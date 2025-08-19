@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { Database } from './database.types'
 import { createServerClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 /**
  * If using Fluid compute: Don't put this client in a global variable. Always create a new client within each
@@ -34,28 +35,8 @@ export async function createClient() {
 }
 
 export async function createServiceRoleClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient<Database>(
+  return createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_SECRET_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
-          } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-      },
-    },
+    process.env.SUPABASE_SECRET_KEY!,
   );
 }
