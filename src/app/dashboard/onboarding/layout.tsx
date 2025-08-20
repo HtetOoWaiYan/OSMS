@@ -13,7 +13,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
 
     // If user already has a project, redirect to dashboard
     if (result.success && result.data) {
-      redirect('/dashboard/(protected)');
+      redirect('/dashboard');
     }
   } catch (error) {
     // Log error but don't block onboarding flow

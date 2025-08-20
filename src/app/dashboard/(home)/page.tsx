@@ -1,7 +1,7 @@
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default async function ProtectedPage() {
+export default async function DashboardHomePage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       <PageHeader title="Overview" description="Welcome to your dashboard overview" />

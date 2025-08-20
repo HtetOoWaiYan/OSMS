@@ -30,7 +30,7 @@ export function ProjectCreationForm() {
       if (result.redirect) {
         router.push(result.redirect);
       } else {
-        router.push('/dashboard/(protected)');
+        router.push('/dashboard');
       }
     });
   };

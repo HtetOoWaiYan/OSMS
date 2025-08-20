@@ -23,38 +23,37 @@ export async function createProjectAction(formData: FormData) {
     const result = await createProject(validatedData);
 
     if (!result.success) {
-      return { 
-        success: false, 
-        error: result.error || 'Failed to create project' 
+      return {
+        success: false,
+        error: result.error || 'Failed to create project',
       };
     }
 
     // Revalidate cache and redirect to dashboard
     revalidatePath('/dashboard');
-    
+
     // Return success with redirect
     return {
       success: true,
       data: result.data,
-      redirect: '/dashboard/(protected)'
+      redirect: '/dashboard',
     };
-
   } catch (error) {
     console.error('Create project action error:', error);
-    
+
     // Handle validation errors from Zod
     if (error instanceof Error && 'issues' in error) {
       const zodError = error as { issues: Array<{ message: string }> };
       const firstIssue = zodError.issues[0];
-      return { 
-        success: false, 
-        error: firstIssue?.message || 'Invalid input data' 
+      return {
+        success: false,
+        error: firstIssue?.message || 'Invalid input data',
       };
     }
 
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to create project' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create project',
     };
   }
 }
@@ -65,7 +64,7 @@ export async function createProjectAction(formData: FormData) {
 export async function checkUserProjectAndRedirect() {
   try {
     const result = await getUserProject();
-    
+
     if (!result.success) {
       // If there's an error, let them proceed to onboarding
       return null;
@@ -73,7 +72,7 @@ export async function checkUserProjectAndRedirect() {
 
     if (result.data) {
       // User has a project, redirect to dashboard
-      redirect('/dashboard/(protected)');
+      redirect('/dashboard');
     }
 
     // User has no project, they can proceed with onboarding
@@ -94,9 +93,9 @@ export async function getUserProjectAction() {
     return result;
   } catch (error) {
     console.error('Get user project action error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to get project' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get project',
     };
   }
 }

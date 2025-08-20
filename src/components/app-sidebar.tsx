@@ -23,23 +23,23 @@ const menuItems = [
   {
     title: 'Overview',
     icon: Home,
-    href: '/dashboard/(protected)',
+    href: '/dashboard',
     exactMatch: true,
   },
   {
     title: 'Items',
     icon: Package,
-    href: '/dashboard/(protected)/items',
+    href: '/dashboard/items',
   },
   {
     title: 'Orders',
     icon: ShoppingCart,
-    href: '/dashboard/(protected)/orders',
+    href: '/dashboard/orders',
   },
   {
     title: 'Users',
     icon: Users,
-    href: '/dashboard/(protected)/users',
+    href: '/dashboard/users',
   },
 ];
 
