@@ -1,0 +1,237 @@
+"server-only";
+
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
+import type { InviteUserData } from "@/lib/validations/users";
+
+export interface ProjectUser {
+  id: string;
+  email: string;
+  name: string;
+  role: "admin" | "agent";
+  isActive: boolean;
+  invitationStatus: "confirmed" | "pending";
+  joinedAt: string;
+}
+
+/**
+ * Get all users for the current project
+ */
+export async function getProjectUsers(): Promise<{
+  success: boolean;
+  error?: string;
+  data?: ProjectUser[];
+}> {
+  try {
+    const supabase = await createClient();
+    const supabaseAdmin = await createServiceRoleClient();
+
+    // Check authentication
+    const { data: { user }, error: getUserError } = await supabase.auth
+      .getUser();
+    if (getUserError || !user) {
+      return { success: false, error: "Authentication required" };
+    }
+
+    // Get current user's project
+    const { data: currentUserRole, error: roleError } = await supabase
+      .from("user_roles")
+      .select("project_id, role")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .single();
+
+    if (roleError || !currentUserRole) {
+      return { success: false, error: "No project access found" };
+    }
+
+    // Check if user has permission to view users (admin only)
+    if (currentUserRole.role !== "admin") {
+      return {
+        success: false,
+        error: "Only administrators can view project users",
+      };
+    }
+
+    // Get all user roles for this project
+    const { data: userRoles, error: usersError } = await supabase
+      .from("user_roles")
+      .select("*")
+      .eq("project_id", currentUserRole.project_id)
+      .eq("is_active", true);
+
+    if (usersError) {
+      console.error("Error fetching project user roles:", usersError);
+      return { success: false, error: "Failed to fetch project users" };
+    }
+
+    // Get auth user data for all users in the project
+    const { data: authUsersData, error: authUsersError } = await supabaseAdmin
+      .auth.admin.listUsers();
+    if (authUsersError) {
+      console.error("Error fetching auth users:", authUsersError);
+      return { success: false, error: "Failed to fetch user details" };
+    }
+
+    // Create a map of user IDs to auth user data
+    const authUsersMap = new Map(
+      authUsersData.users.map((u) => [u.id, u]),
+    );
+
+    // Transform data to ProjectUser format
+    const projectUsers: ProjectUser[] = userRoles
+      .map((userRole) => {
+        const authUser = authUsersMap.get(userRole.user_id);
+        if (!authUser) return null;
+
+        return {
+          id: userRole.user_id,
+          email: authUser.email || "",
+          name: authUser.user_metadata?.name ||
+            authUser.user_metadata?.full_name ||
+            authUser.email?.split("@")[0] || "Unknown",
+          role: userRole.role as "admin" | "agent",
+          isActive: userRole.is_active || false,
+          invitationStatus: authUser.email_confirmed_at
+            ? "confirmed"
+            : "pending",
+          joinedAt: userRole.created_at || new Date().toISOString(),
+        };
+      })
+      .filter((user): user is ProjectUser => user !== null);
+
+    return { success: true, data: projectUsers };
+  } catch (error) {
+    console.error("Error getting project users:", error);
+    return {
+      success: false,
+      error: error instanceof Error
+        ? error.message
+        : "Failed to get project users",
+    };
+  }
+}
+
+/**
+ * Invite a new user to the current project
+ */
+export async function inviteUserToProject(data: InviteUserData): Promise<{
+  success: boolean;
+  error?: string;
+  data?: { userId: string; email: string };
+}> {
+  try {
+    const supabase = await createClient();
+    const supabaseAdmin = await createServiceRoleClient();
+
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return { success: false, error: "Authentication required" };
+    }
+
+    // Get current user's project and verify admin permissions
+    const { data: currentUserRole, error: roleError } = await supabase
+      .from("user_roles")
+      .select("project_id, role")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .single();
+
+    if (roleError || !currentUserRole) {
+      return { success: false, error: "No project access found" };
+    }
+
+    if (currentUserRole.role !== "admin") {
+      return { success: false, error: "Only administrators can invite users" };
+    }
+
+    // Check if user is already in the project
+    const { data: existingUser, error: existingError } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("project_id", currentUserRole.project_id)
+      .eq("is_active", true);
+
+    if (existingError) {
+      return { success: false, error: "Failed to check existing users" };
+    }
+
+    // Check if email is already invited by looking up auth.users
+    const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth
+      .admin.listUsers();
+    if (authUsersError) {
+      return { success: false, error: "Failed to check existing users" };
+    }
+
+    const existingAuthUser = authUsers.users.find((u) =>
+      u.email === data.email
+    );
+    if (
+      existingAuthUser &&
+      existingUser?.some((ur) => ur.user_id === existingAuthUser.id)
+    ) {
+      return {
+        success: false,
+        error: "User is already a member of this project",
+      };
+    }
+
+    // Create the redirect URL for the invitation
+    const redirectUrl =
+      `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/auth/invitation-accept`;
+
+    // Invite user using Supabase Admin API
+    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth
+      .admin.inviteUserByEmail(
+        data.email,
+        {
+          data: {
+            name: data.name,
+            invited_to_project: currentUserRole.project_id,
+            invited_role: data.role,
+          },
+          redirectTo: redirectUrl,
+        },
+      );
+
+    if (inviteError) {
+      console.error("Error inviting user:", inviteError);
+      return { success: false, error: "Failed to send invitation email" };
+    }
+
+    if (!inviteData.user) {
+      return { success: false, error: "Failed to create user invitation" };
+    }
+
+    // Add user to project with the specified role
+    const { error: roleInsertError } = await supabaseAdmin
+      .from("user_roles")
+      .insert({
+        user_id: inviteData.user.id,
+        project_id: currentUserRole.project_id,
+        role: data.role,
+        is_active: true,
+      });
+
+    if (roleInsertError) {
+      console.error("Error adding user role:", roleInsertError);
+      // Try to clean up the invited user if role insertion fails
+      await supabaseAdmin.auth.admin.deleteUser(inviteData.user.id);
+      return { success: false, error: "Failed to assign user role" };
+    }
+
+    return {
+      success: true,
+      data: {
+        userId: inviteData.user.id,
+        email: inviteData.user.email || data.email,
+      },
+    };
+  } catch (error) {
+    console.error("Error inviting user to project:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to invite user",
+    };
+  }
+}
