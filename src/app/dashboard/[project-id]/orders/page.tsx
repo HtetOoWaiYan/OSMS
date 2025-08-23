@@ -1,17 +1,20 @@
-import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 
 export default function OrdersPage() {
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <PageHeader title="Orders" description="Track and manage customer orders">
+    <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
+          <p className="text-muted-foreground">Track and manage customer orders</p>
+        </div>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
           New Order
         </Button>
-      </PageHeader>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>

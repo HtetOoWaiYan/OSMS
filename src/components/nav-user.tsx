@@ -23,6 +23,7 @@ import { LogoutButton } from '@/components/logout-button';
 
 export function NavUser({
   user,
+  projectId,
 }: {
   user: {
     email?: string;
@@ -30,6 +31,7 @@ export function NavUser({
     avatar?: string;
     [key: string]: unknown;
   };
+  projectId: string;
 }) {
   const { isMobile } = useSidebar();
 
@@ -51,6 +53,9 @@ export function NavUser({
 
   const displayName = user.name || user.email?.split('@')[0] || 'User';
   const displayEmail = user.email || '';
+
+  // Generate settings link based on project context
+  const settingsLink = `/dashboard/${projectId}/settings`;
 
   return (
     <SidebarMenu>
@@ -97,7 +102,7 @@ export function NavUser({
                 Profile
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings">
+                <Link href={settingsLink}>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </Link>

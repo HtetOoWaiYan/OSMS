@@ -4,31 +4,6 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 export default function Loading() {
   return (
     <SidebarProvider>
-      {/* Sidebar skeleton */}
-      <div className="bg-sidebar flex h-screen w-64 flex-col">
-        <div className="flex items-center gap-2 p-4">
-          <Skeleton className="h-8 w-8 rounded" />
-          <Skeleton className="h-5 w-20" />
-        </div>
-        <div className="flex-1 space-y-1 p-2">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-md p-2">
-              <Skeleton className="h-4 w-4" />
-              <Skeleton className="h-4 flex-1" />
-            </div>
-          ))}
-        </div>
-        <div className="border-t p-4">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-8 w-8 rounded-full" />
-            <div className="flex-1 space-y-1">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-3 w-24" />
-            </div>
-          </div>
-        </div>
-      </div>
-
       <SidebarInset>
         <div className="space-y-6 p-6">
           {/* Header skeleton */}

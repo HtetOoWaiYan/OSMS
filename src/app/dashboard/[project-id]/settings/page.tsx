@@ -1,9 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { PageHeader } from '@/components/page-header';
-import { getUserProject, maskBotToken } from '@/lib/data/projects';
+import { getProject, maskBotToken, checkUserPermissions } from '@/lib/data/projects';
 import { updateProjectAction } from '@/lib/actions/projects';
-import { requireAdmin } from '@/lib/auth/roles';
 import { ProjectSettingsForm } from '@/components/project-settings-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,15 +9,23 @@ import { Skeleton } from '@/components/ui/skeleton';
 // Force dynamic rendering since we need to access cookies for authentication
 export const dynamic = 'force-dynamic';
 
-async function ProjectSettingsContent() {
-  const result = await getUserProject();
+interface SettingsPageProps {
+  params: Promise<{
+    'project-id': string;
+  }>;
+}
 
-  if (!result.success) {
-    redirect('/dashboard/onboarding');
+async function ProjectSettingsContent({ projectId }: { projectId: string }) {
+  // Check permissions first
+  const permissionsResult = await checkUserPermissions(projectId);
+  if (!permissionsResult.success || !permissionsResult.data?.isAdmin) {
+    redirect('/dashboard/unauthorized');
   }
 
-  if (!result.data) {
-    redirect('/dashboard/onboarding');
+  // Get project data
+  const result = await getProject(projectId);
+  if (!result.success || !result.data) {
+    redirect('/dashboard');
   }
 
   const project = result.data;
@@ -129,17 +135,19 @@ function ProjectSettingsLoading() {
   );
 }
 
-export default async function SettingsPage() {
-  // Require admin role to access settings
-  await requireAdmin();
+export default async function SettingsPage({ params }: SettingsPageProps) {
+  const { 'project-id': projectId } = await params;
 
   return (
-    <>
-      <PageHeader title="Settings" description="Manage your project settings and configuration" />
+    <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground">Manage your project settings and configuration</p>
+      </div>
 
       <Suspense fallback={<ProjectSettingsLoading />}>
-        <ProjectSettingsContent />
+        <ProjectSettingsContent projectId={projectId} />
       </Suspense>
-    </>
+    </div>
   );
 }
