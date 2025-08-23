@@ -1,7 +1,7 @@
 "server-only";
 
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
-import type { InviteUserData } from "@/lib/validations/users";
+import type { InviteUserData, UpdateUserRoleData, RemoveUserData, ResendInvitationData } from "@/lib/validations/users";
 
 export interface ProjectUser {
   id: string;
@@ -234,6 +234,249 @@ export async function inviteUserToProject(data: InviteUserData): Promise<{
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to invite user",
+    };
+  }
+}
+
+/**
+ * Update a user's role in the current project
+ */
+export async function updateUserRole(data: UpdateUserRoleData): Promise<{
+  success: boolean;
+  error?: string;
+  data?: { userId: string; role: string };
+}> {
+  try {
+    const supabase = await createClient();
+    const supabaseAdmin = await createServiceRoleClient();
+
+    // Check authentication
+    const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+    if (getUserError || !user) {
+      return { success: false, error: "Authentication required" };
+    }
+
+    // Get current user's project and verify admin permissions
+    const { data: currentUserRole, error: roleError } = await supabase
+      .from("user_roles")
+      .select("project_id, role")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .single();
+
+    if (roleError || !currentUserRole) {
+      return { success: false, error: "No project access found" };
+    }
+
+    if (currentUserRole.role !== "admin") {
+      return { success: false, error: "Only administrators can update user roles" };
+    }
+
+    // Check if user exists in the project using service role client (bypasses RLS)
+    const { data: existingUserRole, error: existingError } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id, role")
+      .eq("user_id", data.userId)
+      .eq("project_id", currentUserRole.project_id)
+      .eq("is_active", true)
+      .single();
+
+    if (existingError || !existingUserRole) {
+      return { success: false, error: "User not found in this project" };
+    }
+
+    // Prevent updating own role
+    if (data.userId === user.id) {
+      return { success: false, error: "You cannot change your own role" };
+    }
+
+    // Update user role using service role client
+    const { error: updateError } = await supabaseAdmin
+      .from("user_roles")
+      .update({ role: data.role, updated_at: new Date().toISOString() })
+      .eq("user_id", data.userId)
+      .eq("project_id", currentUserRole.project_id)
+      .eq("is_active", true);
+
+    if (updateError) {
+      console.error("Error updating user role:", updateError);
+      return { success: false, error: "Failed to update user role" };
+    }
+
+    return {
+      success: true,
+      data: {
+        userId: data.userId,
+        role: data.role,
+      },
+    };
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update user role",
+    };
+  }
+}
+
+/**
+ * Remove a user from the current project
+ */
+export async function removeUserFromProject(data: RemoveUserData): Promise<{
+  success: boolean;
+  error?: string;
+  data?: { userId: string };
+}> {
+  try {
+    const supabase = await createClient();
+    const supabaseAdmin = await createServiceRoleClient();
+
+    // Check authentication
+    const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+    if (getUserError || !user) {
+      return { success: false, error: "Authentication required" };
+    }
+
+    // Get current user's project and verify admin permissions
+    const { data: currentUserRole, error: roleError } = await supabase
+      .from("user_roles")
+      .select("project_id, role")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .single();
+
+    if (roleError || !currentUserRole) {
+      return { success: false, error: "No project access found" };
+    }
+
+    if (currentUserRole.role !== "admin") {
+      return { success: false, error: "Only administrators can remove users" };
+    }
+
+    // Check if user exists in the project using service role client (bypasses RLS)
+    const { data: existingUserRole, error: existingError } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("user_id", data.userId)
+      .eq("project_id", currentUserRole.project_id)
+      .eq("is_active", true)
+      .single();
+
+    if (existingError || !existingUserRole) {
+      return { success: false, error: "User not found in this project" };
+    }
+
+    // Prevent removing own account
+    if (data.userId === user.id) {
+      return { success: false, error: "You cannot remove yourself from the project" };
+    }
+
+    // Soft delete user role using service role client
+    const { error: removeError } = await supabaseAdmin
+      .from("user_roles")
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq("user_id", data.userId)
+      .eq("project_id", currentUserRole.project_id);
+
+    if (removeError) {
+      console.error("Error removing user from project:", removeError);
+      return { success: false, error: "Failed to remove user from project" };
+    }
+
+    return {
+      success: true,
+      data: {
+        userId: data.userId,
+      },
+    };
+  } catch (error) {
+    console.error("Error removing user from project:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to remove user from project",
+    };
+  }
+}
+
+/**
+ * Resend invitation to a user
+ */
+export async function resendUserInvitation(data: ResendInvitationData): Promise<{
+  success: boolean;
+  error?: string;
+  data?: { userId: string; email: string };
+}> {
+  try {
+    const supabase = await createClient();
+    const supabaseAdmin = await createServiceRoleClient();
+
+    // Check authentication
+    const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+    if (getUserError || !user) {
+      return { success: false, error: "Authentication required" };
+    }
+
+    // Get current user's project and verify admin permissions
+    const { data: currentUserRole, error: roleError } = await supabase
+      .from("user_roles")
+      .select("project_id, role")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .single();
+
+    if (roleError || !currentUserRole) {
+      return { success: false, error: "No project access found" };
+    }
+
+    if (currentUserRole.role !== "admin") {
+      return { success: false, error: "Only administrators can resend invitations" };
+    }
+
+    // Check if user exists in the project and get their role using service role client (bypasses RLS)
+    const { data: existingUserRole, error: existingError } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id, role")
+      .eq("user_id", data.userId)
+      .eq("project_id", currentUserRole.project_id)
+      .eq("is_active", true)
+      .single();
+
+    if (existingError || !existingUserRole) {
+      return { success: false, error: "User not found in this project" };
+    }
+
+    // Create the redirect URL for the invitation
+    const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard/auth/sign-up`;
+
+    // Resend invitation using Supabase Admin API
+    const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      data.email,
+      {
+        data: {
+          invited_to_project: currentUserRole.project_id,
+          invited_role: existingUserRole.role,
+        },
+        redirectTo: redirectUrl,
+      },
+    );
+
+    if (inviteError) {
+      console.error("Error resending invitation:", inviteError);
+      return { success: false, error: `Failed to resend invitation: ${inviteError.message}` };
+    }
+
+    return {
+      success: true,
+      data: {
+        userId: data.userId,
+        email: data.email,
+      },
+    };
+  } catch (error) {
+    console.error("Error resending invitation:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to resend invitation",
     };
   }
 }
