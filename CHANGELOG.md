@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-#### Project Management & User Setup (Phase 1.1)
+#### Project Management & User Setup (Phase 1.1) ✅
 - **Project Creation Flow**: Complete onboarding system for new users
   - Multi-step onboarding: Welcome → Bot Setup Guide → Project Creation
   - Telegram Bot setup guidance with @BotFather integration
@@ -19,36 +19,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Users with no project → onboarding flow
   - Users with existing project → dashboard home page area
   - Project information integration in dashboard layout
-- **Data Access Layer**: Following Next.js security best practices
+- **Project Settings Management**: Complete settings interface ✅
+  - Settings page at `/dashboard/settings` accessible via user profile dropdown
+  - Project information form with name, description, and bot token editing
+  - Masked bot token display with show/hide functionality
+  - Admin-only access control with permission verification
+  - Real-time form validation with success/error feedback
+  - Project details panel with creation and update timestamps
+- **Data Access Layer**: Following Next.js security best practices ✅
   - Comprehensive project data access functions
+  - **Service Role Client Pattern**: All mutations use `createServiceRoleClient()` after permission checks
+  - **Regular Client Pattern**: All reads and permission checks use `createClient()` with RLS
   - User role management and permission checking
   - RLS policy compliance and multi-tenant security
   - Type-safe database operations with proper error handling
-- **Server Actions**: Thin wrapper pattern for form handling
+  - **"server-only" imports**: All data access layer files protected from client-side access
+- **Server Actions**: Thin wrapper pattern for form handling ✅
   - Project creation action with Zod validation
+  - Project update action with proper authentication and authorization
   - User project status checking
   - Proper error handling and user feedback
-- **UI Components**: Professional onboarding experience
+- **UI Components**: Professional onboarding and settings experience ✅
   - Welcome page with feature overview
   - Step-by-step Telegram bot creation guide
   - Project creation form with bot token validation
+  - Settings form with masked token display and update functionality
   - Progress indicators and navigation between steps
   - Error handling with user-friendly messages
   - Responsive design for desktop and mobile
 
-#### Technical Implementation
+#### Technical Implementation ✅
 - **Validation Schemas**: Zod schemas for project creation and bot token validation
 - **Badge Component**: Added missing UI component for step indicators
-- **Updated Navigation**: Corrected dashboard menu links for protected routes
+- **Updated Navigation**: Settings accessible via user profile dropdown (not main sidebar)
 - **Database Integration**: Full integration with projects and user_roles tables
+- **Security Enhancements**: Service role client implementation for secure mutations
+- **Development Guidelines**: Critical security patterns and build-only testing requirements
+
+#### Development Environment & Security ✅
+- **Critical Development Guidelines**: 
+  - ❌ `npm run dev` strictly forbidden for security
+  - ✅ `npm run build` for implementation testing and validation
+  - ✅ `npm run test` for automated functionality testing
+- **Database Security Pattern**: 
+  - Service role client for all mutations after permission verification
+  - Regular client for reads and authentication checks
+  - Explicit "server-only" imports for all data access layer files
+- **Build-Only Testing**: Production-like testing without development server exposure
 
 ### Planned
-- Item management CRUD operations
-- Order processing workflow
-- Customer management system
-- Dashboard analytics and reporting
-- Telegram bot integration
-- Mini-app development
+- Item management CRUD operations (Phase 1.2)
+- Order processing workflow (Phase 2)
+- Customer management system (Phase 2)
+- Dashboard analytics and reporting (Phase 3)
+- Telegram bot integration (Phase 4)
+- Mini-app development (Phase 4)
+
+### Fixed ✅
+- **Project Update Error**: Fixed PGRST116 error when updating project information
+  - Root cause: RLS policies preventing mutations with regular client
+  - Solution: Use service role client for mutations after permission verification
+  - Security maintained: Permission checks still performed with regular client + RLS
+- **Form Input Conflicts**: Resolved duplicate input names in settings form
+- **Bot Token Display**: Implemented secure masking with optional visibility toggle
 
 ---
 
@@ -174,19 +207,27 @@ supabase/
 
 ## Development Notes
 
-### Current State (v0.1.0)
-- **Status**: Foundation complete, ready for implementation
+### Current State (v0.1.0 + Settings Implementation)
+- **Status**: Foundation complete + Project settings management fully implemented
 - **Next Phase**: Core data operations (Items, Orders, Customers)
-- **Architecture**: All infrastructure in place
-- **Security**: Multi-tenant RLS policies active
-- **UI**: Professional dashboard framework ready
+- **Architecture**: All infrastructure in place + secure mutation patterns established
+- **Security**: Multi-tenant RLS policies active + service role client pattern implemented
+- **UI**: Professional dashboard framework ready + settings management complete
+- **Testing**: Build-only validation process established (no development server)
 
 ### Known Limitations
 - Dashboard shows placeholder data (implementation needed)
-- No business logic implementation yet
+- No business logic implementation yet for items/orders
 - Telegram integration prepared but not implemented
 - File upload system ready but not connected
 - Payment integration framework ready
+
+### Technical Notes
+- **Database Security**: Service role client pattern implemented for all mutations
+- **Development Restrictions**: Development server (`npm run dev`) disabled for security
+- **Testing Approach**: Build-only validation ensures production-like testing
+- **RLS Compliance**: Regular client handles all reads with proper access control
+- **"server-only" Protection**: All data access layer files secured from client exposure
 
 ### Migration Notes
 - Database schema is production-ready
@@ -203,7 +244,7 @@ supabase/
 - Item management CRUD operations
 - Category management system
 - Basic inventory tracking
-- User project management
+- User project management (✅ Settings already implemented)
 
 ### [0.3.0] - Planned - Order Management
 - Complete order processing workflow

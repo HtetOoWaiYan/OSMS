@@ -2,8 +2,8 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { createProjectSchema } from '@/lib/validations/projects';
-import { createProject, getUserProject } from '@/lib/data/projects';
+import { createProjectSchema, updateProjectSchema } from '@/lib/validations/projects';
+import { createProject, getUserProject, updateProject } from '@/lib/data/projects';
 
 /**
  * Server Actions for project management
@@ -96,6 +96,87 @@ export async function getUserProjectAction() {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get project',
+    };
+  }
+}
+
+/**
+ * Server action to update project information
+ */
+export async function updateProjectAction(formData: FormData) {
+  try {
+    // Extract form data
+    const rawData = {
+      projectId: formData.get('projectId') as string,
+      name: formData.get('name') as string,
+      description: formData.get('description') as string || null,
+      telegram_bot_token: formData.get('telegram_bot_token') as string,
+    };
+
+    // Validate project ID
+    if (!rawData.projectId) {
+      return {
+        success: false,
+        error: 'Project ID is required',
+      };
+    }
+
+    // If no new bot token provided, get the current one from the project
+    let botTokenToUse = rawData.telegram_bot_token;
+    if (!botTokenToUse || botTokenToUse.trim() === '') {
+      // Get current project to use existing bot token
+      const currentProject = await getUserProject();
+      if (!currentProject.success || !currentProject.data) {
+        return {
+          success: false,
+          error: 'Current project not found',
+        };
+      }
+      botTokenToUse = currentProject.data.telegram_bot_token || '';
+    }
+
+    // Validate the data
+    const validatedData = updateProjectSchema.parse({
+      name: rawData.name,
+      description: rawData.description,
+      telegram_bot_token: botTokenToUse,
+    });
+
+    // Update project through data access layer
+    const result = await updateProject(rawData.projectId, validatedData);
+
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || 'Failed to update project',
+      };
+    }
+
+    // Revalidate the settings page to show updated data
+    revalidatePath('/dashboard/settings');
+    
+    return {
+      success: true,
+      message: 'Project updated successfully',
+      data: result.data,
+    };
+
+  } catch (error) {
+    console.error('Error in updateProjectAction:', error);
+    
+    // Handle Zod validation errors
+    if (error && typeof error === 'object' && 'issues' in error) {
+      const zodError = error as { issues: Array<{ path: string[]; message: string }> };
+      const firstError = zodError.issues[0];
+      return {
+        success: false,
+        error: firstError?.message || 'Validation failed',
+      };
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update project',
     };
   }
 }

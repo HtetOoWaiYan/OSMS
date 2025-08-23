@@ -70,12 +70,27 @@
 - **UI Framework**: Professional sidebar with user profile management
 - **Page Structure**: Overview, Items, Orders, Users pages (placeholders)
 
+## Development Environment & Testing
+
+### **Development Server Restrictions**
+- **❌ NEVER run `npm run dev`** - Development server is disabled for this project
+- **✅ Use `npm run build`** - To test implementation and check for compilation errors
+- **✅ Use `npm run test`** - To run tests and validate functionality
+- **Rationale**: Prevents accidental exposure of development endpoints and ensures production-like testing
+
+### **Testing & Validation Workflow**
+1. **Build Test**: Run `npm run build` after making changes
+2. **Type Check**: Ensure TypeScript compilation passes
+3. **Functionality Test**: Use `npm run test` for automated tests
+4. **Manual Validation**: Test forms and database operations through build output
+
 #### 6. **Development Environment**
 - **Database**: Supabase local development setup
 - **Migrations**: Version-controlled database schema
 - **Type Generation**: Auto-generated TypeScript types from database
 - **Code Quality**: Linting, formatting, pre-commit hooks
 - **Package Management**: Modern dependencies with security updates
+- **Build-Only Testing**: Use build process to validate implementation
 
 #### 7. **Project Structure & Architecture**
 The application follows a clear separation of concerns with two main entry points:
@@ -199,18 +214,26 @@ The current state has **structure without data flow** - all the pieces are in pl
 ## Technical Implementation Details
 
 ### Database Operations Pattern
+
+#### **CRITICAL: Supabase Client Usage Rules**
+- **READ Operations (SELECT)**: Use `createClient()` - Regular client with RLS policies
+- **WRITE Operations (INSERT/UPDATE/DELETE)**: Use `createServiceRoleClient()` - Service role bypasses RLS
+- **Security First**: Always verify permissions BEFORE using service role client
+- **Server-Only**: All database operations must have `"server-only"` import
+
 ```typescript
 // Data Access Layer Pattern (src/lib/data/items.ts)
-import { createClient } from '@/lib/supabase/server';
+import "server-only";
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 export async function getItem(itemId: string) {
-  const supabase = await createClient();
+  const supabase = await createClient(); // Regular client for reads
   
   // Authentication check
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Unauthorized');
   
-  // Database operation with RLS
+  // Database operation with RLS (auto-enforced project access)
   const { data, error } = await supabase
     .from('items')
     .select('*')
@@ -222,16 +245,30 @@ export async function getItem(itemId: string) {
 }
 
 export async function createItem(data: CreateItemData) {
-  const supabase = await createClient();
+  const supabase = await createClient(); // For auth/permission checks
+  const supabaseAdmin = await createServiceRoleClient(); // For mutations
   
-  // Authentication and authorization checks
+  // STEP 1: Authentication check
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Unauthorized');
   
-  // Database operation with RLS (project access automatically enforced)
-  const { data: item, error } = await supabase
+  // STEP 2: Permission verification (using regular client with RLS)
+  const { data: userRole } = await supabase
+    .from('user_roles')
+    .select('role, project_id')
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .single();
+  
+  if (!userRole) throw new Error('No project access');
+  
+  // STEP 3: Data mutation (using service role client - bypasses RLS)
+  const { data: item, error } = await supabaseAdmin
     .from('items')
-    .insert(data)
+    .insert({
+      ...data,
+      project_id: userRole.project_id, // Explicitly set project_id
+    })
     .select()
     .single();
     
@@ -277,11 +314,21 @@ export async function createItemAction(formData: FormData) {
 
 ### Security Considerations
 - **Data Access Layer** enforces all security rules and RLS compliance
+- **Service Role Client Usage**: Only for mutations after proper authorization checks
+- **Permission Verification**: Always check user permissions before using service role client
+- **RLS for Reads**: Use regular client for all SELECT operations to enforce row-level security
+- **Explicit Project Assignment**: Always set project_id explicitly in service role mutations
 - **Server Actions** handle user input validation only
 - **Separation of Concerns**: Security logic isolated in data layer
 - Input sanitization through Zod schemas
 - Error handling prevents information leakage
 - Authentication required for all database access
+
+#### **Database Client Usage Rules:**
+1. **Regular Client (`createClient()`)** - For authentication, reads, and permission checks
+2. **Service Role Client (`createServiceRoleClient()`)** - ONLY for mutations after permission verification
+3. **Never bypass security** - Always verify permissions before using service role
+4. **Server-only operations** - All database code must have `"server-only"` import
 
 ### Performance Optimization
 - Database queries optimized with proper indexes
@@ -425,26 +472,58 @@ export async function getItems() {
 
 ### Key Architectural Decisions
 1. **Multi-tenant by design** - Every operation scoped to project_id
-2. **RLS for security** - Database-level access control
-3. **Data Access Layer pattern** - Security and database logic separated
-4. **Server Actions as thin wrappers** - Input validation and user feedback only
-5. **Minimal client state** - Server components where possible
-6. **Progressive enhancement** - Core functionality first, polish later
+2. **RLS for security** - Database-level access control for reads only
+3. **Service Role for mutations** - All INSERT/UPDATE/DELETE operations use service role client after permission verification
+4. **Data Access Layer pattern** - Security and database logic separated with "server-only" imports
+5. **Server Actions as thin wrappers** - Input validation and user feedback only
+6. **Minimal client state** - Server components where possible
+7. **Progressive enhancement** - Core functionality first, polish later
+8. **Build-only testing** - No development server, use build process for validation
+
+### Database Operation Security Pattern
+```typescript
+// REQUIRED PATTERN for all database mutations:
+import "server-only";
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+
+export async function mutateData(data: any) {
+  const supabase = await createClient();        // For auth & permissions
+  const supabaseAdmin = await createServiceRoleClient(); // For mutations only
+  
+  // 1. Authenticate
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+  
+  // 2. Verify permissions (using RLS-enabled client)
+  const permissionCheck = await supabase.from('user_roles')...
+  if (!hasPermission) throw new Error('Access denied');
+  
+  // 3. Perform mutation (using service role client)
+  const result = await supabaseAdmin.from('table').insert(data);
+  return result;
+}
+```
 
 ### Code Quality Standards
 - TypeScript strict mode enabled
 - Zod validation for all inputs
+- **"server-only" imports** for all database operations
+- **Service role client** for all mutations with permission verification first
+- **Regular client** for reads and permission checks only
 - Data Access Layer for all database operations
 - Consistent error handling patterns
 - Component composition over inheritance
 - Server Actions as input validators only
 - Proper loading and error states
 
-### Testing Strategy (Time Permitting)
-- Manual testing of complete user workflows
+### Testing Strategy
+- **Build testing**: Use `npm run build` to validate implementation
+- **No development server**: Never use `npm run dev` for testing
+- Manual testing of complete user workflows through build output
 - Database constraint testing
 - Authentication flow validation
-- RLS policy verification
-- Telegram webhook testing
+- RLS policy verification for read operations
+- Service role client security verification
+- Telegram webhook testing (when implemented)
 
 This development plan provides a clear roadmap from the current foundation to a fully functional MVP, prioritizing core business value while maintaining code quality and scalability for future enhancements.

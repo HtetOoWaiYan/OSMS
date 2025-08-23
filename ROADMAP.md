@@ -20,11 +20,11 @@ Purple Shopping consists of two integrated applications:
 
 #### **Project Creation Flow** 
 **What we need from user:**
-- [ ] **Required Fields:**
+- [x] **Required Fields:**
   - Project name (shop/business name)
   - Telegram bot token (with guidance link)
   - Optional: Project description
-- [ ] **Implementation Details:**
+- [x] **Implementation Details:**
   - New users with no project get onboarding flow
   - Onboarding guides through first project creation
   - Project creation form integrated into onboarding
@@ -36,7 +36,7 @@ Purple Shopping consists of two integrated applications:
     3. Choose bot name and username
     4. Copy the bot token (format: `123456789:AAEhBOweik6ad...`)
     5. Paste token into our form
-- [ ] **Technical Tasks:**
+- [x] **Technical Tasks:**
   - Create onboarding flow for new users (no project exists)
   - Multi-step onboarding: Welcome → Bot Setup Guide → Project Creation
   - Create server action: `createProject(name, botToken, description?)`
@@ -47,17 +47,34 @@ Purple Shopping consists of two integrated applications:
   - Redirect to dashboard after successful project creation
   - Block creation of additional projects in UI
 
+#### **Project Settings Management** ✅
+- [x] **Settings Page Implementation:**
+  - Complete settings page at `/dashboard/settings`
+  - Accessible via user profile dropdown in sidebar footer
+  - Project information form with validation and error handling
+  - Bot token display with masking and visibility toggle
+- [x] **Project Update Functionality:**
+  - Server action for updating project name, description, and bot token
+  - Admin-only access control with proper permission checking
+  - Service role client usage for secure database mutations
+  - Data access layer following Next.js security best practices
+- [x] **UI Components:**
+  - Professional settings form with real-time validation
+  - Masked bot token display with show/hide toggle
+  - Project details panel showing creation and update timestamps
+  - Success/error feedback with user-friendly messages
+
 #### **Project Selection**
-- [ ] **Single Project Only (MVP Constraint):**
+- [x] **Single Project Only (MVP Constraint):**
   - Limit to one project per user in UI
   - No project switching interface needed
   - Users with existing project go directly to dashboard
-- [ ] **New User Onboarding:**
+- [x] **New User Onboarding:**
   - Check if user has project on login/dashboard access
   - If no project: redirect to onboarding flow
   - If project exists: direct to dashboard
   - Onboarding includes: Welcome → Bot Setup Guide → Project Creation
-- [ ] **Post-Creation Flow:**
+- [x] **Post-Creation Flow:**
   - After successful project creation → redirect to dashboard
   - Dashboard shows proper project data and navigation
   - No option to create additional projects in UI
@@ -145,43 +162,47 @@ Purple Shopping consists of two integrated applications:
 ### 1.3 Data Access Layer
 
 #### **Server Actions Implementation**
-- [ ] **Data Access Layer Pattern (Next.js Security Best Practice):**
+- [x] **Data Access Layer Pattern (Next.js Security Best Practice):**
   - Follow pattern from: https://nextjs.org/blog/security-nextjs-server-components-actions
   - Create dedicated data access layer: `src/lib/data/` folder
   - Separate data fetching from server actions
   - Example structure: `src/lib/data/items.ts`, `src/lib/data/categories.ts`, `src/lib/data/projects.ts`
   - Data functions handle all database operations and security checks
-- [ ] **Server Actions as Thin Wrappers:**
+  - **CRITICAL: Service Role Client Usage**: Use `createServiceRoleClient()` for all mutations (INSERT/UPDATE/DELETE)
+  - **Security Pattern**: Always verify permissions with regular client BEFORE using service role client
+- [x] **Server Actions as Thin Wrappers:**
   - Server actions in `src/lib/actions/` call data layer functions
   - Actions handle form validation and user input processing
   - Actions return user-friendly responses and handle redirects
   - Keep business logic in data layer, not in actions
-- [ ] **Type-safe Database Operations:**
+- [x] **Type-safe Database Operations:**
   - Use TypeScript for full type safety with database types
   - Each data function returns typed results with proper error handling
   - Consistent return type: `Promise<{success: boolean, error?: string, data?: T}>`
-- [ ] **Error Handling Patterns:**
+- [x] **Error Handling Patterns:**
   - Data layer throws errors, actions catch and format them
   - Database constraint errors mapped to user-friendly messages
   - Authentication errors handled with proper redirects
   - Logging for debugging (console.error for now)
-- [ ] **Input Validation with Zod:**
+- [x] **Input Validation with Zod:**
   - Schema definitions in `src/lib/validations/` folder
   - Validate all server action inputs before calling data layer
   - Data layer assumes inputs are already validated
   - Client-side form validation using same schemas
   - Error messages returned for invalid inputs
-- [ ] **RLS Policy Compliance:**
+- [x] **RLS Policy Compliance:**
   - Data layer handles all RLS policy compliance
+  - Regular client (`createClient()`) for reads and permission checks
+  - Service role client (`createServiceRoleClient()`) for mutations only
   - All queries automatically filtered by user's project access
-  - No manual project_id filtering needed (RLS handles it)
   - Use `createClient()` for authenticated operations in data layer only
   - Server actions never directly access database
-- [ ] **Data Layer Security Pattern:**
+- [x] **Data Layer Security Pattern:**
   - Data functions verify user authentication and authorization
   - Check user project access before any database operation
   - Return appropriate errors for unauthorized access
   - Verify RLS policies work correctly in testing
+  - **"server-only" imports required** for all data access layer files
 
 #### **Client State Management**
 - [ ] **Zustand Stores for UI State:**
@@ -428,6 +449,37 @@ Purple Shopping consists of two integrated applications:
 
 ## Implementation Notes
 
+### **Critical Development Guidelines** ⚠️
+- **❌ NEVER use `npm run dev`** - Development server is strictly forbidden
+- **✅ Use `npm run build`** - For testing implementation and compilation validation
+- **✅ Use `npm run test`** - For automated testing and functionality validation
+- **🔒 Service Role Client Rule**: All database mutations MUST use `createServiceRoleClient()` 
+- **🛡️ Security First**: Always verify permissions with regular client BEFORE using service role
+- **📝 "server-only" Required**: All data access layer files must import `"server-only"`
+
+### **Database Operation Security Pattern** 🔐
+```typescript
+import "server-only";
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+
+export async function mutateData(data: any) {
+  const supabase = await createClient();        // For auth & permissions
+  const supabaseAdmin = await createServiceRoleClient(); // For mutations only
+  
+  // 1. Authenticate
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+  
+  // 2. Verify permissions (using RLS-enabled client)
+  const permissionCheck = await supabase.from('user_roles')...
+  if (!hasPermission) throw new Error('Access denied');
+  
+  // 3. Perform mutation (using service role client)
+  const result = await supabaseAdmin.from('table').insert(data);
+  return result;
+}
+```
+
 ### Priority Order
 1. **Items Management** (Core business entity)
 2. **Orders & Customers** (Revenue generation)
@@ -443,7 +495,9 @@ Purple Shopping consists of two integrated applications:
 - **Day 10**: Production-ready demonstration
 
 ### Quality Gates
-- Each phase must be tested before proceeding
+- Each phase must be tested using `npm run build` (never `npm run dev`)
 - Database operations must maintain data consistency
+- All mutations must use service role client after permission verification
 - UI must remain responsive and professional
-- Security (RLS) must be verified at each step
+- Security (RLS + service role pattern) must be verified at each step
+- All data access layer functions must have "server-only" imports

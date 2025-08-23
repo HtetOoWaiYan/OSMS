@@ -4,7 +4,7 @@ import type {
   TablesInsert, 
   Enums 
 } from '@/lib/supabase/database.types';
-import type { CreateProjectData } from '@/lib/validations/projects';
+import type { CreateProjectData, UpdateProjectData } from '@/lib/validations/projects';
 
 // Type aliases for better readability
 type Project = Tables<'projects'>;
@@ -240,4 +240,95 @@ export async function checkUserPermissions(projectId: string): Promise<{
       error: error instanceof Error ? error.message : 'Failed to check permissions' 
     };
   }
+}
+
+/**
+ * Update project information
+ */
+export async function updateProject(
+  projectId: string, 
+  data: UpdateProjectData
+): Promise<{
+  success: boolean;
+  error?: string;
+  data?: Project;
+}> {
+  try {
+    const supabase = await createClient();
+    const supabaseAdmin = await createServiceRoleClient();
+    
+    // Check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    // Check if user has admin access to this project
+    const permissions = await checkUserPermissions(projectId);
+    if (!permissions.success || !permissions.data?.isAdmin) {
+      return { success: false, error: 'Only project administrators can update project settings' };
+    }
+
+    // Prepare update data (only include provided fields)
+    const updateData: Partial<Project> = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.telegram_bot_token !== undefined) updateData.telegram_bot_token = data.telegram_bot_token;
+    
+    // Always update the timestamp
+    updateData.updated_at = new Date().toISOString();
+
+    // Update project using service role client (bypasses RLS)
+    const { data: project, error: updateError } = await supabaseAdmin
+      .from('projects')
+      .update(updateData)
+      .eq('id', projectId)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    return { success: true, data: project };
+  } catch (error) {
+    console.error('Error updating project:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to update project' 
+    };
+  }
+}
+
+/**
+ * Mask bot token for display (show only first parts and last 4 characters)
+ * Format: 123456789:AAEhBOweik***************ew11
+ */
+export function maskBotToken(token: string): string {
+  if (!token || token.length < 15) {
+    return token; // Too short to mask effectively
+  }
+  
+  const colonIndex = token.indexOf(':');
+  if (colonIndex === -1) {
+    // No colon found, mask middle part
+    const start = token.slice(0, 6);
+    const end = token.slice(-4);
+    const maskedLength = Math.min(15, token.length - 10);
+    return `${start}${'*'.repeat(maskedLength)}${end}`;
+  }
+  
+  // Mask the secret part after the colon
+  const botId = token.slice(0, colonIndex + 1); // Include the colon
+  const secret = token.slice(colonIndex + 1);
+  
+  if (secret.length < 10) {
+    return token; // Secret too short to mask effectively
+  }
+  
+  const secretStart = secret.slice(0, 6);
+  const secretEnd = secret.slice(-4);
+  const maskedLength = Math.min(15, secret.length - 10);
+  
+  return `${botId}${secretStart}${'*'.repeat(maskedLength)}${secretEnd}`;
 }
