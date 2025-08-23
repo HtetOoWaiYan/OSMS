@@ -127,6 +127,7 @@ src/
 │
 ├── components/
 │   ├── ui/                    # Shadcn UI components (buttons, cards, etc.)
+│   ├── providers/             # Application providers (QueryProvider, etc.)
 │   ├── dashboard/             # Dashboard-specific components
 │   ├── mini-app/              # Mini-app specific components
 │   ├── shared/                # Shared components between apps
@@ -140,6 +141,7 @@ src/
 │
 └── hooks/                     # Custom React hooks
     ├── use-mobile.ts          # Mobile detection
+    ├── use-query-hooks.ts     # TanStack Query hooks (client-side only)
     └── [custom-hooks]         # App-specific hooks
 
 supabase/
@@ -312,6 +314,95 @@ export async function createItemAction(formData: FormData) {
 - **Zustand** for client-side state management
 - **Zod** schemas for type-safe validation
 
+### Data Fetching Strategy
+- **Server-side fetching (PRIMARY)**: Always fetch data in server components when possible
+  - Better performance (no client-server round trips)
+  - SEO friendly
+  - Automatic error handling
+  - Direct database access through data access layer
+- **Client-side fetching (LAST RESORT)**: Only use TanStack Query when server-side is not possible
+  - Real-time updates needed
+  - User-triggered refresh functionality
+  - Interactive features requiring immediate feedback
+  - Use QueryProvider wrapper for TanStack Query integration
+
+### Data Fetching Implementation Examples
+
+#### **Server-side Fetching (Preferred Pattern):**
+```typescript
+// Server Component (src/app/dashboard/items/page.tsx)
+import { getItems } from '@/lib/data/items';
+
+export default async function ItemsPage() {
+  const items = await getItems(); // Direct server-side fetch
+  
+  return (
+    <div>
+      <ItemsList items={items} />
+    </div>
+  );
+}
+
+// Data Access Layer (src/lib/data/items.ts)
+import "server-only";
+import { createClient } from '@/lib/supabase/server';
+
+export async function getItems() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('items').select('*');
+  if (error) throw error;
+  return data;
+}
+```
+
+#### **Client-side Fetching (Last Resort with TanStack Query):**
+```typescript
+// Client Component (src/components/interactive-items.tsx)
+"use client";
+
+import { useQuery } from '@tanstack/react-query';
+import { getItemsAction } from '@/lib/actions/items';
+
+export function InteractiveItems() {
+  const { data: items, isLoading, error } = useQuery({
+    queryKey: ['items'],
+    queryFn: () => getItemsAction(),
+  });
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading items</div>;
+  
+  return <ItemsList items={items} />;
+}
+
+// Root Layout Provider (src/app/layout.tsx)
+import { QueryProvider } from '@/components/providers/query-provider';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <QueryProvider>
+          {children}
+        </QueryProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### When to Use Each Approach
+- **Use Server Components**: 
+  - Initial page loads
+  - Static data display
+  - SEO-critical content
+  - Dashboard pages, lists, forms
+- **Use Client Components with TanStack Query**:
+  - Real-time data updates
+  - User-triggered refresh actions
+  - Interactive features requiring immediate feedback
+  - Optimistic updates
+
 ### Security Considerations
 - **Data Access Layer** enforces all security rules and RLS compliance
 - **Service Role Client Usage**: Only for mutations after proper authorization checks
@@ -476,9 +567,10 @@ export async function getItems() {
 3. **Service Role for mutations** - All INSERT/UPDATE/DELETE operations use service role client after permission verification
 4. **Data Access Layer pattern** - Security and database logic separated with "server-only" imports
 5. **Server Actions as thin wrappers** - Input validation and user feedback only
-6. **Minimal client state** - Server components where possible
-7. **Progressive enhancement** - Core functionality first, polish later
-8. **Build-only testing** - No development server, use build process for validation
+6. **Server-side data fetching** - Primary approach using server components for better performance and SEO
+7. **Client-side fetching as last resort** - TanStack Query only when server-side is not possible
+8. **Progressive enhancement** - Core functionality first, polish later
+9. **Build-only testing** - No development server, use build process for validation
 
 ### Database Operation Security Pattern
 ```typescript

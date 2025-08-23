@@ -52,8 +52,8 @@ export async function getProjectUsers(): Promise<{
       };
     }
 
-    // Get all user roles for this project
-    const { data: userRoles, error: usersError } = await supabase
+    // Get all user roles for this project (using admin client since this is admin-only operation)
+    const { data: userRoles, error: usersError } = await supabaseAdmin
       .from("user_roles")
       .select("*")
       .eq("project_id", currentUserRole.project_id)
@@ -81,7 +81,9 @@ export async function getProjectUsers(): Promise<{
     const projectUsers: ProjectUser[] = userRoles
       .map((userRole) => {
         const authUser = authUsersMap.get(userRole.user_id);
-        if (!authUser) return null;
+        if (!authUser) {
+          return null;
+        }
 
         return {
           id: userRole.user_id,
@@ -178,7 +180,7 @@ export async function inviteUserToProject(data: InviteUserData): Promise<{
 
     // Create the redirect URL for the invitation
     const redirectUrl =
-      `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/auth/invitation-accept`;
+      `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard/auth/sign-up`;
 
     // Invite user using Supabase Admin API
     const { data: inviteData, error: inviteError } = await supabaseAdmin.auth
@@ -186,7 +188,7 @@ export async function inviteUserToProject(data: InviteUserData): Promise<{
         data.email,
         {
           data: {
-            name: data.name,
+            ...(data.name && { name: data.name }),
             invited_to_project: currentUserRole.project_id,
             invited_role: data.role,
           },
@@ -196,7 +198,7 @@ export async function inviteUserToProject(data: InviteUserData): Promise<{
 
     if (inviteError) {
       console.error("Error inviting user:", inviteError);
-      return { success: false, error: "Failed to send invitation email" };
+      return { success: false, error: `Failed to send invitation email: ${inviteError.message}` };
     }
 
     if (!inviteData.user) {
