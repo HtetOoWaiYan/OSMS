@@ -50,12 +50,6 @@ const menuItems: MenuItem[] = [
     href: '/dashboard/users',
     adminOnly: true,
   },
-  {
-    title: 'Settings',
-    icon: Settings,
-    href: '/dashboard/settings',
-    adminOnly: true,
-  },
 ];
 
 interface AppSidebarProps {

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
 import { getUserProject, maskBotToken } from '@/lib/data/projects';
 import { updateProjectAction } from '@/lib/actions/projects';
+import { requireAdmin } from '@/lib/auth/roles';
 import { ProjectSettingsForm } from '@/components/project-settings-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -128,7 +129,10 @@ function ProjectSettingsLoading() {
   );
 }
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  // Require admin role to access settings
+  await requireAdmin();
+
   return (
     <>
       <PageHeader title="Settings" description="Manage your project settings and configuration" />

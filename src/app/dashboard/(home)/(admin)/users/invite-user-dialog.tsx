@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -41,6 +42,7 @@ interface InviteUserDialogProps {
 export function InviteUserDialog({ children }: InviteUserDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const form = useForm<InviteUserData>({
     resolver: zodResolver(inviteUserSchema),
@@ -53,13 +55,15 @@ export function InviteUserDialog({ children }: InviteUserDialogProps) {
   const onSubmit = async (data: InviteUserData) => {
     try {
       setIsLoading(true);
-      
+
       const result = await inviteUserAction(data);
-      
+
       if (result.success) {
         toast.success('User invited successfully');
         form.reset();
         setOpen(false);
+        // Refresh the page to show the new user
+        router.refresh();
       } else {
         toast.error(result.error || 'Failed to invite user');
       }
@@ -73,20 +77,19 @@ export function InviteUserDialog({ children }: InviteUserDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Mail className="w-5 h-5" />
+            <Mail className="h-5 w-5" />
             Invite User to Project
           </DialogTitle>
           <DialogDescription>
-            Send an invitation to a new user to join your project. They will receive an email with instructions to sign up.
+            Send an invitation to a new user to join your project. They will receive an email with
+            instructions to sign up.
           </DialogDescription>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -96,11 +99,7 @@ export function InviteUserDialog({ children }: InviteUserDialogProps) {
                 <FormItem>
                   <FormLabel>Email Address</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="user@example.com"
-                      type="email"
-                      {...field}
-                    />
+                    <Input placeholder="user@example.com" type="email" {...field} />
                   </FormControl>
                   <FormDescription>
                     The email address where the invitation will be sent
@@ -109,7 +108,7 @@ export function InviteUserDialog({ children }: InviteUserDialogProps) {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="role"
@@ -134,7 +133,7 @@ export function InviteUserDialog({ children }: InviteUserDialogProps) {
                 </FormItem>
               )}
             />
-            
+
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"
@@ -147,12 +146,12 @@ export function InviteUserDialog({ children }: InviteUserDialogProps) {
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Sending...
                   </>
                 ) : (
                   <>
-                    <Mail className="w-4 h-4 mr-2" />
+                    <Mail className="mr-2 h-4 w-4" />
                     Send Invitation
                   </>
                 )}
