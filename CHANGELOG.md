@@ -8,19 +8,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+#### Clean Architecture Improvements ✅
+- **Layout Separation**: Moved Purple Shopping header from shared layout to project listing page only
+  - `/dashboard` route now has Purple Shopping header with logo and user welcome
+  - `/dashboard/[project-id]/*` routes have clean sidebar-only layout without header conflicts
+  - Resolved UI collision between PageHeader and SidebarInset components
+- **Sidebar Simplification**: Removed sidebar trigger functionality for cleaner UX
+  - Always-visible sidebar in project context without collapse/expand complexity
+  - Removed hamburger menu button and related SidebarTrigger components
+  - Streamlined project navigation with permanent sidebar access
+- **Component Cleanup**: Removed unused and redundant code from architectural changes
+  - Deleted unused PageHeader component (no longer used after layout restructuring)
+  - Cleaned up imports and dependencies throughout the codebase
+  - Made projectId required parameter in AppSidebar and NavUser components
+  - Removed conditional logic for projectId since it's always available in project context
+- **Type Safety Improvements**: Enhanced component interfaces for better reliability
+  - Required projectId in sidebar and navigation components eliminates edge cases
+  - Simplified URL generation without conditional project ID checks
+  - More predictable component behavior in project-specific contexts
+
+#### Multi-Project Architecture (Phase 1.1+) ✅
+- **Dynamic Project Routes**: Restructured dashboard from `/dashboard` to `/dashboard/[project-id]/`
+  - Project listing page at `/dashboard` showing all user's projects with roles
+  - Dynamic project-specific dashboard routes with project context
+  - Project switching capability via "Switch Project" link in sidebar
+  - Each project has its own isolated management interface
+- **Enhanced Data Access Layer**: Multi-project support throughout the application
+  - `getUserProjects()` function to fetch all projects for a user
+  - Updated project creation to support multiple projects per user
+  - Removed single-project MVP constraint for scalable architecture
+  - Enhanced permissions checking with project-specific access control
+- **Project-Aware Navigation**: Updated UI components for multi-project support
+  - Sidebar displays current project name and "Switch Project" functionality
+  - Project-specific navigation URLs (e.g., `/dashboard/[id]/items`, `/dashboard/[id]/settings`)
+  - User profile dropdown with project-specific settings links
+  - Enhanced project listing with role badges and creation/update timestamps
+
 #### Project Management & User Setup (Phase 1.1) ✅
 - **Project Creation Flow**: Complete onboarding system for new users
   - Multi-step onboarding: Welcome → Bot Setup Guide → Project Creation
   - Telegram Bot setup guidance with @BotFather integration
   - Project creation form with validation and error handling
   - Automatic admin role assignment for project creators
-- **Project Selection & Management**: Single project per user constraint (MVP)
-  - Automatic redirect logic based on user's project status
-  - Users with no project → onboarding flow
-  - Users with existing project → dashboard home page area
-  - Project information integration in dashboard layout
 - **Project Settings Management**: Complete settings interface ✅
-  - Settings page at `/dashboard/settings` accessible via user profile dropdown
+  - Settings page at `/dashboard/[project-id]/settings` accessible via user profile dropdown
   - Project information form with name, description, and bot token editing
   - Masked bot token display with show/hide functionality
   - Admin-only access control with permission verification
@@ -35,24 +66,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Type-safe database operations with proper error handling
   - **"server-only" imports**: All data access layer files protected from client-side access
 - **Server Actions**: Thin wrapper pattern for form handling ✅
-  - Project creation action with Zod validation
+  - Project creation action with Zod validation and dynamic project redirection
   - Project update action with proper authentication and authorization
-  - User project status checking
+  - User project status checking with multi-project awareness
   - Proper error handling and user feedback
-- **UI Components**: Professional onboarding and settings experience ✅
+- **UI Components**: Professional onboarding and multi-project experience ✅
   - Welcome page with feature overview
   - Step-by-step Telegram bot creation guide
   - Project creation form with bot token validation
+  - Project listing cards with role indicators and access buttons
   - Settings form with masked token display and update functionality
   - Progress indicators and navigation between steps
   - Error handling with user-friendly messages
   - Responsive design for desktop and mobile
 
 #### Technical Implementation ✅
+- **Route Architecture**: Next.js 15 dynamic routes with proper param handling
+  - Async params support for Next.js 15 compatibility
+  - Type-safe route parameters with Promise-based param access
+  - Project-specific layouts with authentication and authorization
 - **Validation Schemas**: Zod schemas for project creation and bot token validation
-- **Badge Component**: Added missing UI component for step indicators
-- **Updated Navigation**: Settings accessible via user profile dropdown (not main sidebar)
-- **Database Integration**: Full integration with projects and user_roles tables
+- **Updated Navigation**: Project-aware navigation with dynamic URLs
+- **Database Integration**: Enhanced integration with projects and user_roles tables
 - **Security Enhancements**: Service role client implementation for secure mutations
 - **Development Guidelines**: Critical security patterns and build-only testing requirements
 
@@ -207,12 +242,12 @@ supabase/
 
 ## Development Notes
 
-### Current State (v0.1.0 + Settings Implementation)
-- **Status**: Foundation complete + Project settings management fully implemented
-- **Next Phase**: Core data operations (Items, Orders, Customers)
-- **Architecture**: All infrastructure in place + secure mutation patterns established
-- **Security**: Multi-tenant RLS policies active + service role client pattern implemented
-- **UI**: Professional dashboard framework ready + settings management complete
+### Current State (v0.1.0 + Clean Multi-Project Architecture)
+- **Status**: Foundation complete + Multi-project architecture implemented + Layout architecture cleaned
+- **Next Phase**: Core data operations with project-specific context (Items, Orders, Customers)
+- **Architecture**: Multi-project infrastructure with clean layout separation + simplified navigation patterns
+- **Security**: Multi-tenant RLS policies active + project-aware service role client pattern implemented
+- **UI**: Professional project listing and streamlined project-specific dashboard framework ready
 - **Testing**: Build-only validation process established (no development server)
 
 ### Known Limitations

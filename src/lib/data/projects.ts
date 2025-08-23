@@ -1,3 +1,4 @@
+import "server-only";
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import type { 
   Tables, 
@@ -19,12 +20,12 @@ type UserRoleEnum = Enums<'user_role_enum'>;
  */
 
 /**
- * Check if the current user has any existing projects
+ * Get all projects that the current user has access to
  */
-export async function getUserProject(): Promise<{
+export async function getUserProjects(): Promise<{
   success: boolean;
   error?: string;
-  data?: Project & { userRole?: UserRole };
+  data?: Array<Project & { userRole: UserRole }>;
 }> {
   try {
     const supabase = await createClient();
@@ -35,8 +36,8 @@ export async function getUserProject(): Promise<{
       return { success: false, error: 'Authentication required' };
     }
 
-    // Get user's project through user_roles relationship
-    const { data: userRole, error: roleError } = await supabase
+    // Get all user's projects through user_roles relationship
+    const { data: userRoles, error: roleError } = await supabase
       .from('user_roles')
       .select(`
         *,
@@ -44,25 +45,50 @@ export async function getUserProject(): Promise<{
       `)
       .eq('user_id', user.id)
       .eq('is_active', true)
-      .single();
+      .order('created_at', { ascending: false });
 
     if (roleError) {
-      // User has no active roles (no projects)
-      if (roleError.code === 'PGRST116') {
-        return { success: true, data: undefined };
-      }
       throw roleError;
     }
 
-    // Extract project data from the relationship
-    const project = userRole.projects as unknown as Project;
-    
-    return { 
-      success: true, 
-      data: { 
+    // Transform data to include project info with user role
+    const projectsWithRoles = userRoles?.map(userRole => {
+      const project = userRole.projects as unknown as Project;
+      return {
         ...project,
         userRole: userRole
-      } 
+      };
+    }) || [];
+    
+    return { success: true, data: projectsWithRoles };
+  } catch (error) {
+    console.error('Error getting user projects:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to get user projects' 
+    };
+  }
+}
+
+/**
+ * Check if the current user has any existing projects (legacy function for backwards compatibility)
+ */
+export async function getUserProject(): Promise<{
+  success: boolean;
+  error?: string;
+  data?: Project & { userRole?: UserRole };
+}> {
+  try {
+    const projectsResult = await getUserProjects();
+    if (!projectsResult.success) {
+      return { success: false, error: projectsResult.error };
+    }
+
+    // Return the first project if any exist, otherwise undefined
+    const firstProject = projectsResult.data?.[0];
+    return {
+      success: true,
+      data: firstProject
     };
   } catch (error) {
     console.error('Error getting user project:', error);
@@ -89,12 +115,6 @@ export async function createProject(data: CreateProjectData): Promise<{
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return { success: false, error: 'Authentication required' };
-    }
-
-    // Check if user already has a project (MVP constraint: one project per user)
-    const existingProject = await getUserProject();
-    if (existingProject.success && existingProject.data) {
-      return { success: false, error: 'You already have a project. Only one project per user is allowed.' };
     }
 
     // Create the project using service role client (bypasses RLS)

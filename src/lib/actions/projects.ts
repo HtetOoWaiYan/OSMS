@@ -29,14 +29,14 @@ export async function createProjectAction(formData: FormData) {
       };
     }
 
-    // Revalidate cache and redirect to dashboard
+    // Revalidate cache and redirect to the new project dashboard
     revalidatePath('/dashboard');
 
-    // Return success with redirect
+    // Return success with redirect to the specific project
     return {
       success: true,
       data: result.data,
-      redirect: '/dashboard',
+      redirect: `/dashboard/${result.data!.id}`,
     };
   } catch (error) {
     console.error('Create project action error:', error);
@@ -60,6 +60,9 @@ export async function createProjectAction(formData: FormData) {
 
 /**
  * Check if user has an existing project and redirect appropriately
+ * If user has only one project, redirect to that project
+ * If user has multiple projects, redirect to project listing
+ * If user has no projects, proceed with onboarding
  */
 export async function checkUserProjectAndRedirect() {
   try {
@@ -71,7 +74,7 @@ export async function checkUserProjectAndRedirect() {
     }
 
     if (result.data) {
-      // User has a project, redirect to dashboard
+      // User has at least one project, redirect to project listing
       redirect('/dashboard');
     }
 
@@ -153,7 +156,8 @@ export async function updateProjectAction(formData: FormData) {
     }
 
     // Revalidate the settings page to show updated data
-    revalidatePath('/dashboard/settings');
+    revalidatePath(`/dashboard/${rawData.projectId}/settings`);
+    revalidatePath('/dashboard'); // Also revalidate project listing
     
     return {
       success: true,

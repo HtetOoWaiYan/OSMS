@@ -2,7 +2,16 @@
 
 ## Project Overview
 
-**Purple Shopping** is a comprehensive web-based Online Shop Management System (OSMS) designed for small sellers in Myanmar who primarily use social media for sales. The system automates core workflows including item management, orders, payments, and customer messaging through an integrated Telegram chatbot and mini-app.
+**Purple Shopping** is a comprehensive web-based Online Shop Management System (OSMS) designed for small sellers in Myanmar wh### 🔄 Current Status: Clean Multi-Project Architecture
+The project now has a comprehensive multi-project foundation with:
+- Modern, scalable architecture supporting multiple projects per user
+- **Project Management**: Centralized listing and project-specific dashboards  
+- **Dynamic Routing**: Project-aware navigation and layouts
+- Professional UI/UX foundation with clean layout separation
+- Complete database schema with multi-tenant security
+- Authentication system with project-specific authorization
+- Type-safe development environment with Next.js 15 compatibility
+- **Clean Architecture**: Removed unused components and sidebar trigger functionalitysocial media for sales. The system automates core workflows including item management, orders, payments, and customer messaging through an integrated Telegram chatbot and mini-app.
 
 ### Key Project Constraints
 - **Timeline**: 10-day development sprint for undergraduate final year project
@@ -22,12 +31,21 @@
 - **Validation**: Zod schemas
 - **Type Safety**: TypeScript with strict configuration
 
-#### 2. **Project Structure**
-- Modern Next.js 15 app directory structure
+#### 2. **Multi-Project Architecture** ✅
+- **Project Listing**: Central dashboard at `/dashboard` showing all user projects
+- **Dynamic Routes**: Project-specific dashboards at `/dashboard/[project-id]/`
+- **Project Switching**: Seamless navigation between multiple projects
+- **Role-Based Access**: Project-specific permissions and user role management
+- **Enhanced Data Layer**: Support for multiple projects per user with proper security
+- **Navigation System**: Project-aware sidebar and navigation components
+
+#### 3. **Project Structure**
+- Modern Next.js 15 app directory structure with dynamic routes
 - Clean separation of concerns (components, hooks, lib, app routes)
+- Multi-project route organization and layouts
 - Proper TypeScript configuration
 - ESLint, Prettier, and Husky for code quality
-- Development workflow with hot reloading
+- Development workflow with build-only testing
 
 #### 3. **Database Architecture (Comprehensive)**
 **Multi-tenant system with project-based organization:**
@@ -63,12 +81,14 @@
 - **Redirect Handling**: Proper routing between auth and protected routes
 - **Error Handling**: User-friendly error messages and loading states
 
-#### 5. **Dashboard Foundation**
-- **Layout**: Sidebar navigation with responsive design
-- **Protected Routes**: Authentication-guarded dashboard areas
-- **Navigation**: Multi-level routing structure (/dashboard/(protected)/)
-- **UI Framework**: Professional sidebar with user profile management
-- **Page Structure**: Overview, Items, Orders, Users pages (placeholders)
+#### 5. **Multi-Project Dashboard Foundation** ✅
+- **Project Listing**: Central dashboard showing all user projects with roles and metadata
+- **Dynamic Project Routes**: Project-specific management interfaces at `/dashboard/[project-id]/`
+- **Clean Layout Separation**: Project listing has Purple Shopping header, project pages have sidebar only
+- **Simplified Navigation**: Removed sidebar trigger for always-visible sidebar in project context
+- **UI Framework**: Professional project cards and streamlined project-specific navigation
+- **Access Control**: Project-specific permission checking and role-based features
+- **Required Parameters**: ProjectId required in all sidebar/navigation components for type safety
 
 ## Development Environment & Testing
 
@@ -149,35 +169,36 @@ supabase/
 └── schemas/                   # Schema definitions (14 tables)
 ```
 
-### **Next.js 15 Dashboard Route Structure Explained**
+### **Multi-Project Dashboard Route Structure Explained**
 
-#### **Route Groups with Parentheses `(group)`:**
-- **Purpose**: Organize routes without affecting URL structure
-- **Layout inheritance**: Routes inside groups can share layouts  
-- **URL mapping**: `(home)` doesn't appear in actual URLs
-
-#### **Dashboard Route Organization:**
+#### **Project Management Flow:**
 ```
-/dashboard/
-├── (home)/                    # Route Group - HAS sidebar layout
-│   ├── layout.tsx            # Sidebar layout applied to all routes in this group
-│   ├── page.tsx              # Maps to: /dashboard
-│   ├── items/page.tsx        # Maps to: /dashboard/items  
-│   ├── orders/page.tsx       # Maps to: /dashboard/orders
-│   └── users/page.tsx        # Maps to: /dashboard/users
-├── onboarding/page.tsx       # Maps to: /dashboard/onboarding (NO sidebar)
-└── auth/
-    ├── login/page.tsx        # Maps to: /dashboard/auth/login (NO sidebar)  
-    └── sign-up/page.tsx      # Maps to: /dashboard/auth/sign-up (NO sidebar)
+/dashboard/                         # 📋 PROJECT LISTING
+├── Shows all projects user has access to
+├── Role badges (admin/agent) for each project  
+├── "New Project" button → onboarding
+└── "Open Project" → /dashboard/[project-id]/
+
+/dashboard/[project-id]/            # 🖥️ PROJECT-SPECIFIC DASHBOARD
+├── layout.tsx                      # Sidebar with project context + auth
+├── page.tsx                        # Project overview (items, orders, users stats)
+├── items/                          # Project inventory management
+├── orders/                         # Project order processing  
+├── users/                          # Project team management
+└── settings/                       # Project-specific configuration
 ```
 
-#### **Layout Application Rules:**
-- **Inside `(home)` group**: Gets sidebar layout from `(home)/layout.tsx`
-- **Outside `(home)` group**: Gets base layout only (no sidebar)
-- **Why this separation**:
-  - Onboarding needs full-screen layout (no sidebar distraction)
-  - Auth pages need clean, focused design (no sidebar)
-  - Main dashboard pages need navigation sidebar for functionality
+#### **Next.js 15 Dynamic Route Implementation:**
+- **Async Params**: `params: Promise<{ 'project-id': string }>` for Next.js 15 compatibility
+- **Project Context**: Each route receives project-id and validates user access
+- **Layout Inheritance**: Project-specific layouts with authentication and project verification
+- **Navigation**: Project-aware sidebar with dynamic URLs and "Switch Project" functionality
+
+#### **Multi-Project Architecture Benefits:**
+- **Scalability**: Users can manage multiple shops/businesses
+- **Role Isolation**: Different roles per project (admin in one, agent in another)
+- **Data Separation**: Complete isolation between projects via RLS policies
+- **Flexible Growth**: Easy to add new projects without architectural changes
 
 #### **Key Implementation Notes:**
 - **Cannot put `page.tsx` in `/dashboard/`** - Would create conflicting routes with `(home)/page.tsx`
@@ -198,7 +219,7 @@ The project has a solid foundation with:
 
 ### 🚧 What's Missing (Implementation Phase)
 
-The current state has **structure without data flow** - all the pieces are in place but no actual business logic or data operations are implemented.
+The current state has **multi-project structure with business logic ready for implementation** - all the architectural pieces are in place including multi-project support, but actual data operations and business workflows need to be implemented.
 
 ## Next Steps
 

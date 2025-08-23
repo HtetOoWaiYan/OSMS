@@ -1,17 +1,20 @@
-import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus } from 'lucide-react';
 
 export default function ItemsPage() {
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <PageHeader title="Items" description="Manage your product inventory">
+    <div className="flex flex-1 flex-col gap-4 p-4">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Items</h1>
+          <p className="text-muted-foreground">Manage your product inventory</p>
+        </div>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
           Add Item
         </Button>
-      </PageHeader>
+      </div>
 
       <Card>
         <CardHeader>

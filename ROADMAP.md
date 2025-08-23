@@ -5,11 +5,21 @@ This roadmap outlines the implementation phases for Purple Shopping, transitioni
 
 ### Dual Application Architecture
 Purple Shopping consists of two integrated applications:
-- **🖥️ Dashboard** (`/dashboard/`) - Shop management interface for business owners and staff
+- **🖥️ Dashboard** (`/dashboard/`) - Project listing and selection interface
+- **🖥️ Project Dashboard** (`/dashboard/[project-id]/`) - Project-specific management interface for business owners and staff  
 - **📱 Mini-App** (`/app/`) - Customer-facing Telegram Web App for shopping and ordering
 
-## Current Status: Phase 0 Complete ✅
-**Foundation & Architecture** - All infrastructure, database schema, authentication, and UI framework completed.
+### Multi-Project Support ✅
+**Enhanced Architecture for Scalability:**
+- **Project Listing**: Central dashboard showing all user projects with roles
+- **Dynamic Routes**: Project-specific dashboards via `/dashboard/[project-id]/` 
+- **Clean Layout Separation**: Project listing has Purple Shopping header, project pages have streamlined sidebar
+- **Role-Based Access**: Project-specific permissions and role management
+- **Simplified Navigation**: Always-visible sidebar without toggle complexity
+- **Type-Safe Components**: Required projectId parameters throughout navigation components
+
+## Current Status: Phase 0 + Clean Multi-Project Architecture Complete ✅
+**Foundation & Multi-Project Infrastructure** - All infrastructure, database schema, authentication, UI framework, and clean multi-project architecture completed.
 
 ---
 
@@ -18,34 +28,49 @@ Purple Shopping consists of two integrated applications:
 
 ### 1.1 Project Management & User Setup
 
-#### **Project Creation Flow** 
+#### **Project Creation Flow** ✅
 **What we need from user:**
 - [x] **Required Fields:**
   - Project name (shop/business name)
   - Telegram bot token (with guidance link)
   - Optional: Project description
 - [x] **Implementation Details:**
-  - New users with no project get onboarding flow
+  - New users with no projects get onboarding flow
   - Onboarding guides through first project creation
   - Project creation form integrated into onboarding
   - Provide clear instructions: "How to create a Telegram Bot" link
   - Link to BotFather guide: https://core.telegram.org/bots/tutorial
+  - **Multi-Project Support**: Users can create multiple projects
   - **Important**: Guide user through BotFather process:
     1. Start chat with @BotFather
     2. Send `/newbot` command
-    3. Choose bot name and username
-    4. Copy the bot token (format: `123456789:AAEhBOweik6ad...`)
+    3. Follow prompts to name bot
+    4. Copy the bot token provided
     5. Paste token into our form
 - [x] **Technical Tasks:**
-  - Create onboarding flow for new users (no project exists)
+  - Create onboarding flow for new users (no projects exist)
   - Multi-step onboarding: Welcome → Bot Setup Guide → Project Creation
   - Create server action: `createProject(name, botToken, description?)`
-  - Check if user already has a project (redirect to dashboard if exists)
+  - Redirect to specific project dashboard after creation
   - Auto-assign creator as admin role in `user_roles` table
   - Validate bot token format (should start with number:string)
   - Store project in `projects` table with `telegram_bot_token`
-  - Redirect to dashboard after successful project creation
-  - Block creation of additional projects in UI
+  - **Enhanced**: Support for multiple projects per user
+
+#### **Project Selection & Management** ✅  
+- [x] **Multi-Project Dashboard:**
+  - Project listing page at `/dashboard` showing all user projects
+  - Project cards display name, description, role, and creation/update dates
+  - "Open Project" buttons navigate to project-specific dashboard
+  - "New Project" button for creating additional projects
+- [x] **Dynamic Project Routes:**
+  - Project-specific dashboards at `/dashboard/[project-id]/`
+  - All management pages scoped to specific project context
+  - Project-aware navigation and breadcrumbs
+- [x] **Project Switching:**
+  - "Switch Project" link in project dashboard sidebar
+  - Seamless navigation between multiple user projects
+  - Project context maintained throughout user session
 
 #### **Project Settings Management** ✅
 - [x] **Settings Page Implementation:**
@@ -90,12 +115,12 @@ Purple Shopping consists of two integrated applications:
   - Admin can invite others later as 'agent' or 'admin'
 
 #### **User Role Management**
-- [ ] **Team Member Invitation (Phase 1 - Simple):**
+- [x] **Team Member Invitation (Phase 1 - Simple):**
   - Add team member by email input
   - Send invitation email via Supabase Auth
   - Auto-assign 'agent' role to invited users
   - Basic user list with role display
-- [ ] **Role-based Permission Checks:**
+- [x] **Role-based Permission Checks:**
   - Implement permission helper: `checkUserPermission(userId, projectId, action)`
   - Admin can: manage items, orders, users, project settings
   - Agent can: manage items, orders (no user management)
