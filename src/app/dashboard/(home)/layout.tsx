@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getUserProject } from '@/lib/data/projects';
+import { isAdmin } from '@/lib/auth/roles';
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
@@ -19,9 +20,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/dashboard/onboarding');
   }
 
+  // Check if user is admin
+  const userIsAdmin = await isAdmin();
+
   return (
     <SidebarProvider>
-      <AppSidebar user={data.claims} />
+      <AppSidebar user={data.claims} isAdmin={userIsAdmin} />
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );

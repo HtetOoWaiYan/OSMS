@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, Check } from 'lucide-react';
 
+// Force dynamic rendering since this page may need to check authentication
+export const dynamic = 'force-dynamic';
+
 export default function WelcomePage() {
   return (
     <div className="bg-background min-h-screen">

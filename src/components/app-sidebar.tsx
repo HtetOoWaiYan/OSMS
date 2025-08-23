@@ -1,6 +1,6 @@
 'use client';
 
-import { Package, ShoppingCart, Users, Home } from 'lucide-react';
+import { Package, ShoppingCart, Users, Home, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
@@ -19,7 +19,15 @@ import {
 } from '@/components/ui/sidebar';
 import { NavUser } from '@/components/nav-user';
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  icon: React.ComponentType;
+  href: string;
+  exactMatch?: boolean;
+  adminOnly?: boolean;
+}
+
+const menuItems: MenuItem[] = [
   {
     title: 'Overview',
     icon: Home,
@@ -40,6 +48,13 @@ const menuItems = [
     title: 'Users',
     icon: Users,
     href: '/dashboard/users',
+    adminOnly: true,
+  },
+  {
+    title: 'Settings',
+    icon: Settings,
+    href: '/dashboard/settings',
+    adminOnly: true,
   },
 ];
 
@@ -48,9 +63,10 @@ interface AppSidebarProps {
     email?: string;
     [key: string]: unknown;
   };
+  isAdmin?: boolean;
 }
 
-export function AppSidebar({ user }: AppSidebarProps) {
+export function AppSidebar({ user, isAdmin = false }: AppSidebarProps) {
   const pathname = usePathname();
 
   const isActive = (href: string, exactMatch = false) => {
@@ -59,6 +75,14 @@ export function AppSidebar({ user }: AppSidebarProps) {
     }
     return pathname.startsWith(href);
   };
+
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (item.adminOnly) {
+      return isAdmin;
+    }
+    return true;
+  });
 
   return (
     <Sidebar variant="inset">
@@ -73,7 +97,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {filteredMenuItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={isActive(item.href, item.exactMatch)}>
                     <Link href={item.href}>

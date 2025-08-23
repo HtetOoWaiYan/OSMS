@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, ArrowRight, ExternalLink, MessageSquare, Bot, CheckCircle } from 'lucide-react';
 
+// Force dynamic rendering since this page may need to check authentication
+export const dynamic = 'force-dynamic';
+
 export default function BotSetupPage() {
   return (
     <div className="bg-background min-h-screen">

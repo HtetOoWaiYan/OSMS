@@ -7,6 +7,9 @@ import { ProjectSettingsForm } from '@/components/project-settings-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// Force dynamic rendering since we need to access cookies for authentication
+export const dynamic = 'force-dynamic';
+
 async function ProjectSettingsContent() {
   const result = await getUserProject();
 
