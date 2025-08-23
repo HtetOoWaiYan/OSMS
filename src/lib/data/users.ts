@@ -119,7 +119,7 @@ export async function getProjectUsers(): Promise<{
 export async function inviteUserToProject(data: InviteUserData): Promise<{
   success: boolean;
   error?: string;
-  data?: { userId: string; email: string };
+  data?: { userId: string; email: string; isReactivation?: boolean; isNewUser?: boolean };
 }> {
   try {
     const supabase = await createClient();
@@ -147,17 +147,6 @@ export async function inviteUserToProject(data: InviteUserData): Promise<{
       return { success: false, error: "Only administrators can invite users" };
     }
 
-    // Check if user is already in the project
-    const { data: existingUser, error: existingError } = await supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("project_id", currentUserRole.project_id)
-      .eq("is_active", true);
-
-    if (existingError) {
-      return { success: false, error: "Failed to check existing users" };
-    }
-
     // Check if email is already invited by looking up auth.users
     const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth
       .admin.listUsers();
@@ -168,10 +157,26 @@ export async function inviteUserToProject(data: InviteUserData): Promise<{
     const existingAuthUser = authUsers.users.find((u) =>
       u.email === data.email
     );
-    if (
-      existingAuthUser &&
-      existingUser?.some((ur) => ur.user_id === existingAuthUser.id)
-    ) {
+
+    // Check if user already has a role in this project (active or inactive)
+    let existingUserRole = null;
+    if (existingAuthUser) {
+      const { data: userRole, error: roleCheckError } = await supabaseAdmin
+        .from("user_roles")
+        .select("user_id, is_active, role")
+        .eq("user_id", existingAuthUser.id)
+        .eq("project_id", currentUserRole.project_id)
+        .single();
+
+      if (roleCheckError && roleCheckError.code !== 'PGRST116') {
+        return { success: false, error: "Failed to check existing user role" };
+      }
+
+      existingUserRole = userRole;
+    }
+
+    // If user exists and is active, they're already a member
+    if (existingUserRole?.is_active) {
       return {
         success: false,
         error: "User is already a member of this project",
@@ -182,9 +187,17 @@ export async function inviteUserToProject(data: InviteUserData): Promise<{
     const redirectUrl =
       `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard/auth/sign-up`;
 
-    // Invite user using Supabase Admin API
-    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth
-      .admin.inviteUserByEmail(
+    let finalUserId: string;
+    let finalUserEmail: string;
+
+    if (existingAuthUser) {
+      // User already exists in Supabase Auth, we just need to reactivate their role
+      // No need to send invitation email, they can log in with existing credentials
+      finalUserId = existingAuthUser.id;
+      finalUserEmail = existingAuthUser.email || data.email;
+    } else {
+      // New user - send invitation email
+      const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
         data.email,
         {
           data: {
@@ -195,38 +208,66 @@ export async function inviteUserToProject(data: InviteUserData): Promise<{
           redirectTo: redirectUrl,
         },
       );
+      
+      if (inviteError) {
+        console.error("Error inviting user:", inviteError);
+        return { success: false, error: `Failed to send invitation email: ${inviteError.message}` };
+      }
 
-    if (inviteError) {
-      console.error("Error inviting user:", inviteError);
-      return { success: false, error: `Failed to send invitation email: ${inviteError.message}` };
+      if (!inviteData?.user) {
+        return { success: false, error: "Failed to create user invitation" };
+      }
+
+      finalUserId = inviteData.user.id;
+      finalUserEmail = inviteData.user.email || data.email;
     }
 
-    if (!inviteData.user) {
-      return { success: false, error: "Failed to create user invitation" };
+    // Handle user role assignment - either create new or reactivate existing
+    let userRoleError = null;
+    
+    if (existingUserRole && !existingUserRole.is_active) {
+      // Reactivate existing inactive user role
+      const { error } = await supabaseAdmin
+        .from("user_roles")
+        .update({
+          role: data.role,
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", finalUserId)
+        .eq("project_id", currentUserRole.project_id);
+      
+      userRoleError = error;
+    } else {
+      // Create new user role record
+      const { error } = await supabaseAdmin
+        .from("user_roles")
+        .insert({
+          user_id: finalUserId,
+          project_id: currentUserRole.project_id,
+          role: data.role,
+          is_active: true,
+        });
+      
+      userRoleError = error;
     }
 
-    // Add user to project with the specified role
-    const { error: roleInsertError } = await supabaseAdmin
-      .from("user_roles")
-      .insert({
-        user_id: inviteData.user.id,
-        project_id: currentUserRole.project_id,
-        role: data.role,
-        is_active: true,
-      });
-
-    if (roleInsertError) {
-      console.error("Error adding user role:", roleInsertError);
-      // Try to clean up the invited user if role insertion fails
-      await supabaseAdmin.auth.admin.deleteUser(inviteData.user.id);
+    if (userRoleError) {
+      console.error("Error managing user role:", userRoleError);
+      // Only try to clean up if this was a new user (not existing user)
+      if (!existingAuthUser) {
+        await supabaseAdmin.auth.admin.deleteUser(finalUserId);
+      }
       return { success: false, error: "Failed to assign user role" };
     }
 
     return {
       success: true,
       data: {
-        userId: inviteData.user.id,
-        email: inviteData.user.email || data.email,
+        userId: finalUserId,
+        email: finalUserEmail,
+        isReactivation: !!(existingUserRole && !existingUserRole.is_active),
+        isNewUser: !existingAuthUser,
       },
     };
   } catch (error) {

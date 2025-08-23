@@ -59,7 +59,13 @@ export function InviteUserDialog({ children }: InviteUserDialogProps) {
       const result = await inviteUserAction(data);
 
       if (result.success) {
-        toast.success('User invited successfully');
+        const message = result.data?.isReactivation
+          ? 'User has been re-added to the project successfully'
+          : result.data?.isNewUser
+            ? 'Invitation sent successfully'
+            : 'User invited successfully';
+
+        toast.success(message);
         form.reset();
         setOpen(false);
         // Refresh the page to show the new user
