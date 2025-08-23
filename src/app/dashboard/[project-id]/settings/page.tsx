@@ -19,7 +19,7 @@ async function ProjectSettingsContent({ projectId }: { projectId: string }) {
   // Check permissions first
   const permissionsResult = await checkUserPermissions(projectId);
   if (!permissionsResult.success || !permissionsResult.data?.isAdmin) {
-    redirect('/dashboard/unauthorized');
+    redirect(`/dashboard/${projectId}/unauthorized`);
   }
 
   // Get project data

@@ -3,7 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ShieldX } from 'lucide-react';
 import Link from 'next/link';
 
-export default function UnauthorizedPage() {
+interface PageProps {
+  params: Promise<{
+    'project-id': string;
+  }>;
+}
+
+export default async function UnauthorizedPage({ params }: PageProps) {
+  const { 'project-id': projectId } = await params;
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
       <div className="space-y-1">
@@ -25,7 +33,7 @@ export default function UnauthorizedPage() {
           </CardHeader>
           <CardContent className="text-center">
             <Button asChild>
-              <Link href="/dashboard">Return to Dashboard</Link>
+              <Link href={`/dashboard/${projectId}`}>Return to Dashboard</Link>
             </Button>
           </CardContent>
         </Card>
