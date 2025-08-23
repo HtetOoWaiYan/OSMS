@@ -2,8 +2,13 @@
 
 ## Project Overview
 
-**Purple Shopping** is a comprehensive web-based Online Shop Management System (OSMS) designed for small sellers in Myanmar wh### 🔄 Current Status: Clean Multi-Project Architecture
-The project now has a comprehensive multi-project foundation with:
+**Purple Shopping** is a comprehensive web-based Online Shop Management System (OSMS) designed for small sellers in Myanmar wh### 🔄 Current Status: Complete User Management System (Phase 1.2)
+The project now has comprehensive multi-project architecture with full user management capabilities:
+- **Complete User Lifecycle**: Create, edit, remove, and re-invite users with proper validation
+- **Admin Role Management**: Role switching between admin/agent with permission verification
+- **Smart User Handling**: Automatic detection of new vs. existing users during invitations
+- **Database Integrity**: Proper handling of unique constraints and soft delete patterns
+- **Enhanced Security**: Service role client usage with admin permission checks
 - Modern, scalable architecture supporting multiple projects per user
 - **Project Management**: Centralized listing and project-specific dashboards  
 - **Dynamic Routing**: Project-aware navigation and layouts
@@ -39,7 +44,17 @@ The project now has a comprehensive multi-project foundation with:
 - **Enhanced Data Layer**: Support for multiple projects per user with proper security
 - **Navigation System**: Project-aware sidebar and navigation components
 
-#### 3. **Project Structure**
+#### 3. **Complete User Management System** ✅
+- **User CRUD Operations**: Full create, read, update, delete operations for project users
+- **Role Management**: Admin can change user roles between admin/agent with EditUserDialog
+- **User Removal**: Soft delete with confirmation dialogs and proper audit trail
+- **Smart Re-invitation**: Support for re-adding removed users without constraint violations
+- **Invitation System**: New user invitations via email and existing user reactivation
+- **Admin Security**: All operations require admin role with self-protection mechanisms
+- **Database Integrity**: Service role client usage with proper RLS bypass after permission checks
+- **Enhanced UX**: Contextual success messages, loading states, and error handling
+
+#### 4. **Project Structure**
 - Modern Next.js 15 app directory structure with dynamic routes
 - Clean separation of concerns (components, hooks, lib, app routes)
 - Multi-project route organization and layouts
@@ -47,7 +62,7 @@ The project now has a comprehensive multi-project foundation with:
 - ESLint, Prettier, and Husky for code quality
 - Development workflow with build-only testing
 
-#### 3. **Database Architecture (Comprehensive)**
+#### 5. **Database Architecture (Comprehensive)**
 **Multi-tenant system with project-based organization:**
 
 **Core Tables:**
@@ -74,14 +89,14 @@ The project now has a comprehensive multi-project foundation with:
 - Enum types for status management
 - Foreign key relationships with proper cascading
 
-#### 4. **Authentication System**
+#### 6. **Authentication System**
 - **Complete auth flow**: Login, signup, password reset, email confirmation
 - **UI Components**: Professional auth forms with Purple Shopping branding
 - **Security**: Supabase Auth with middleware-based session management
 - **Redirect Handling**: Proper routing between auth and protected routes
 - **Error Handling**: User-friendly error messages and loading states
 
-#### 5. **Multi-Project Dashboard Foundation** ✅
+#### 7. **Multi-Project Dashboard Foundation** ✅
 - **Project Listing**: Central dashboard showing all user projects with roles and metadata
 - **Dynamic Project Routes**: Project-specific management interfaces at `/dashboard/[project-id]/`
 - **Clean Layout Separation**: Project listing has Purple Shopping header, project pages have sidebar only
@@ -104,7 +119,7 @@ The project now has a comprehensive multi-project foundation with:
 3. **Functionality Test**: Use `npm run test` for automated tests
 4. **Manual Validation**: Test forms and database operations through build output
 
-#### 6. **Development Environment**
+#### 8. **Development Environment**
 - **Database**: Supabase local development setup
 - **Migrations**: Version-controlled database schema
 - **Type Generation**: Auto-generated TypeScript types from database
@@ -112,7 +127,7 @@ The project now has a comprehensive multi-project foundation with:
 - **Package Management**: Modern dependencies with security updates
 - **Build-Only Testing**: Use build process to validate implementation
 
-#### 7. **Project Structure & Architecture**
+#### 9. **Project Structure & Architecture**
 The application follows a clear separation of concerns with two main entry points:
 
 ```
