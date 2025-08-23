@@ -8,6 +8,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+#### Complete User Management System (Phase 1.2) ✅
+- **Full User CRUD Operations**: Complete user lifecycle management for project teams
+  - **User Role Editing**: Admin can change user roles between "admin" and "agent" via EditUserDialog
+  - **User Removal**: Admin can remove users from projects with confirmation dialog (soft delete)
+  - **User Re-invitation**: Support for re-adding previously removed users to projects
+  - **Invitation Resending**: Admin can resend invitations to pending users
+- **Advanced User Management Features**:
+  - **Smart User Detection**: System automatically detects existing vs. new users during invitation
+  - **Existing User Support**: Fixed "user already registered" error for re-inviting removed users
+  - **Contextual Success Messages**: Different messages for new invitations vs. user reactivations
+  - **Database Constraint Handling**: Proper handling of unique(user_id, project_id) constraints
+- **Enhanced Security & Validation**:
+  - **Admin-Only Operations**: All user management operations require admin role verification
+  - **Self-Protection**: Users cannot edit their own role or remove themselves from projects
+  - **Service Role Client**: Consistent use of service role client for all user operations
+  - **Input Validation**: Comprehensive Zod schemas for all user management operations
+- **UI/UX Improvements**:
+  - **Conditional Actions**: Different dropdown options for pending vs. confirmed users
+  - **Confirmation Dialogs**: AlertDialog component for destructive operations (user removal)
+  - **Loading States**: Proper loading indicators and disabled states during operations
+  - **Error Handling**: User-friendly error messages with actionable guidance
+- **Data Layer Architecture**:
+  - **Enhanced Data Functions**: `updateUserRole()`, `removeUserFromProject()`, `resendUserInvitation()`
+  - **Server Actions**: Type-safe server actions with proper validation and error handling
+  - **Audit Trail**: Maintains updated_at timestamps and user activity history
+  - **Soft Delete Pattern**: Preserves user data history while allowing reactivation
+
 #### Clean Architecture Improvements ✅
 - **Layout Separation**: Moved Purple Shopping header from shared layout to project listing page only
   - `/dashboard` route now has Purple Shopping header with logo and user welcome
@@ -103,7 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Build-Only Testing**: Production-like testing without development server exposure
 
 ### Planned
-- Item management CRUD operations (Phase 1.2)
+- Item management CRUD operations (Phase 1.3)
 - Order processing workflow (Phase 2)
 - Customer management system (Phase 2)
 - Dashboard analytics and reporting (Phase 3)
@@ -111,6 +139,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mini-app development (Phase 4)
 
 ### Fixed ✅
+- **User Management Service Role Client Issues**: Fixed "User not found in project" errors
+  - Root cause: Using regular client with RLS for user existence checks in admin operations  
+  - Solution: Use service role client for all user lookup operations after admin verification
+  - Maintains security: Admin permissions verified first, then bypass RLS for broader access
+- **Existing User Re-invitation**: Fixed "user already registered" error for removed users
+  - Root cause: `inviteUserByEmail` fails for users already in Supabase Auth
+  - Solution: Two-path logic - skip email invitation for existing users, just reactivate role
+  - Enhanced UX: Contextual success messages for new vs. reactivated users
+- **Database Constraint Violations**: Fixed unique constraint errors in user_roles table
+  - Root cause: Attempting to INSERT new records for existing (user_id, project_id) pairs
+  - Solution: Smart detection and UPDATE existing inactive records instead of INSERT
+  - Data integrity: Preserves audit trail while preventing constraint violations
 - **Project Update Error**: Fixed PGRST116 error when updating project information
   - Root cause: RLS policies preventing mutations with regular client
   - Solution: Use service role client for mutations after permission verification
