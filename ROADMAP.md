@@ -109,7 +109,7 @@ Purple Shopping consists of two integrated applications:
   - UI just needs to enforce single project limitation
 
 #### **Default Admin Role Assignment**
-- [ ] **Auto-assignment Logic:**
+- [x] **Auto-assignment Logic:**
   - Project creator automatically gets 'admin' role
   - Insert into `user_roles` table: `(user_id, project_id, role: 'admin', is_active: true)`
   - Admin can invite others later as 'agent' or 'admin'
@@ -125,7 +125,7 @@ Purple Shopping consists of two integrated applications:
   - Admin can: manage items, orders, users, project settings
   - Agent can: manage items, orders (no user management)
   - Use in server actions and UI components
-- [ ] **User Management Interface:**
+- [x] **User Management Interface:**
   - Simple table: User email, Role, Status, Actions
   - Admin can: remove users, change roles (admin ↔ agent)
   - Show current user's role in header
