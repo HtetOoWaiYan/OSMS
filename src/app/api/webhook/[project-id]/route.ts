@@ -28,7 +28,12 @@ async function getBotForProject(projectId: string): Promise<Bot | null> {
   try {
     // Check if bot instance already exists
     if (botInstances.has(projectId)) {
-      return botInstances.get(projectId)!;
+      const existingBot = botInstances.get(projectId)!;
+      // Ensure the bot is initialized
+      if (!existingBot.botInfo) {
+        await existingBot.init();
+      }
+      return existingBot;
     }
 
     // Get project data from database
@@ -40,6 +45,9 @@ async function getBotForProject(projectId: string): Promise<Bot | null> {
 
     // Create new bot instance
     const bot = new Bot(projectResult.data.telegram_bot_token);
+
+    // Initialize the bot (required for Grammy)
+    await bot.init();
 
     // Set up basic commands
     setupBotCommands(bot, projectId, projectResult.data.name);
