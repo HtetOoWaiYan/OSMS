@@ -32,6 +32,12 @@ export default async function AppPage({ params, searchParams }: AppPageProps) {
 
   const project = projectResult.data;
 
+  // Type guard: ensure bot token exists
+  if (!project.telegram_bot_token) {
+    console.error(`Bot token is missing for project: ${projectId}`);
+    redirect('/dashboard/auth/error?error=project_not_found');
+  }
+
   // Validate the initData using the bot token
   const validationResult = await validateTelegramInitData(initDataRaw, project.telegram_bot_token);
 
