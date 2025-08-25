@@ -13,6 +13,15 @@ import { getProjectById } from "@/lib/data/projects";
 const botInstances = new Map<string, Bot>();
 
 /**
+ * Generate mini app URL for a project
+ */
+function generateMiniAppUrl(projectId: string): string {
+  // Use environment variable or default to localhost for development
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  return `${baseUrl}/app/${projectId}`;
+}
+
+/**
  * Get or create bot instance for a project
  */
 async function getBotForProject(projectId: string): Promise<Bot | null> {
@@ -54,8 +63,7 @@ function setupBotCommands(bot: Bot, projectId: string, projectName: string) {
     const user = ctx.from;
     if (!user) return;
 
-    const welcomeMessage = `
-🌟 Welcome to ${projectName}! 🌟
+    const welcomeMessage = `🌟 Welcome to ${projectName}! 🌟
 
 Hello ${user.first_name}! I'm your shopping assistant.
 
@@ -65,12 +73,15 @@ Here are some things I can help you with:
 • Check order status
 • Get help and support
 
-Use /catalog to start browsing our products!
-    `.trim();
+Use /catalog to start browsing our products!`.trim();
+
+    // Generate mini app URL for this project
+    const miniAppUrl = generateMiniAppUrl(projectId);
 
     await ctx.reply(welcomeMessage, {
       reply_markup: {
         inline_keyboard: [
+          [{ text: "🚀 Launch Mini App", web_app: { url: miniAppUrl } }],
           [{ text: "🛍️ Browse Catalog", callback_data: "catalog" }],
           [{ text: "📦 My Orders", callback_data: "orders" }],
           [{ text: "❓ Help", callback_data: "help" }],
@@ -81,19 +92,19 @@ Use /catalog to start browsing our products!
 
   // Handle /help command
   bot.command("help", async (ctx) => {
-    const helpMessage = `
-🆘 Help & Support
+    const helpMessage = `🆘 Help & Support
 
 Available commands:
 /start - Welcome message and main menu
+/launch - Open the mini app
 /catalog - Browse our product catalog
 /orders - View your order history
 /help - Show this help message
 
+🚀 Launch Mini App button - Opens our mobile shopping app
 You can also send me messages and I'll assist you with your shopping needs!
 
-For support, contact our team directly.
-    `.trim();
+For support, contact our team directly.`.trim();
 
     await ctx.reply(helpMessage);
   });
@@ -108,6 +119,25 @@ For support, contact our team directly.
   bot.command("orders", async (ctx) => {
     // TODO: Implement order history
     await ctx.reply("📦 Order history feature coming soon! Stay tuned.");
+  });
+
+  // Handle /launch command
+  bot.command("launch", async (ctx) => {
+    const miniAppUrl = generateMiniAppUrl(projectId);
+
+    await ctx.reply(
+      `🚀 **Launch Mini App**
+
+Click the button below to open our mobile shopping app:`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🛍️ Open Purple Shopping", web_app: { url: miniAppUrl } }],
+          ],
+        },
+        parse_mode: "Markdown",
+      }
+    );
   });
 
   // Handle callback queries from inline keyboards
@@ -126,15 +156,14 @@ For support, contact our team directly.
         );
         break;
       case "help":
-        const helpMessage = `
-🆘 Help & Support
+        const helpMessage = `🆘 Help & Support
 
 Available commands:
 /start - Welcome message and main menu
+/launch - Open the mini app
 /catalog - Browse our product catalog
 /orders - View your order history
-/help - Show this help message
-        `.trim();
+/help - Show this help message`.trim();
         await ctx.editMessageText(helpMessage);
         break;
       default:
