@@ -32,7 +32,7 @@ import type { Tables } from '@/lib/supabase/database.types';
 
 type Category = Tables<'categories'>;
 type ItemWithPrice = Tables<'items'> & {
-  current_price?: Partial<Tables<'item_prices'>>;
+  current_price?: Partial<Tables<'item_prices'>> | null;
   category?: Tables<'categories'> | null;
 };
 

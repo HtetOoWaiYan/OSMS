@@ -15,7 +15,7 @@ import type {
 // Type aliases for better readability
 type Item = Tables<"items">;
 type ItemWithPrice = Tables<"items"> & {
-  current_price?: Partial<Tables<"item_prices">>;
+  current_price?: Partial<Tables<"item_prices">> | null;
   category?: Tables<"categories"> | null;
   item_images?: Array<{
     image_url: string;
@@ -73,13 +73,14 @@ export async function getItems(
       .select(`
         *,
         category:categories(*),
-        item_prices!inner(
+        item_prices!left(
           id,
           base_price,
           selling_price,
           discount_percentage,
           is_active,
-          effective_from
+          effective_from,
+          effective_until
         ),
         item_images!left(
           image_url,
@@ -87,15 +88,18 @@ export async function getItems(
           is_primary
         )
       `)
-      .eq("project_id", projectId)
-      .eq("item_prices.is_active", true);
+      .eq("project_id", projectId);
 
     // Apply filters
     if (filters?.search) {
       query = query.ilike("name", `%${filters.search}%`);
     }
-    if (filters?.categoryId) {
-      query = query.eq("category_id", filters.categoryId);
+    if (filters?.categoryId !== undefined) {
+      if (filters.categoryId === null) {
+        query = query.is("category_id", null);
+      } else {
+        query = query.eq("category_id", filters.categoryId);
+      }
     }
     if (filters?.isActive !== undefined) {
       query = query.eq("is_active", filters.isActive);
@@ -130,8 +134,12 @@ export async function getItems(
     if (filters?.search) {
       countQuery = countQuery.ilike("name", `%${filters.search}%`);
     }
-    if (filters?.categoryId) {
-      countQuery = countQuery.eq("category_id", filters.categoryId);
+    if (filters?.categoryId !== undefined) {
+      if (filters.categoryId === null) {
+        countQuery = countQuery.is("category_id", null);
+      } else {
+        countQuery = countQuery.eq("category_id", filters.categoryId);
+      }
     }
     if (filters?.isActive !== undefined) {
       countQuery = countQuery.eq("is_active", filters.isActive);
@@ -159,11 +167,14 @@ export async function getItems(
 
     // Transform data to include current price and first image
     const itemsWithPrices = items?.map((item) => {
-      const activePrices = item.item_prices?.filter((p) => p.is_active) || [];
-      const currentPrice = activePrices.sort((a, b) =>
-        new Date(b.effective_from!).getTime() -
-        new Date(a.effective_from!).getTime()
-      )[0];
+      // Handle items that might not have prices or active prices
+      const activePrices = item.item_prices?.filter((p) => p && p.is_active) || [];
+      const currentPrice = activePrices.length > 0
+        ? activePrices.sort((a, b) =>
+            new Date(b.effective_from!).getTime() -
+            new Date(a.effective_from!).getTime()
+          )[0]
+        : null; // No active price found
 
       // Get first image URL - prefer primary image, then by display order
       let firstImageUrl: string | undefined = undefined;

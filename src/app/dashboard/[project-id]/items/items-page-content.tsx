@@ -1,17 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { getItemsAction, getCategoriesAction } from '@/lib/actions/items';
 import { ItemsTable } from '@/components/items/items-table';
+import { ItemFilters } from '@/lib/validations/items';
+import { ItemsFilterForm } from './items-filter-form';
 
 interface ItemsPageContentProps {
   projectId: string;
@@ -19,21 +13,37 @@ interface ItemsPageContentProps {
 }
 
 export async function ItemsPageContent({ projectId, searchParams }: ItemsPageContentProps) {
-  // Convert search params to URLSearchParams for the action
-  const urlSearchParams = new URLSearchParams();
-  Object.entries(searchParams).forEach(([key, value]) => {
-    if (value) {
-      if (Array.isArray(value)) {
-        value.forEach((v) => urlSearchParams.append(key, v));
-      } else {
-        urlSearchParams.set(key, value);
-      }
-    }
-  });
+  // Build filters from search params
+  const filters: ItemFilters = {
+    search: searchParams.search as string,
+    categoryId:
+      searchParams.categoryId === 'all'
+        ? undefined
+        : searchParams.categoryId === 'no-category'
+          ? null
+          : (searchParams.categoryId as string),
+    isActive:
+      !searchParams.isActive || searchParams.isActive === 'all'
+        ? undefined
+        : searchParams.isActive === 'true'
+          ? true
+          : false,
+    isFeatured:
+      !searchParams.isFeatured || searchParams.isFeatured === 'all'
+        ? undefined
+        : searchParams.isFeatured === 'true'
+          ? true
+          : false,
+    sortBy:
+      (searchParams.sortBy as 'name' | 'created_at' | 'stock_quantity' | 'price') || 'created_at',
+    sortOrder: (searchParams.sortOrder as 'asc' | 'desc') || 'desc',
+    page: parseInt(searchParams.page as string) || 1,
+    limit: parseInt(searchParams.limit as string) || 20,
+  };
 
   // Fetch items and categories
   const [itemsResult, categoriesResult] = await Promise.all([
-    getItemsAction(projectId),
+    getItemsAction(projectId, filters),
     getCategoriesAction(projectId),
   ]);
 
@@ -41,11 +51,15 @@ export async function ItemsPageContent({ projectId, searchParams }: ItemsPageCon
   const totalItems = itemsResult.success ? itemsResult.data?.total || 0 : 0;
   const categories = categoriesResult.success ? categoriesResult.data || [] : [];
 
-  // Current filter values
-  const currentSearch = (searchParams.search as string) || '';
-  const currentCategory = (searchParams.categoryId as string) || 'all';
-  const currentStatus = (searchParams.isActive as string) || 'all';
-  const currentFeatured = (searchParams.isFeatured as string) || 'all';
+  // Current filter values for the form
+  const currentFilters = {
+    search: (searchParams.search as string) || '',
+    categoryId: (searchParams.categoryId as string) || 'all',
+    isActive: (searchParams.isActive as string) || 'all',
+    isFeatured: (searchParams.isFeatured as string) || 'all',
+    sortBy: (searchParams.sortBy as string) || 'created_at',
+    sortOrder: (searchParams.sortOrder as string) || 'desc',
+  };
 
   return (
     <>
@@ -68,76 +82,11 @@ export async function ItemsPageContent({ projectId, searchParams }: ItemsPageCon
       </div>
 
       {/* Filters and Search */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-4 sm:flex-row">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
-              <Input
-                placeholder="Search items..."
-                className="pl-10"
-                defaultValue={currentSearch}
-                name="search"
-                form="filters-form"
-              />
-            </div>
-
-            {/* Category Filter */}
-            <Select defaultValue={currentCategory} name="categoryId" form="filters-form">
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Status Filter */}
-            <Select defaultValue={currentStatus} name="isActive" form="filters-form">
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="true">Active</SelectItem>
-                <SelectItem value="false">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Featured Filter */}
-            <Select defaultValue={currentFeatured} name="isFeatured" form="filters-form">
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="All Items" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Items</SelectItem>
-                <SelectItem value="true">Featured</SelectItem>
-                <SelectItem value="false">Not Featured</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Filter Button */}
-            <Button type="submit" form="filters-form" variant="outline">
-              <Filter className="mr-2 h-4 w-4" />
-              Filter
-            </Button>
-          </div>
-
-          {/* Hidden form for filters */}
-          <form
-            id="filters-form"
-            action={`/dashboard/${projectId}/items`}
-            method="GET"
-            className="hidden"
-          />
-        </CardContent>
-      </Card>
+      <ItemsFilterForm
+        projectId={projectId}
+        categories={categories}
+        currentFilters={currentFilters}
+      />
 
       {/* Items Table */}
       {items.length === 0 ? (
@@ -149,10 +98,10 @@ export async function ItemsPageContent({ projectId, searchParams }: ItemsPageCon
               </div>
               <h3 className="mb-2 text-lg font-medium">No items found</h3>
               <p className="mb-4">
-                {currentSearch ||
-                currentCategory !== 'all' ||
-                currentStatus !== 'all' ||
-                currentFeatured !== 'all'
+                {currentFilters.search ||
+                currentFilters.categoryId !== 'all' ||
+                currentFilters.isActive !== 'all' ||
+                currentFilters.isFeatured !== 'all'
                   ? 'No items match your current filters. Try adjusting your search criteria.'
                   : 'Get started by creating your first product item.'}
               </p>
