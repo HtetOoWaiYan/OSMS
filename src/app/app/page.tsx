@@ -17,9 +17,10 @@ export default async function AppPage({ params, searchParams }: AppPageProps) {
   // Get initData from search params (passed by Telegram)
   const initDataRaw = searchParamsData.initData as string;
 
+  console.log({ searchParamsData });
+
   if (!initDataRaw) {
     console.error('No initData provided - redirecting to error');
-    redirect('/dashboard/auth/error?error=no_init_data');
   }
 
   // Get project to retrieve bot token
@@ -27,7 +28,6 @@ export default async function AppPage({ params, searchParams }: AppPageProps) {
 
   if (!projectResult.success || !projectResult.data?.telegram_bot_token) {
     console.error(`Project not found or no bot token for project: ${projectId}`);
-    redirect('/dashboard/auth/error?error=project_not_found');
   }
 
   const project = projectResult.data;
@@ -35,7 +35,6 @@ export default async function AppPage({ params, searchParams }: AppPageProps) {
   // Type guard: ensure bot token exists
   if (!project.telegram_bot_token) {
     console.error(`Bot token is missing for project: ${projectId}`);
-    redirect('/dashboard/auth/error?error=project_not_found');
   }
 
   // Validate the initData using the bot token
@@ -43,12 +42,10 @@ export default async function AppPage({ params, searchParams }: AppPageProps) {
 
   if (!validationResult.isValid) {
     console.error(`Invalid initData for project ${projectId}:`, validationResult.error);
-    redirect('/dashboard/auth/error?error=invalid_init_data');
   }
 
   if (!validationResult.user) {
     console.error(`No user data in valid initData for project ${projectId}`);
-    redirect('/dashboard/auth/error?error=invalid_user');
   }
 
   const user = validationResult.user;
