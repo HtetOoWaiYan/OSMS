@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### Stock Movement Tracking Form Field Issue ✅
+- **Critical Field Name Mismatch**: Fixed stock movement tracking system not recording actual quantities during item creation
+  - **Root Cause**: Server action expected field names `initialStockQuantity`/`initialMinStockLevel` but item creation form sent `stockQuantity`/`minStockLevel`
+  - **Impact**: All stock movements were created with 0 quantity instead of user-entered values
+  - **Fix**: Enhanced server action `createItemActionSimple` to handle both field naming conventions
+  - **Implementation**: Added fallback logic `formData.get("initialStockQuantity") || formData.get("stockQuantity")`
+  - **Result**: Stock movements now correctly record actual quantities entered during item creation
+- **Form Compatibility**: Server action now supports both item creation forms (dialog and page)
+  - **Dialog Form**: Uses `initialStockQuantity`/`initialMinStockLevel` field names
+  - **Page Form**: Uses `stockQuantity`/`minStockLevel` field names  
+  - **Solution**: Unified handling in server action prevents future form compatibility issues
+- **Code Cleanup**: Removed unused imports and cleaned up form components after successful fix
+  - **Removed**: Unused `Image` import from CreateItemDialog component
+  - **Removed**: Completely unused `CreateItemDialog` component (583 lines) - no imports found
+  - **Removed**: Completely unused `NewItemForm` component (259 lines) - no imports found
+  - **Removed**: Completely unused `BulkActions` component (74 lines) - no imports found
+  - **Removed**: Completely unused `DeleteItemButton` component (98 lines) - no imports found  
+  - **Removed**: Completely unused `QueryProvider` component (15 lines) - no imports found
+  - **Removed**: Empty `providers/` directory after QueryProvider removal
+  - **Active Components**: `ItemForm` (new items) and `EditItemForm` (editing) remain in use
+  - **Total Cleanup**: **1,029 lines** of completely dead code removed from components
+  - **Maintained**: Error logging for production debugging while removing development artifacts
+  - **Verified**: Build validation confirms all fixes work correctly without breaking changes
+
 #### Item Search and Filter Functionality ✅
 - **Critical Filter Logic Bug**: Fixed incorrect filter application when no search parameters were provided
   - **Root Cause**: Filter logic incorrectly set `isActive: false` and `isFeatured: false` when no filters applied
@@ -26,6 +50,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Removed**: Debug console.log statements from data layer functions
   - **Cleaned**: Unused imports (`zodResolver`, `z`) from form components
   - **Optimized**: Removed unused variables and improved code maintainability
+
+#### Complete Stock Movement Tracking System ✅
+- **Hybrid Stock Management Approach**:
+  - **Initial Stock Setup**: Added optional initial stock quantity and minimum stock level fields to item creation form
+  - **Automatic Stock Movement Logging**: Items created with initial stock automatically generate "initial" stock movement records
+  - **Edit Form Integration**: Stock management section in edit form with read-only current stock display and quick access to adjustment dialog
+  - **Minimum Stock Level Management**: Editable minimum stock level field in edit form with low stock alerts
+  - **Flexible User Experience**: Users can set initial stock during creation OR adjust stock later through the dedicated system
+- **Stock Adjustment Functionality**:
+  - Stock adjustment dialog with professional UI and TypeScript support
+  - Form validation with reason field and optional notes
+  - Real-time stock preview showing before/after values
+  - Low stock level alerts and visual indicators
+  - Integration with items table actions column
+- **Stock Movement Logging**:
+  - Automatic logging to `stock_movements` table for all adjustments
+  - Movement type classification (in/out based on adjustment direction)
+  - Reason tracking with predefined categories (adjustment, purchase, etc.)
+  - Notes field for detailed adjustment context
+  - User attribution for audit trail
+  - Created timestamp tracking for chronological ordering
+- **Stock Movement History Component**:
+  - Comprehensive history table with sorting by date (newest first)
+  - Movement type indicators with colored badges and icons
+  - Quantity changes with +/- visual indicators and color coding
+  - Reason and notes display for full context
+  - User attribution (currently simplified, expandable for full user details)
+  - Loading states and error handling with retry functionality
+  - Empty state messaging for items without movement history
+- **Database Integration**:
+  - Utilizes existing `stock_movements` table schema
+  - Service role client pattern for secure stock updates
+  - Transaction-like behavior with rollback on logging failure
+  - Negative stock prevention with validation
+- **UI Integration**:
+  - Stock adjustment button in items table actions
+  - Stock movement history in item edit pages
+  - Responsive design with mobile optimization
+  - Loading states and disabled controls during operations
+  - Success/error feedback with toast notifications
+- **Technical Implementation**:
+  - Server action `adjustStockAction` with Zod validation
+  - Data layer function `adjustStock` with transaction safety
+  - Server action `getStockMovementsAction` for history retrieval
+  - Data layer function `getStockMovements` with proper filtering
+  - Type-safe implementation with comprehensive error handling
+  - Debounced search and optimized revalidation patterns
 
 ### Added
 

@@ -14,6 +14,7 @@ import { Star, Package } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ToggleItemStatusButton } from './toggle-item-status-button';
+import { StockAdjustmentDialog } from './stock-adjustment-dialog';
 import type { Tables } from '@/lib/supabase/database.types';
 
 type Item = Tables<'items'>;
@@ -133,12 +134,22 @@ export function ItemsTable({ items, projectId }: ItemsTableProps) {
                 </div>
               </TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>
-                <ToggleItemStatusButton
-                  itemId={item.id}
-                  itemName={item.name}
-                  projectId={projectId}
-                  isActive={item.is_active ?? false}
-                />
+                <div className="flex items-center gap-2">
+                  <StockAdjustmentDialog
+                    itemId={item.id}
+                    itemName={item.name}
+                    currentStock={item.stock_quantity}
+                    minStockLevel={item.min_stock_level || 0}
+                    projectId={projectId}
+                    defaultReason="manual_adjustment"
+                  />
+                  <ToggleItemStatusButton
+                    itemId={item.id}
+                    itemName={item.name}
+                    projectId={projectId}
+                    isActive={item.is_active ?? false}
+                  />
+                </div>
               </TableCell>
             </TableRow>
           ))}

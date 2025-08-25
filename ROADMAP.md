@@ -26,6 +26,8 @@ Purple Shopping consists of two integrated applications:
 - **Database Query Optimization**: Enhanced item retrieval with LEFT JOIN to include items without active price records
 - **Type Safety Improvements**: Updated type definitions for better null handling and compatibility
 - **Code Cleanup**: Removed debug code and unused imports for production readiness
+- **Stock Movement Tracking System**: Complete implementation with audit trail, UI integration, and database logging
+- **Hybrid Stock Management System**: Implemented flexible approach allowing initial stock setup during item creation while maintaining dedicated stock adjustment system for ongoing management
 
 ---
 

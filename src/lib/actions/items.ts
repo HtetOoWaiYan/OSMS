@@ -9,6 +9,7 @@ import {
   ItemFilters,
 } from "@/lib/validations/items";
 import {
+  adjustStock,
   createCategory,
   createItem,
   createItemPrice,
@@ -22,10 +23,20 @@ import {
 // Simple version for direct calls (client components)
 export async function createItemActionSimple(formData: FormData) {
   try {
-    const projectId = formData.get("projectId") as string;
+    // Handle both field names for projectId (different forms use different naming)
+    const projectId = (formData.get("projectId") || formData.get("project_id")) as string;
     if (!projectId) {
       return { success: false, error: "Project ID is required" };
     }
+
+    // Parse numeric fields carefully since FormData always returns strings
+    // Handle both field naming conventions (initialStockQuantity vs stockQuantity)
+    const initialStockQuantityStr = formData.get("initialStockQuantity") || formData.get("stockQuantity");
+    const initialMinStockLevelStr = formData.get("initialMinStockLevel") || formData.get("minStockLevel");
+    const basePriceStr = formData.get("basePrice");
+    const sellingPriceStr = formData.get("sellingPrice");
+    const discountPercentageStr = formData.get("discountPercentage");
+    const weightStr = formData.get("weight");
 
     const itemData = createItemSchema.parse({
       name: formData.get("name"),
@@ -34,19 +45,18 @@ export async function createItemActionSimple(formData: FormData) {
       categoryId: formData.get("categoryId") === "no-category"
         ? null
         : formData.get("categoryId") || null,
-      stockQuantity: parseInt(formData.get("stockQuantity") as string) || 0,
-      minStockLevel: parseInt(formData.get("minStockLevel") as string) || 0,
-      weight: parseFloat(formData.get("weight") as string) || null,
+      initialStockQuantity: initialStockQuantityStr ? parseInt(initialStockQuantityStr as string, 10) : 0,
+      initialMinStockLevel: initialMinStockLevelStr ? parseInt(initialMinStockLevelStr as string, 10) : 0,
+      weight: weightStr ? parseFloat(weightStr as string) : null,
       tags: formData.get("tags")
         ? (formData.get("tags") as string).split(",").map((tag) => tag.trim())
           .filter(Boolean)
         : [],
       isFeatured: formData.get("isFeatured") === "true",
       isActive: formData.get("isActive") === "true",
-      basePrice: parseFloat(formData.get("basePrice") as string) || 0,
-      sellingPrice: parseFloat(formData.get("sellingPrice") as string) || 0,
-      discountPercentage:
-        parseFloat(formData.get("discountPercentage") as string) || 0,
+      basePrice: basePriceStr ? parseFloat(basePriceStr as string) : 0,
+      sellingPrice: sellingPriceStr ? parseFloat(sellingPriceStr as string) : 0,
+      discountPercentage: discountPercentageStr ? parseFloat(discountPercentageStr as string) : 0,
     });
 
     // Separate price data (don't validate itemId since it will be set by createItem)
@@ -79,7 +89,7 @@ export async function createItemActionSimple(formData: FormData) {
 export async function updateItemActionSimple(formData: FormData) {
   try {
     const itemId = formData.get("itemId") as string;
-    const projectId = formData.get("projectId") as string;
+    const projectId = (formData.get("projectId") || formData.get("project_id")) as string;
 
     if (!itemId || !projectId) {
       return { success: false, error: "Item ID and Project ID are required" };
@@ -238,6 +248,48 @@ export async function toggleItemStatusAction(formData: FormData) {
   } catch (error) {
     console.error("Error toggling item status:", error);
     return { success: false, error: "Failed to toggle item status" };
+  }
+}
+
+// Adjust item stock action
+export async function adjustStockAction(formData: FormData) {
+  try {
+    const itemId = formData.get("itemId") as string;
+    const projectId = formData.get("projectId") as string;
+    const adjustment = parseInt(formData.get("adjustment") as string, 10);
+    const reason = formData.get("reason") as string;
+    const notes = formData.get("notes") as string;
+
+    if (!itemId || !projectId) {
+      return { success: false, error: "Item ID and Project ID are required" };
+    }
+
+    if (!reason) {
+      return { success: false, error: "Reason is required" };
+    }
+
+    if (adjustment === 0) {
+      return { success: false, error: "Adjustment amount must be non-zero" };
+    }
+
+    // Use the existing adjustStock function from data layer
+    const result = await adjustStock({
+      itemId,
+      adjustment,
+      reason,
+      notes: notes || undefined,
+    });
+
+    if (result.success) {
+      revalidatePath(`/dashboard/${projectId}/items`);
+      revalidatePath(`/dashboard/${projectId}/items/${itemId}/edit`);
+      return { success: true };
+    } else {
+      return { success: false, error: result.error };
+    }
+  } catch (error) {
+    console.error("Error adjusting stock:", error);
+    return { success: false, error: "Failed to adjust stock" };
   }
 }
 
