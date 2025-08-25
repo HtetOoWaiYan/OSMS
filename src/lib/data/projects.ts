@@ -1,11 +1,12 @@
 import "server-only";
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
-import type { 
-  Tables, 
-  TablesInsert, 
-  Enums 
+import type {
+  Tables,
+  TablesInsert,
+  Enums
 } from '@/lib/supabase/database.types';
 import type { CreateProjectData, UpdateProjectData } from '@/lib/validations/projects';
+import { setWebhook, generateWebhookUrl } from '@/lib/telegram/api';
 
 // Type aliases for better readability
 type Project = Tables<'projects'>;
@@ -105,7 +106,18 @@ export async function getUserProject(): Promise<{
 export async function createProject(data: CreateProjectData): Promise<{
   success: boolean;
   error?: string;
-  data?: Project;
+  data?: Project & { telegram_webhook_url?: string };
+  webhookSetup?: {
+    success: boolean;
+    error?: string;
+    webhookInfo?: {
+      url: string;
+      has_custom_certificate: boolean;
+      pending_update_count: number;
+      max_connections?: number;
+      ip_address?: string;
+    };
+  };
 }> {
   try {
     const supabase = await createClient();
@@ -153,11 +165,55 @@ export async function createProject(data: CreateProjectData): Promise<{
         .from('projects')
         .delete()
         .eq('id', project.id);
-      
+
       throw new Error('Failed to assign admin role');
     }
 
-    return { success: true, data: project };
+    // Set up Telegram webhook (don't fail project creation if this fails)
+    let webhookSetupResult: {
+      success: boolean;
+      error?: string;
+      webhookInfo?: {
+        url: string;
+        has_custom_certificate: boolean;
+        pending_update_count: number;
+        max_connections?: number;
+        ip_address?: string;
+      };
+    } | undefined;
+
+    try {
+      const webhookUrl = generateWebhookUrl(project.id);
+
+      // Update the project with the webhook URL
+      await supabaseAdmin
+        .from('projects')
+        .update({ telegram_webhook_url: webhookUrl })
+        .eq('id', project.id);
+
+      // Set the webhook with Telegram
+      const setupResult = await setWebhook(data.telegram_bot_token, webhookUrl);
+      webhookSetupResult = setupResult;
+
+      if (!setupResult.success) {
+        console.warn(`Webhook setup failed for project ${project.id}: ${setupResult.error}`);
+        // Don't fail the project creation, just log the warning
+      } else {
+        console.log(`Webhook setup successful for project ${project.id}`);
+      }
+    } catch (webhookError) {
+      console.warn(`Unexpected error setting up webhook for project ${project.id}:`, webhookError);
+      // Don't fail the project creation for webhook setup issues
+    }
+
+    return {
+      success: true,
+      data: {
+        ...project,
+        telegram_webhook_url: generateWebhookUrl(project.id)
+      },
+      webhookSetup: webhookSetupResult
+    };
   } catch (error) {
     console.error('Error creating project:', error);
     return { 
@@ -177,7 +233,7 @@ export async function getProject(projectId: string): Promise<{
 }> {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -201,9 +257,46 @@ export async function getProject(projectId: string): Promise<{
     return { success: true, data: project };
   } catch (error) {
     console.error('Error getting project:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to get project' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get project'
+    };
+  }
+}
+
+/**
+ * Get project by ID without authentication (for webhooks)
+ * Uses service role client to bypass RLS since webhooks don't have user context
+ */
+export async function getProjectById(projectId: string): Promise<{
+  success: boolean;
+  error?: string;
+  data?: Project;
+}> {
+  try {
+    const supabaseAdmin = await createServiceRoleClient();
+
+    // Get project using service role client (bypasses RLS)
+    const { data: project, error } = await supabaseAdmin
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .eq('is_active', true)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return { success: false, error: 'Project not found' };
+      }
+      throw error;
+    }
+
+    return { success: true, data: project };
+  } catch (error) {
+    console.error('Error getting project by ID:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get project'
     };
   }
 }
@@ -266,12 +359,23 @@ export async function checkUserPermissions(projectId: string): Promise<{
  * Update project information
  */
 export async function updateProject(
-  projectId: string, 
+  projectId: string,
   data: UpdateProjectData
 ): Promise<{
   success: boolean;
   error?: string;
-  data?: Project;
+  data?: Project & { telegram_webhook_url?: string };
+  webhookSetup?: {
+    success: boolean;
+    error?: string;
+    webhookInfo?: {
+      url: string;
+      has_custom_certificate: boolean;
+      pending_update_count: number;
+      max_connections?: number;
+      ip_address?: string;
+    };
+  };
 }> {
   try {
     const supabase = await createClient();
@@ -310,7 +414,53 @@ export async function updateProject(
       throw updateError;
     }
 
-    return { success: true, data: project };
+    // Set up or update Telegram webhook if bot token was provided
+    let webhookSetupResult: {
+      success: boolean;
+      error?: string;
+      webhookInfo?: {
+        url: string;
+        has_custom_certificate: boolean;
+        pending_update_count: number;
+        max_connections?: number;
+        ip_address?: string;
+      };
+    } | undefined;
+
+    if (data.telegram_bot_token && data.telegram_bot_token.trim() !== '') {
+      try {
+        const webhookUrl = generateWebhookUrl(projectId);
+
+        // Update the project with the webhook URL
+        await supabaseAdmin
+          .from('projects')
+          .update({ telegram_webhook_url: webhookUrl })
+          .eq('id', projectId);
+
+        // Set the webhook with Telegram
+        const setupResult = await setWebhook(data.telegram_bot_token, webhookUrl);
+        webhookSetupResult = setupResult;
+
+        if (!setupResult.success) {
+          console.warn(`Webhook setup failed for project ${projectId}: ${setupResult.error}`);
+          // Don't fail the project update, just log the warning
+        } else {
+          console.log(`Webhook setup successful for project ${projectId}`);
+        }
+      } catch (webhookError) {
+        console.warn(`Unexpected error setting up webhook for project ${projectId}:`, webhookError);
+        // Don't fail the project update for webhook setup issues
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        ...project,
+        telegram_webhook_url: generateWebhookUrl(projectId)
+      },
+      webhookSetup: webhookSetupResult
+    };
   } catch (error) {
     console.error('Error updating project:', error);
     return { 
