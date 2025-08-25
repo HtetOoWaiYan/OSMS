@@ -1,80 +1,127 @@
-# Telegram Bot Integration
+# Telegram Integration
 
-This directory contains the Telegram bot integration for the Purple Shopping system.
+This directory contains all Telegram-related functionality for the Purple Shopping system.
 
-## Webhook Setup
+## Mini App Setup
 
-### Dynamic Webhook Handler
-The webhook handler is located at `/api/webhook/[project-id]` and supports multiple bots for different projects.
+### Route Structure
+- **Mini App URL**: `/app/[project-id]`
+- **Example**: `https://your-domain.com/app/project-uuid-123`
+- **Authentication**: Automatic via `initData` validation
 
-**Features:**
-- Dynamic bot instances per project
-- Basic commands: `/start`, `/help`, `/catalog`, `/orders`
-- Inline keyboard support
-- Automatic bot token retrieval from database
-- Webhook verification support
+### InitData Validation
 
-### Setting Up a Bot for a Project
-
-1. **Create a Telegram Bot:**
-   - Message @BotFather on Telegram
-   - Send `/newbot` command
-   - Follow prompts to create your bot
-   - Copy the bot token
-
-2. **Configure Bot Token:**
-   - Go to your project settings in the dashboard
-   - Enter the bot token in the Telegram Bot Token field
-   - The system will automatically handle webhook setup
-
-3. **Webhook URL Format:**
-   ```
-   https://your-domain.com/api/webhook/project-id
-   ```
-
-### Testing the Webhook
-
-Use the test utility to validate webhook setup:
+The mini app uses server-side validation of Telegram's `initData` to ensure authenticity:
 
 ```typescript
-import { testWebhookSetup } from '@/lib/telegram/webhook-test';
-
-const result = await testWebhookSetup('your-project-id');
-console.log(result);
+// Automatic validation in layout.tsx
+const validationResult = await validateTelegramInitData(
+  initDataRaw,
+  project.telegram_bot_token
+);
 ```
 
-### Available Commands
+**Validation Process:**
+1. Parse `initData` as query parameters
+2. Extract key-value pairs (excluding `hash`)
+3. Sort alphabetically
+4. Create HMAC-SHA256 with `WebAppData` + bot token
+5. Create HMAC-SHA256 with result + sorted pairs
+6. Compare with provided `hash`
+7. Validate timestamp (not older than 24 hours)
 
-- `/start` - Welcome message with inline keyboard
-- `/help` - Show available commands
-- `/catalog` - Browse products (coming soon)
-- `/orders` - View order history (coming soon)
+### Webhook Setup
 
-### Bot Commands Setup
+Webhooks are automatically configured when projects are created or updated:
 
-The bot automatically responds to:
-- Text messages with keyword recognition
-- Callback queries from inline keyboards
-- Basic conversational patterns
+```typescript
+// Automatic webhook setup during project creation
+const webhookUrl = `https://your-domain.com/api/webhook/${projectId}`;
+await setWebhook(botToken, webhookUrl);
+```
 
-### Security Notes
+## API Functions
 
-- Bot tokens are stored encrypted in the database
-- Webhooks use service role client to bypass RLS
-- Each project has its own isolated bot instance
-- All webhook endpoints are protected by project ID validation
+### Webhook Management
+```typescript
+import { setWebhook, removeWebhook, getWebhookInfo } from '@/lib/telegram/api';
 
-### Development
+// Set webhook for a bot
+await setWebhook(botToken, webhookUrl);
 
-To test locally:
-1. Use ngrok or similar to expose your local server
-2. Set the webhook URL in your project settings
-3. The bot will receive messages at the exposed URL
+// Remove webhook
+await removeWebhook(botToken);
 
-### Future Enhancements
+// Get webhook status
+const info = await getWebhookInfo(botToken);
+```
 
-- Product catalog browsing
-- Order placement through chat
-- Order status notifications
-- Customer support integration
-- Mini-app integration
+### InitData Validation
+```typescript
+import { validateTelegramInitData } from '@/lib/telegram/init-data-validation';
+
+// Validate initData
+const result = await validateTelegramInitData(initDataRaw, botToken);
+
+if (result.isValid) {
+  console.log('User:', result.user);
+  console.log('Auth Date:', result.authDate);
+}
+```
+
+## Mini App Features
+
+### Current Status
+- ✅ **Authentication**: Server-side `initData` validation
+- ✅ **User Verification**: Automatic user data extraction
+- ✅ **Error Handling**: Comprehensive error pages
+- ✅ **Loading States**: Smooth loading experience
+- ⏳ **Product Catalog**: Coming in Phase 4
+- ⏳ **Shopping Cart**: Coming in Phase 4
+- ⏳ **Order Management**: Coming in Phase 4
+
+### URL Parameters
+Telegram passes the following via URL search params:
+- `initData`: Authentication data (required)
+- Other parameters as documented in Telegram Mini Apps spec
+
+### Error Codes
+- `no_init_data`: No authentication data provided
+- `project_not_found`: Project doesn't exist or has no bot token
+- `invalid_init_data`: Hash validation failed
+- `invalid_user`: User data parsing failed
+
+## Development
+
+### Testing Locally
+1. Use ngrok to expose local server: `ngrok http 3000`
+2. Update project webhook URL to: `https://xxx.ngrok.io/api/webhook/project-id`
+3. Test mini app at: `https://xxx.ngrok.io/app/project-id`
+
+### Environment Variables
+```env
+NEXT_PUBLIC_APP_URL=https://your-production-domain.com
+# For local development: http://localhost:3000
+```
+
+### Mini App Launch
+
+The bot includes a **Launch Mini App** button that opens the Telegram Mini App:
+
+- **Button in /start**: Primary launch button in welcome message
+- **/launch command**: Direct command to open mini app
+- **Web App URL**: Uses `web_app` type for seamless opening
+- **Dynamic URLs**: Automatically generates project-specific URLs
+
+### Debugging
+- Check server logs for validation results
+- Use the debug panel in development mode
+- Verify webhook setup with `getWebhookInfo()`
+
+## Security Notes
+
+- **Server-side validation**: All `initData` is validated on the server
+- **Bot token security**: Tokens are encrypted in database
+- **Timestamp validation**: `initData` must be less than 24 hours old
+- **Project isolation**: Each project has its own bot and webhook
+- **HTTPS required**: All webhooks must use HTTPS in production
