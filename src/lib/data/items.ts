@@ -399,8 +399,8 @@ export async function createItem(
       name: itemData.name,
       description: itemData.description,
       sku,
-      stock_quantity: itemData.stockQuantity,
-      min_stock_level: itemData.minStockLevel,
+      stock_quantity: itemData.initialStockQuantity,
+      min_stock_level: itemData.initialMinStockLevel,
       weight: itemData.weight,
       dimensions: itemData.dimensions
         ? JSON.parse(JSON.stringify(itemData.dimensions))
@@ -410,14 +410,42 @@ export async function createItem(
       tags: itemData.tags,
     };
 
+
+
+
+
     const { data: item, error: itemError } = await supabaseAdmin
       .from("items")
       .insert(itemInsert)
       .select()
       .single();
 
+
+
     if (itemError) {
       throw itemError;
+    }
+
+    // Always create initial stock movement record for audit trail
+    const initialStockMovement: StockMovementInsert = {
+      item_id: item.id,
+      movement_type: itemData.initialStockQuantity > 0 ? "in" : "adjustment",
+      reason: "initial",
+      quantity: itemData.initialStockQuantity,
+      notes: itemData.initialStockQuantity > 0
+        ? `Initial stock set during item creation (${itemData.initialStockQuantity} units)`
+        : "Item created with zero initial stock",
+      created_by: user.id,
+    };
+
+    const { error: stockMovementError } = await supabaseAdmin
+      .from("stock_movements")
+      .insert(initialStockMovement);
+
+    if (stockMovementError) {
+      console.error("Create initial stock movement error:", stockMovementError);
+      // Don't fail the entire creation if stock movement fails
+      // The item is created successfully, just log the error
     }
 
     // Create initial price
@@ -511,9 +539,8 @@ export async function updateItem(
     if (itemData.categoryId !== undefined) {
       updateData.category_id = itemData.categoryId;
     }
-    if (itemData.stockQuantity !== undefined) {
-      updateData.stock_quantity = itemData.stockQuantity;
-    }
+    // Stock quantity is managed through the stock adjustment system
+    // Min stock level can be updated via the edit form
     if (itemData.minStockLevel !== undefined) {
       updateData.min_stock_level = itemData.minStockLevel;
     }
@@ -1279,3 +1306,7 @@ export async function deleteItemImage(imageId: string): Promise<{
     };
   }
 }
+
+// ============================================================================
+// STOCK MANAGEMENT OPERATIONS
+// ============================================================================

@@ -27,6 +27,8 @@ import {
 import { generateSKU, calculateSellingPrice } from '@/lib/utils/item-utils';
 import { CreateCategoryDialog } from './create-category-dialog';
 import { ImageUpload } from './image-upload';
+import { StockMovementHistory } from './stock-movement-history';
+import { StockAdjustmentDialog } from './stock-adjustment-dialog';
 import { toast } from 'sonner';
 import type { Tables } from '@/lib/supabase/database.types';
 
@@ -403,35 +405,9 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
 
           <Separator />
 
-          {/* Inventory */}
+          {/* Physical Properties */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Inventory</h3>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="stockQuantity">Stock Quantity</Label>
-                <Input
-                  id="stockQuantity"
-                  name="stockQuantity"
-                  type="number"
-                  min="0"
-                  defaultValue={item.stock_quantity || 0}
-                  placeholder="0"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="minStockLevel">Min Stock Level</Label>
-                <Input
-                  id="minStockLevel"
-                  name="minStockLevel"
-                  type="number"
-                  min="0"
-                  defaultValue={item.min_stock_level || 0}
-                  placeholder="0"
-                />
-              </div>
-            </div>
+            <h3 className="text-lg font-medium">Physical Properties</h3>
 
             <div>
               <Label htmlFor="weight">Weight (kg)</Label>
@@ -445,6 +421,63 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
                 placeholder="0.00"
               />
             </div>
+          </div>
+
+          <Separator />
+
+          {/* Stock Management */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium">Stock Management</h3>
+              <StockAdjustmentDialog
+                itemId={itemId}
+                itemName={item.name}
+                currentStock={item.stock_quantity}
+                minStockLevel={item.min_stock_level || 0}
+                projectId={projectId}
+                defaultReason="manual_adjustment"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="currentStock">Current Stock</Label>
+                <Input
+                  id="currentStock"
+                  type="number"
+                  value={item.stock_quantity || 0}
+                  readOnly
+                  className="bg-muted"
+                />
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Use &quot;Adjust Stock&quot; button to modify
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="minStockLevel">Min Stock Alert Level</Label>
+                <Input
+                  id="minStockLevel"
+                  type="number"
+                  min="0"
+                  defaultValue={item.min_stock_level || 0}
+                  name="minStockLevel"
+                  placeholder="0"
+                />
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Get notified when stock goes below this level
+                </p>
+              </div>
+            </div>
+
+            {item.stock_quantity <= (item.min_stock_level || 0) &&
+              (item.min_stock_level || 0) > 0 && (
+                <Alert>
+                  <AlertDescription>
+                    {`⚠️ Low stock alert: Current stock (${item.stock_quantity}) is at or below minimum level (${item.min_stock_level})`}
+                  </AlertDescription>
+                </Alert>
+              )}
           </div>
 
           <Separator />
@@ -531,6 +564,15 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
             </Button>
           </div>
         </form>
+
+        {/* Stock Movement History */}
+        <div className="mt-6">
+          <StockMovementHistory
+            itemId={itemId}
+            itemName={item?.name || 'Unknown Item'}
+            currentStock={item?.stock_quantity || 0}
+          />
+        </div>
       </CardContent>
     </Card>
   );

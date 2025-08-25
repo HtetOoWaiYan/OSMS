@@ -18,18 +18,19 @@ export const createItemSchema = z.object({
     .uuid("Invalid category ID")
     .optional()
     .nullable(),
-  stockQuantity: z.number()
-    .int("Stock quantity must be an integer")
-    .min(0, "Stock quantity cannot be negative")
-    .default(0),
-  minStockLevel: z.number()
-    .int("Minimum stock level must be an integer")
-    .min(0, "Minimum stock level cannot be negative")
-    .default(0),
+
   weight: z.number()
     .min(0, "Weight cannot be negative")
     .optional()
     .nullable(),
+  initialStockQuantity: z.number()
+    .int("Stock quantity must be an integer")
+    .min(0, "Stock quantity cannot be negative")
+    .default(0),
+  initialMinStockLevel: z.number()
+    .int("Minimum stock level must be an integer")
+    .min(0, "Minimum stock level cannot be negative")
+    .default(0),
   dimensions: z.object({
     length: z.number().min(0, "Length cannot be negative").optional(),
     width: z.number().min(0, "Width cannot be negative").optional(),
@@ -58,6 +59,10 @@ export const createItemSchema = z.object({
 
 export const updateItemSchema = createItemSchema.partial().extend({
   id: z.string().uuid("Invalid item ID"),
+  minStockLevel: z.number()
+    .int("Minimum stock level must be an integer")
+    .min(0, "Minimum stock level cannot be negative")
+    .optional(),
 });
 
 // Item price validation schemas

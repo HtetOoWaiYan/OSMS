@@ -17,12 +17,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Plus, Minus, Package } from 'lucide-react';
 import { toast } from 'sonner';
+import { adjustStockAction } from '@/lib/actions/items';
 
 interface StockAdjustmentDialogProps {
   itemId: string;
   itemName: string;
   currentStock: number;
   minStockLevel?: number;
+  projectId: string;
+  defaultReason?: string;
 }
 
 export function StockAdjustmentDialog({
@@ -30,18 +33,26 @@ export function StockAdjustmentDialog({
   itemName,
   currentStock,
   minStockLevel = 0,
+  projectId,
+  defaultReason = 'adjustment',
 }: StockAdjustmentDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState<boolean>(false);
   const [adjustment, setAdjustment] = useState<number>(0);
-  const [notes, setNotes] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reason, setReason] = useState<string>(defaultReason);
+  const [notes, setNotes] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const newStock = currentStock + adjustment;
   const isLowStock = minStockLevel > 0 && newStock <= minStockLevel;
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     if (adjustment === 0) {
       toast.error('Please enter an adjustment amount');
+      return;
+    }
+
+    if (!reason.trim()) {
+      toast.error('Please enter a reason for the adjustment');
       return;
     }
 
@@ -53,14 +64,25 @@ export function StockAdjustmentDialog({
     setIsSubmitting(true);
 
     try {
-      // Here you would implement the actual stock adjustment API call
-      // For now, we'll just simulate the adjustment
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const formData = new FormData();
+      formData.append('itemId', itemId);
+      formData.append('projectId', projectId);
+      formData.append('adjustment', adjustment.toString());
+      formData.append('reason', reason);
+      if (notes) {
+        formData.append('notes', notes);
+      }
 
-      toast.success(`Stock adjusted for ${itemName}. New stock: ${newStock}`);
-      setOpen(false);
-      setAdjustment(0);
-      setNotes('');
+      const result = await adjustStockAction(formData);
+
+      if (result.success) {
+        toast.success(`Stock adjusted for ${itemName}. New stock: ${newStock}`);
+        setOpen(false);
+        setAdjustment(0);
+        setNotes('');
+      } else {
+        toast.error(result.error || 'Failed to adjust stock');
+      }
     } catch (error) {
       console.error('Stock adjustment error:', error);
       toast.error('Failed to adjust stock');
@@ -71,6 +93,7 @@ export function StockAdjustmentDialog({
 
   const reset = () => {
     setAdjustment(0);
+    setReason(defaultReason);
     setNotes('');
   };
 
@@ -119,7 +142,7 @@ export function StockAdjustmentDialog({
                 id="adjustment"
                 type="number"
                 value={adjustment}
-                onChange={(e) => setAdjustment(parseInt(e.target.value) || 0)}
+                onChange={(e) => setAdjustment(parseInt(e.target.value, 10) || 0)}
                 className="text-center"
                 placeholder="0"
               />
@@ -135,6 +158,21 @@ export function StockAdjustmentDialog({
             </div>
             <p className="text-muted-foreground text-xs">
               Use positive numbers to add stock, negative numbers to remove stock
+            </p>
+          </div>
+
+          {/* Reason Input */}
+          <div className="space-y-2">
+            <Label htmlFor="reason">Reason</Label>
+            <Input
+              id="reason"
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g., purchase, adjustment, damage"
+            />
+            <p className="text-muted-foreground text-xs">
+              Reason for this stock adjustment (required)
             </p>
           </div>
 
@@ -167,7 +205,7 @@ export function StockAdjustmentDialog({
             <Textarea
               id="notes"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => setNotes((e.target as HTMLTextAreaElement).value)}
               placeholder="Reason for adjustment..."
               rows={2}
             />
