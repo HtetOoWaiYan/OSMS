@@ -32,11 +32,21 @@ export async function createProjectAction(formData: FormData) {
     // Revalidate cache and redirect to the new project dashboard
     revalidatePath('/dashboard');
 
+    // Log webhook setup result for debugging
+    if (result.webhookSetup) {
+      if (result.webhookSetup.success) {
+        console.log(`Webhook setup successful for new project: ${result.data!.id}`);
+      } else {
+        console.warn(`Webhook setup failed for new project: ${result.data!.id} - ${result.webhookSetup.error}`);
+      }
+    }
+
     // Return success with redirect to the specific project
     return {
       success: true,
       data: result.data,
       redirect: `/dashboard/${result.data!.id}`,
+      webhookSetup: result.webhookSetup,
     };
   } catch (error) {
     console.error('Create project action error:', error);
@@ -158,11 +168,21 @@ export async function updateProjectAction(formData: FormData) {
     // Revalidate the settings page to show updated data
     revalidatePath(`/dashboard/${rawData.projectId}/settings`);
     revalidatePath('/dashboard'); // Also revalidate project listing
-    
+
+    // Log webhook setup result for debugging
+    if (result.webhookSetup) {
+      if (result.webhookSetup.success) {
+        console.log(`Webhook setup successful for updated project: ${rawData.projectId}`);
+      } else {
+        console.warn(`Webhook setup failed for updated project: ${rawData.projectId} - ${result.webhookSetup.error}`);
+      }
+    }
+
     return {
       success: true,
       message: 'Project updated successfully',
       data: result.data,
+      webhookSetup: result.webhookSetup,
     };
 
   } catch (error) {
