@@ -5,6 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
+// Type declaration for Telegram WebApp
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: {
+        close(): void;
+      };
+    };
+  }
+}
+
 export default function AppErrorPage() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
