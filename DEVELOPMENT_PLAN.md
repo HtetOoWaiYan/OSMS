@@ -2,8 +2,10 @@
 
 ## Project Overview
 
-**Purple Shopping** is a comprehensive web-based Online Shop Management System (OSMS) designed for small sellers in Myanmar wh### 🔄 Current Status: Complete Item Management System (Phase 1.3)
-The project now has comprehensive item management capabilities with image upload/display:
+**Purple Shopping** is a comprehensive web-based Online Shop Management System (OSMS) designed for small sellers in Myanmar wh### 🔄 Current Status: Complete Item Management System (Phase 1.3) + Bug Fixes
+The project now has comprehensive item management capabilities with image upload/display and recent critical bug fixes:
+
+#### ✅ Core Features Completed
 - **Complete Item CRUD**: Full create, read, update, delete operations for items
 - **Professional UI**: Item listing table with search, filters, bulk operations, and click-to-edit functionality
 - **Advanced Features**: SKU generation, price history, stock management, featured items, tags system
@@ -14,13 +16,29 @@ The project now has comprehensive item management capabilities with image upload
 - **Storage Configuration**: Public Supabase Storage bucket for product catalog images
 - **Complete User Management**: Full user lifecycle with role editing, removal, and re-invitation
 - Modern, scalable architecture supporting multiple projects per user
-- **Project Management**: Centralized listing and project-specific dashboards  
+- **Project Management**: Centralized listing and project-specific dashboards
 - **Dynamic Routing**: Project-aware navigation and layouts
 - Professional UI/UX foundation with clean layout separation
 - Complete database schema with multi-tenant security
 - Authentication system with project-specific authorization
 - Type-safe development environment with Next.js 15 compatibility
-- **Clean Architecture**: Removed unused components and streamlined navigationsocial media for sales. The system automates core workflows including item management, orders, payments, and customer messaging through an integrated Telegram chatbot and mini-app.
+- **Clean Architecture**: Removed unused components and streamlined navigations
+
+#### 🐛 Recent Bug Fixes & Optimizations
+- **Critical Filter Logic Bug**: Fixed incorrect filter application hiding items from the list
+  - **Problem**: When no search params provided, filters defaulted to `isActive: false, isFeatured: false`
+  - **Solution**: Updated filter logic to properly handle undefined parameters as "no filter"
+  - **Result**: All items now appear correctly when visiting items page without filters
+- **Database Query Enhancement**: Improved item retrieval to include items without active price records
+  - **Problem**: INNER JOIN was filtering out items without active prices
+  - **Solution**: Changed to LEFT JOIN to include all items regardless of price status
+  - **Result**: Items without price records now appear in the interface
+- **Type Safety Improvements**: Enhanced type definitions for better null handling
+  - **Enhanced**: `ItemWithPrice` type now properly handles nullable `current_price`
+  - **Compatibility**: Maintained backward compatibility across all components
+- **Code Cleanup**: Removed debug logging and optimized imports for production readiness
+
+The system automates core workflows including item management, orders, payments, and customer messaging through an integrated Telegram chatbot and mini-app.
 
 ### Key Project Constraints
 - **Timeline**: 10-day development sprint for undergraduate final year project

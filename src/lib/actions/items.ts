@@ -6,6 +6,7 @@ import {
   CreateItemPriceData,
   createItemSchema,
   updateItemSchema,
+  ItemFilters,
 } from "@/lib/validations/items";
 import {
   createCategory,
@@ -162,9 +163,9 @@ export async function getItemAction(itemId: string) {
 }
 
 // Get items action
-export async function getItemsAction(projectId: string) {
+export async function getItemsAction(projectId: string, filters?: ItemFilters) {
   try {
-    const result = await getItems(projectId);
+    const result = await getItems(projectId, filters);
     return result;
   } catch (error) {
     console.error("Error getting items:", error);

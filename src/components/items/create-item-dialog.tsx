@@ -36,14 +36,32 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Upload, X, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { createItemSchema } from '@/lib/validations/items';
-import type { z } from 'zod';
 import type { Tables } from '@/lib/supabase/database.types';
 import { toast } from 'sonner';
 
 type Category = Tables<'categories'>;
-type CreateItemFormData = z.infer<typeof createItemSchema>;
+// Custom type that matches the form fields without the schema defaults
+type CreateItemFormData = {
+  name: string;
+  description?: string | null;
+  sku?: string | null;
+  categoryId?: string | null;
+  stockQuantity: number;
+  minStockLevel: number;
+  weight?: number | null;
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+  } | null;
+  tags: string[];
+  isFeatured: boolean;
+  isActive: boolean;
+  basePrice: number;
+  sellingPrice: number;
+  discountPercentage: number;
+};
 
 interface CreateItemDialogProps {
   projectId: string;
@@ -60,22 +78,21 @@ export function CreateItemDialog({ projectId, categories, children }: CreateItem
   const router = useRouter();
 
   const form = useForm<CreateItemFormData>({
-    resolver: zodResolver(createItemSchema),
     defaultValues: {
       name: '',
-      description: null,
-      sku: null,
+      description: undefined,
+      sku: undefined,
+      categoryId: undefined,
       stockQuantity: 0,
       minStockLevel: 0,
-      weight: null,
-      basePrice: 0,
-      sellingPrice: 0,
-      discountPercentage: 0,
-      categoryId: null,
+      weight: undefined,
+      dimensions: undefined,
       tags: [],
       isFeatured: false,
       isActive: true,
-      dimensions: null,
+      basePrice: 0,
+      sellingPrice: 0,
+      discountPercentage: 0,
     },
   });
 
@@ -134,6 +151,16 @@ export function CreateItemDialog({ projectId, categories, children }: CreateItem
   const onSubmit = async (data: CreateItemFormData) => {
     setIsSubmitting(true);
     try {
+      // Validate the form data
+      try {
+        createItemSchema.parse(data);
+      } catch (validationError) {
+        console.error('Validation error:', validationError);
+        toast.error('Please fix the form errors before submitting');
+        setIsSubmitting(false);
+        return;
+      }
+
       const formData = new FormData();
 
       // Add text fields
@@ -220,7 +247,10 @@ export function CreateItemDialog({ projectId, categories, children }: CreateItem
                         <Textarea
                           placeholder="Describe your product"
                           className="min-h-[100px]"
-                          {...field}
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />
@@ -236,7 +266,13 @@ export function CreateItemDialog({ projectId, categories, children }: CreateItem
                       <FormItem>
                         <FormLabel>SKU</FormLabel>
                         <FormControl>
-                          <Input placeholder="Auto-generated if empty" {...field} />
+                          <Input
+                            placeholder="Auto-generated if empty"
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                          />
                         </FormControl>
                         <FormDescription>Leave empty for auto-generation</FormDescription>
                         <FormMessage />
@@ -250,7 +286,7 @@ export function CreateItemDialog({ projectId, categories, children }: CreateItem
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select category" />
@@ -323,8 +359,10 @@ export function CreateItemDialog({ projectId, categories, children }: CreateItem
                           type="number"
                           step="0.01"
                           min="0"
-                          {...field}
+                          value={field.value || ''}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          onBlur={field.onBlur}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormDescription>For shipping calculations</FormDescription>

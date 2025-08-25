@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+#### Item Search and Filter Functionality ✅
+- **Critical Filter Logic Bug**: Fixed incorrect filter application when no search parameters were provided
+  - **Root Cause**: Filter logic incorrectly set `isActive: false` and `isFeatured: false` when no filters applied
+  - **Impact**: Only items matching the false values were displayed, hiding most items from the list
+  - **Fix**: Updated filter logic to properly handle undefined search parameters as "no filter applied"
+  - **Result**: All items now appear correctly when visiting items page without filters
+- **Database Query Optimization**: Enhanced item retrieval to handle items without active price records
+  - **Problem**: INNER JOIN on `item_prices` was filtering out items without active prices
+  - **Solution**: Changed to LEFT JOIN to include all items regardless of price status
+  - **Benefit**: Items without price records now appear in the interface
+- **Type Safety Improvements**: Updated type definitions to handle nullable current_price values
+  - **Enhanced**: `ItemWithPrice` type now allows `current_price?: Partial<Tables<'item_prices'>> | null`
+  - **Compatibility**: Maintained backward compatibility across all components
+- **Code Cleanup**: Removed debug logging and unused imports after successful troubleshooting
+  - **Removed**: Debug console.log statements from data layer functions
+  - **Cleaned**: Unused imports (`zodResolver`, `z`) from form components
+  - **Optimized**: Removed unused variables and improved code maintainability
+
 ### Added
 
 #### Complete Item Management System (Phase 1.3) ✅
