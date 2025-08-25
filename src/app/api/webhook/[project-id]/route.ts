@@ -17,7 +17,7 @@ const botInstances = new Map<string, Bot>();
  */
 function generateMiniAppUrl(projectId: string): string {
   // Use environment variable or default to localhost for development
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return `${baseUrl}/app/${projectId}`;
 }
 
