@@ -26,18 +26,21 @@ export function FeaturedProducts({ items, projectId }: FeaturedProductsProps) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3">
-        <Star className="h-4 w-4 fill-current text-yellow-500" />
-        <h2 className="text-lg font-semibold">Featured</h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Star className="h-5 w-5 fill-current text-yellow-500" />
+          <h2 className="text-lg font-bold text-gray-900">Featured Products</h2>
+        </div>
+        <span className="text-xs font-medium text-gray-500">{items.length} items</span>
       </div>
 
       {/* Horizontal scrolling featured items */}
-      <div className="overflow-x-auto">
-        <div className="flex gap-3 px-3 pb-2" style={{ width: 'max-content' }}>
+      <div className="-mx-4 overflow-x-auto">
+        <div className="flex gap-3 px-4 pb-2" style={{ width: 'max-content' }}>
           {items.slice(0, 8).map((item) => (
-            <div key={item.id} className="w-32 flex-shrink-0">
+            <div key={item.id} className="w-36 flex-shrink-0">
               <ProductCard item={item} projectId={projectId} compact />
             </div>
           ))}

@@ -1,7 +1,6 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { CartItem } from '@/hooks/use-cart-store';
 import { Package } from 'lucide-react';
 import Image from 'next/image';
@@ -24,10 +23,10 @@ export function OrderSummary({ items }: OrderSummaryProps) {
   const total = subtotal + deliveryFee;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Package className="h-5 w-5" />
+    <Card className="border-0 shadow-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+          <Package className="h-5 w-5 text-blue-600" />
           Order Summary
         </CardTitle>
       </CardHeader>
@@ -35,30 +34,32 @@ export function OrderSummary({ items }: OrderSummaryProps) {
         {/* Items List */}
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center gap-3">
+            <div key={item.id} className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
               {/* Item Image */}
-              <div className="bg-muted h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
+              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border bg-white">
                 {item.imageUrl ? (
                   <Image
                     src={item.imageUrl}
                     alt={item.name}
-                    width={48}
-                    height={48}
+                    width={56}
+                    height={56}
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="text-muted-foreground flex h-full w-full items-center justify-center">
-                    <Package className="h-4 w-4" />
+                  <div className="flex h-full w-full items-center justify-center text-gray-400">
+                    <Package className="h-5 w-5" />
                   </div>
                 )}
               </div>
 
               {/* Item Details */}
               <div className="min-w-0 flex-1">
-                <h4 className="line-clamp-1 text-sm font-medium">{item.name}</h4>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-sm">Qty: {item.quantity}</span>
-                  <span className="text-sm font-medium">
+                <h4 className="line-clamp-2 text-sm leading-tight font-semibold text-gray-900">
+                  {item.name}
+                </h4>
+                <div className="mt-1 flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-600">Qty: {item.quantity}</span>
+                  <span className="text-sm font-bold text-gray-900">
                     {formatPrice(item.price * item.quantity)}
                   </span>
                 </div>
@@ -67,33 +68,39 @@ export function OrderSummary({ items }: OrderSummaryProps) {
           ))}
         </div>
 
-        <Separator />
-
         {/* Price Breakdown */}
-        <div className="space-y-2">
+        <div className="space-y-3 rounded-lg bg-gray-50 p-4">
           <div className="flex justify-between text-sm">
-            <span>Subtotal ({items.length} items)</span>
-            <span>{formatPrice(subtotal)}</span>
+            <span className="text-gray-600">Subtotal ({items.length} items)</span>
+            <span className="font-medium text-gray-900">{formatPrice(subtotal)}</span>
           </div>
 
           <div className="flex justify-between text-sm">
-            <span>Delivery Fee</span>
-            <span>{formatPrice(deliveryFee)}</span>
+            <span className="text-gray-600">Delivery Fee</span>
+            <span className="font-medium text-gray-900">{formatPrice(deliveryFee)}</span>
           </div>
         </div>
 
-        <Separator />
-
         {/* Total */}
-        <div className="flex justify-between text-lg font-bold">
-          <span>Total</span>
-          <span className="text-primary">{formatPrice(total)}</span>
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-semibold text-gray-900">Total</span>
+            <span className="text-xl font-bold text-blue-600">{formatPrice(total)}</span>
+          </div>
         </div>
 
         {/* Delivery Notice */}
-        <div className="text-muted-foreground bg-muted rounded-lg p-3 text-xs">
-          📦 <strong>Delivery Info:</strong> Standard delivery fee applies. Delivery can take up to
-          3 days. Orders to non-deliverable areas will be cancelled.
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <div className="flex items-start gap-2">
+            <span className="text-sm text-amber-600">📦</span>
+            <div className="text-xs leading-relaxed text-amber-800">
+              <p className="mb-1 font-semibold">Delivery Information</p>
+              <p>
+                Standard delivery applies. Delivery takes up to 3 days. Orders to non-deliverable
+                areas will be cancelled.
+              </p>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

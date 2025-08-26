@@ -66,111 +66,149 @@ export function CODConfirmation({ order }: CODConfirmationProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Success Header */}
-      <Card>
-        <CardContent className="pt-6 text-center">
-          <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-green-500" />
-          <h1 className="mb-2 text-2xl font-bold">Order Confirmed!</h1>
-          <p className="text-muted-foreground mb-4">Your order has been successfully placed.</p>
-          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-            <p className="font-medium text-green-800">Order #{order.order_number}</p>
-            <p className="text-sm text-green-600">Total: {formatPrice(order.total_amount)}</p>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="border-b border-gray-200 bg-white px-4 py-4">
+        <div className="text-center">
+          <CheckCircle2 className="mx-auto mb-3 h-16 w-16 text-green-500" />
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">Order Confirmed!</h1>
+          <p className="text-gray-600">Your order has been successfully placed.</p>
+        </div>
+      </div>
 
-      {/* COD Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Cash on Delivery (COD)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <h3 className="mb-2 font-semibold text-blue-900">Payment Instructions</h3>
-            <ul className="space-y-1 text-sm text-blue-800">
-              <li>• Pay the total amount when your order arrives</li>
-              <li>• Have exact change ready if possible</li>
-              <li>• Payment accepted in Myanmar Kyat (MMK) only</li>
-              <li>• Please check your order before payment</li>
-            </ul>
-          </div>
-
-          <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
-            <Clock className="text-muted-foreground h-5 w-5" />
-            <div>
-              <p className="font-medium">Estimated Delivery</p>
-              <p className="text-muted-foreground text-sm">
-                2-3 business days from order confirmation
-              </p>
+      <div className="space-y-4 p-4">
+        {/* Order Summary Card */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-6 text-center">
+            <div className="rounded-xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-4">
+              <p className="mb-1 text-lg font-bold text-green-800">Order #{order.order_number}</p>
+              <p className="text-2xl font-bold text-green-900">{formatPrice(order.total_amount)}</p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Delivery Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Delivery Details
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div>
-            <p className="font-medium">Delivery Address:</p>
-            <div className="text-muted-foreground text-sm">
-              <p>
-                {firstName} {lastName}
-              </p>
-              <p>{addressLine1}</p>
-              {addressLine2 && <p>{addressLine2}</p>}
-              <p>{city}</p>
-              {postalCode && <p>{postalCode}</p>}
+        {/* COD Information */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+              <Package className="h-5 w-5 text-blue-600" />
+              Cash on Delivery (COD)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <h3 className="mb-3 text-base font-semibold text-blue-900">Payment Instructions</h3>
+              <ul className="space-y-2 text-sm text-blue-800">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600">•</span>
+                  Pay the total amount when your order arrives
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600">•</span>
+                  Have exact change ready if possible
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600">•</span>
+                  Payment accepted in Myanmar Kyat (MMK) only
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600">•</span>
+                  Please check your order before payment
+                </li>
+              </ul>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <Phone className="text-muted-foreground h-4 w-4" />
-            <span className="text-sm">{phone}</span>
-          </div>
-
-          {order.delivery_notes && (
-            <div>
-              <p className="text-sm font-medium">Delivery Notes:</p>
-              <p className="text-muted-foreground text-sm">{order.delivery_notes}</p>
+            <div className="flex items-center gap-3 rounded-xl border bg-gray-50 p-4">
+              <Clock className="h-6 w-6 flex-shrink-0 text-gray-600" />
+              <div>
+                <p className="font-semibold text-gray-900">Estimated Delivery</p>
+                <p className="text-sm text-gray-600">2-3 business days from order confirmation</p>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Important Notice */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-            <h3 className="mb-2 font-semibold text-yellow-900">Important Notice</h3>
-            <ul className="space-y-1 text-sm text-yellow-800">
-              <li>• Our delivery team will contact you before delivery</li>
-              <li>• Please ensure someone is available to receive the order</li>
-              <li>• You can track your order status in the Orders section</li>
-              <li>• Contact us if you need to modify your order</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Delivery Information */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+              <MapPin className="h-5 w-5 text-green-600" />
+              Delivery Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-xl border bg-gray-50 p-4">
+              <p className="mb-2 font-semibold text-gray-900">Delivery Address:</p>
+              <div className="space-y-1 text-sm text-gray-700">
+                <p className="font-medium">
+                  {firstName} {lastName}
+                </p>
+                <p>{addressLine1}</p>
+                {addressLine2 && <p>{addressLine2}</p>}
+                <p>{city}</p>
+                {postalCode && <p>{postalCode}</p>}
+              </div>
 
-      {/* Action Buttons */}
-      <div className="space-y-3">
-        <Button onClick={handleViewOrder} className="w-full" size="lg">
-          View Order Details
-        </Button>
+              <div className="mt-3 flex items-center gap-2 border-t border-gray-200 pt-3">
+                <Phone className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">{phone}</span>
+              </div>
+            </div>
 
-        <Button variant="outline" onClick={handleContinueShopping} className="w-full">
-          Continue Shopping
-        </Button>
+            {order.delivery_notes && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="mb-1 text-sm font-semibold text-amber-900">Delivery Notes:</p>
+                <p className="text-sm text-amber-800">{order.delivery_notes}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Important Notice */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-6">
+            <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+              <h3 className="mb-3 text-base font-semibold text-yellow-900">Important Notice</h3>
+              <ul className="space-y-2 text-sm text-yellow-800">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-yellow-600">•</span>
+                  Our delivery team will contact you before delivery
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-yellow-600">•</span>
+                  Please ensure someone is available to receive the order
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-yellow-600">•</span>
+                  You can track your order status in the Orders section
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-yellow-600">•</span>
+                  Contact us if you need to modify your order
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
+        <div className="space-y-3 pt-4">
+          <Button
+            onClick={handleViewOrder}
+            className="h-12 w-full bg-blue-600 font-semibold shadow-sm hover:bg-blue-700"
+            size="lg"
+          >
+            View Order Details
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={handleContinueShopping}
+            className="h-10 w-full border-gray-300 font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Continue Shopping
+          </Button>
+        </div>
       </div>
     </div>
   );

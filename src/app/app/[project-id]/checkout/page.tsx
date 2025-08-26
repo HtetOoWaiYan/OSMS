@@ -67,30 +67,39 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
 
   return (
     <MiniAppLayout projectId={projectId} showBottomNav={false}>
-      <div className="container mx-auto max-w-md space-y-6 px-4 py-6">
+      <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-bold">Checkout</h1>
-            <p className="text-muted-foreground text-sm">
-              {getItemCount()} items •{' '}
-              {new Intl.NumberFormat('en-MM', {
-                style: 'currency',
-                currency: 'MMK',
-                minimumFractionDigits: 0,
-              }).format(getTotal())}
-            </p>
+        <div className="border-b border-gray-200 bg-white px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              className="h-9 w-9 flex-shrink-0"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-xl font-bold text-gray-900">Checkout</h1>
+              <p className="text-sm text-gray-600">
+                {getItemCount()} items •{' '}
+                {new Intl.NumberFormat('en-MM', {
+                  style: 'currency',
+                  currency: 'MMK',
+                  minimumFractionDigits: 0,
+                }).format(getTotal())}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Order Summary */}
-        <OrderSummary items={items} />
+        <div className="space-y-4 p-4">
+          {/* Order Summary */}
+          <OrderSummary items={items} />
 
-        {/* Checkout Form */}
-        <CheckoutForm projectId={projectId} />
+          {/* Checkout Form */}
+          <CheckoutForm projectId={projectId} />
+        </div>
       </div>
     </MiniAppLayout>
   );

@@ -42,28 +42,35 @@ export default async function AppPage({ params, searchParams }: AppPageProps) {
   return (
     <MiniAppLayout projectId={projectId}>
       <div className="min-h-screen bg-gray-50">
-        {/* Featured Products - only show if no search/filters applied */}
+        {/* Featured Products Section */}
         {!filters.search && !filters.category && featuredItems.length > 0 && (
-          <div className="bg-white px-3 py-4">
-            <FeaturedProducts items={featuredItems} projectId={projectId} />
+          <div className="border-b border-gray-100 bg-white">
+            <div className="px-4 py-4">
+              <FeaturedProducts items={featuredItems} projectId={projectId} />
+            </div>
           </div>
         )}
 
-        {/* All Products */}
-        <div className="mt-2 bg-white">
-          <ProductGrid
-            items={items}
-            categories={categories}
-            projectId={projectId}
-            title={
-              filters.search
-                ? `Search: "${filters.search}"`
-                : filters.category
-                  ? `${categories.find((c) => c.id === filters.category)?.name || 'Category'}`
-                  : 'All Products'
-            }
-          />
+        {/* Main Products Section */}
+        <div className="bg-white">
+          <div className="px-1">
+            <ProductGrid
+              items={items}
+              categories={categories}
+              projectId={projectId}
+              title={
+                filters.search
+                  ? `Search: "${filters.search}"`
+                  : filters.category
+                    ? `${categories.find((c) => c.id === filters.category)?.name || 'Category'}`
+                    : 'All Products'
+              }
+            />
+          </div>
         </div>
+
+        {/* Bottom Spacing for mobile */}
+        <div className="h-4 bg-gray-50" />
       </div>
     </MiniAppLayout>
   );

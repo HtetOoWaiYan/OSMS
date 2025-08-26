@@ -34,69 +34,77 @@ export function ItemInfo({ item }: ItemInfoProps) {
   };
 
   return (
-    <div className="space-y-4 px-3 pb-20">
-      {/* Category */}
+    <div className="space-y-5 px-4 pb-20">
+      {/* Category Badge */}
       {item.category && (
         <div className="flex items-center gap-2">
-          <Tag className="text-muted-foreground h-3 w-3" />
-          <span className="text-muted-foreground text-xs tracking-wide uppercase">
-            {item.category.name}
-          </span>
+          <div className="flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1">
+            <Tag className="h-3 w-3 text-gray-500" />
+            <span className="text-xs font-medium tracking-wide text-gray-600 uppercase">
+              {item.category.name}
+            </span>
+          </div>
         </div>
       )}
 
-      {/* Name */}
-      <h1 className="text-xl leading-tight font-bold">{item.name}</h1>
+      {/* Name and Badges Section */}
+      <div className="space-y-3">
+        <h1 className="text-2xl leading-tight font-bold text-gray-900">{item.name}</h1>
 
-      {/* Badges */}
-      <div className="flex flex-wrap gap-2">
-        {item.is_featured && (
-          <Badge variant="default" className="bg-yellow-500 px-2 py-1 text-xs text-white">
-            <Star className="mr-1 h-2 w-2" />
-            Featured
-          </Badge>
-        )}
-        {isOutOfStock && (
-          <Badge variant="destructive" className="px-2 py-1 text-xs">
-            Out of Stock
-          </Badge>
-        )}
-        {hasDiscount && !isOutOfStock && (
-          <Badge variant="secondary" className="bg-green-500 px-2 py-1 text-xs text-white">
-            {item.current_price?.discount_percentage}% OFF
-          </Badge>
-        )}
+        {/* Status Badges */}
+        <div className="flex flex-wrap gap-2">
+          {item.is_featured && (
+            <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 px-2.5 py-1 text-xs font-medium text-white shadow-sm">
+              <Star className="mr-1 h-2.5 w-2.5 fill-current" />
+              Featured
+            </Badge>
+          )}
+          {isOutOfStock && (
+            <Badge variant="destructive" className="px-2.5 py-1 text-xs font-medium shadow-sm">
+              Out of Stock
+            </Badge>
+          )}
+          {hasDiscount && !isOutOfStock && (
+            <Badge className="bg-gradient-to-r from-green-500 to-green-600 px-2.5 py-1 text-xs font-medium text-white shadow-sm">
+              {item.current_price?.discount_percentage}% OFF
+            </Badge>
+          )}
+        </div>
       </div>
 
-      {/* Price */}
-      <div className="space-y-1">
+      {/* Price Section */}
+      <div className="space-y-2 rounded-lg bg-gray-50 p-4">
         <div className="flex items-baseline gap-3">
-          <span className="text-primary text-2xl font-bold">{formatPrice(currentPrice)}</span>
+          <span className="text-3xl font-bold text-gray-900">{formatPrice(currentPrice)}</span>
           {hasDiscount && (
-            <span className="text-muted-foreground text-lg line-through">
+            <span className="text-lg text-gray-500 line-through">
               {formatPrice(originalPrice!)}
             </span>
           )}
         </div>
         {hasDiscount && (
-          <p className="text-sm font-medium text-green-600">
-            Save {formatPrice(originalPrice! - currentPrice)}
-          </p>
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-semibold text-green-600">
+              You save {formatPrice(originalPrice! - currentPrice)}
+            </span>
+          </div>
         )}
       </div>
 
-      {/* Stock info */}
+      {/* Stock Info */}
       <div className="flex items-center gap-2">
-        <Package className="text-muted-foreground h-3 w-3" />
-        <span className="text-muted-foreground text-sm">
-          {isOutOfStock ? (
-            <span className="text-destructive font-medium">Out of stock</span>
-          ) : item.stock_quantity <= 5 ? (
-            <span className="font-medium text-orange-600">Only {item.stock_quantity} left</span>
-          ) : (
-            <span className="text-green-600">{item.stock_quantity} in stock</span>
-          )}
-        </span>
+        <div className="flex items-center gap-2 rounded-md border bg-white px-3 py-2">
+          <Package className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-medium">
+            {isOutOfStock ? (
+              <span className="text-red-600">Out of stock</span>
+            ) : item.stock_quantity <= 5 ? (
+              <span className="text-orange-600">Only {item.stock_quantity} left</span>
+            ) : (
+              <span className="text-green-600">{item.stock_quantity} in stock</span>
+            )}
+          </span>
+        </div>
       </div>
 
       {/* SKU */}
@@ -108,19 +116,25 @@ export function ItemInfo({ item }: ItemInfoProps) {
 
       {/* Description */}
       {item.description && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Description</h3>
-          <p className="text-muted-foreground text-sm leading-relaxed">{item.description}</p>
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold text-gray-900">Product Details</h3>
+          <div className="rounded-lg border bg-white p-4">
+            <p className="text-sm leading-relaxed text-gray-700">{item.description}</p>
+          </div>
         </div>
       )}
 
       {/* Tags */}
       {item.tags && item.tags.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Tags</h3>
-          <div className="flex flex-wrap gap-1">
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold text-gray-900">Tags</h3>
+          <div className="flex flex-wrap gap-2">
             {item.tags.map((tag, index) => (
-              <Badge key={index} variant="outline" className="px-2 py-0.5 text-xs">
+              <Badge
+                key={index}
+                variant="outline"
+                className="rounded-full border-gray-300 px-3 py-1 text-xs font-medium text-gray-700"
+              >
                 {tag}
               </Badge>
             ))}

@@ -72,12 +72,12 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
     : item.stock_quantity;
 
   return (
-    <div className="safe-area-inset-bottom fixed right-0 bottom-0 left-0 z-40 border-t border-gray-200 bg-white p-3">
-      <div className="mx-auto max-w-md space-y-3">
+    <div className="safe-area-inset-bottom fixed right-0 bottom-0 left-0 z-40 border-t border-gray-200 bg-white shadow-lg">
+      <div className="mx-auto max-w-md space-y-4 p-4">
         {/* Quantity Selector */}
         {!isOutOfStock && (
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Quantity:</span>
+          <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+            <span className="text-sm font-medium text-gray-900">Quantity:</span>
             <div className="flex items-center gap-3">
               <QuantitySelector
                 value={selectedQuantity}
@@ -86,7 +86,9 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
                 max={maxSelectableQuantity}
                 disabled={isOutOfStock}
               />
-              <span className="text-muted-foreground text-xs">{item.stock_quantity} available</span>
+              <span className="text-xs font-medium text-gray-500">
+                {item.stock_quantity} available
+              </span>
             </div>
           </div>
         )}
@@ -97,7 +99,7 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
           <Button
             onClick={handleAddToCart}
             disabled={isOutOfStock || maxSelectableQuantity === 0}
-            className="h-11 flex-1"
+            className="h-12 flex-1 bg-blue-600 font-medium shadow-sm hover:bg-blue-700"
             size="lg"
           >
             <ShoppingCart className="mr-2 h-4 w-4" />
@@ -106,25 +108,39 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
 
           {/* Buy Now Button */}
           {!isOutOfStock && (
-            <Button onClick={handleBuyNow} variant="outline" className="h-11 flex-1" size="lg">
+            <Button
+              onClick={handleBuyNow}
+              variant="outline"
+              className="h-12 flex-1 border-blue-600 font-medium text-blue-600 hover:bg-blue-50"
+              size="lg"
+            >
               Buy Now
             </Button>
           )}
         </div>
 
-        {/* Stock Warning */}
-        {!isOutOfStock && item.stock_quantity <= 5 && (
-          <div className="rounded bg-orange-50 px-2 py-1 text-center text-xs text-orange-600">
-            ⚠️ Only {item.stock_quantity} left!
-          </div>
-        )}
+        {/* Status Messages */}
+        <div className="space-y-2">
+          {/* Stock Warning */}
+          {!isOutOfStock && item.stock_quantity <= 5 && (
+            <div className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-center">
+              <div className="flex items-center justify-center gap-1">
+                <span className="text-sm font-medium text-orange-600">
+                  ⚠️ Only {item.stock_quantity} left in stock!
+                </span>
+              </div>
+            </div>
+          )}
 
-        {/* Cart Info */}
-        {isInCart && (
-          <div className="text-muted-foreground rounded bg-gray-50 px-2 py-1 text-center text-xs">
-            {cartItem.quantity} in cart
-          </div>
-        )}
+          {/* Cart Info */}
+          {isInCart && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-center">
+              <span className="text-sm font-medium text-blue-700">
+                ✓ {cartItem.quantity} item{cartItem.quantity > 1 ? 's' : ''} in cart
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

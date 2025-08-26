@@ -20,10 +20,12 @@ export function ItemImageGallery({ images, itemName }: ItemImageGalleryProps) {
   // If no images, show placeholder
   if (!images || images.length === 0) {
     return (
-      <div className="bg-muted flex aspect-square items-center justify-center">
-        <div className="text-muted-foreground text-center">
-          <ImageIcon className="mx-auto mb-4 h-16 w-16" />
-          <p className="text-lg font-medium">No Image Available</p>
+      <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+        <div className="text-center text-gray-400">
+          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gray-300">
+            <ImageIcon className="h-8 w-8" />
+          </div>
+          <p className="text-sm font-medium">No Image Available</p>
         </div>
       </div>
     );
@@ -41,9 +43,9 @@ export function ItemImageGallery({ images, itemName }: ItemImageGalleryProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Main Image */}
-      <div className="bg-muted relative aspect-square overflow-hidden">
+      <div className="relative aspect-square overflow-hidden bg-gray-50">
         <Image
           src={currentImage.image_url}
           alt={`${itemName} - Image ${currentImageIndex + 1}`}
@@ -59,7 +61,7 @@ export function ItemImageGallery({ images, itemName }: ItemImageGalleryProps) {
             <Button
               variant="outline"
               size="icon"
-              className="bg-background/80 absolute top-1/2 left-2 h-8 w-8 -translate-y-1/2 rounded-full backdrop-blur"
+              className="absolute top-1/2 left-3 h-9 w-9 -translate-y-1/2 rounded-full border-0 bg-white/90 shadow-lg"
               onClick={goToPrevious}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -68,7 +70,7 @@ export function ItemImageGallery({ images, itemName }: ItemImageGalleryProps) {
             <Button
               variant="outline"
               size="icon"
-              className="bg-background/80 absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 rounded-full backdrop-blur"
+              className="absolute top-1/2 right-3 h-9 w-9 -translate-y-1/2 rounded-full border-0 bg-white/90 shadow-lg"
               onClick={goToNext}
             >
               <ChevronRight className="h-4 w-4" />
@@ -78,8 +80,8 @@ export function ItemImageGallery({ images, itemName }: ItemImageGalleryProps) {
 
         {/* Image counter */}
         {hasMultipleImages && (
-          <div className="bg-background/80 absolute right-2 bottom-2 rounded px-2 py-1 text-xs backdrop-blur">
-            {currentImageIndex + 1} of {images.length}
+          <div className="absolute right-3 bottom-3 rounded-full bg-black/60 px-2 py-1 text-xs font-medium text-white">
+            {currentImageIndex + 1} / {images.length}
           </div>
         )}
       </div>

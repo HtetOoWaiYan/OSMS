@@ -13,32 +13,38 @@ export function EmptyCart({ projectId }: EmptyCartProps) {
   const router = useRouter();
 
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="bg-muted mb-6 flex h-20 w-20 items-center justify-center rounded-full">
-          <ShoppingCart className="text-muted-foreground h-10 w-10" />
-        </div>
+    <div className="flex min-h-[60vh] items-center justify-center px-4">
+      <Card className="w-full max-w-sm border-0 shadow-lg">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-200">
+            <ShoppingCart className="h-12 w-12 text-gray-400" />
+          </div>
 
-        <h2 className="mb-2 text-xl font-semibold">Your cart is empty</h2>
-        <p className="text-muted-foreground mb-6 max-w-sm">
-          Looks like you haven&apos;t added anything to your cart yet. Start shopping to fill it up!
-        </p>
+          <h2 className="mb-3 text-xl font-bold text-gray-900">Your cart is empty</h2>
+          <p className="mb-8 max-w-sm text-sm leading-relaxed text-gray-600">
+            Discover amazing products and add them to your cart. Start your shopping journey now!
+          </p>
 
-        <div className="w-full max-w-xs space-y-3">
-          <Button onClick={() => router.push(`/app/${projectId}`)} className="w-full" size="lg">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Start Shopping
-          </Button>
+          <div className="w-full space-y-3">
+            <Button
+              onClick={() => router.push(`/app/${projectId}`)}
+              className="h-12 w-full bg-blue-600 font-semibold shadow-sm hover:bg-blue-700"
+              size="lg"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Start Shopping
+            </Button>
 
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/app/${projectId}/orders`)}
-            className="w-full"
-          >
-            View Past Orders
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+            <Button
+              variant="outline"
+              onClick={() => router.push(`/app/${projectId}/orders`)}
+              className="h-10 w-full border-gray-300 font-medium text-gray-700 hover:bg-gray-50"
+            >
+              View Past Orders
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

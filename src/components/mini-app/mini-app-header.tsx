@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, ShoppingCart, Package } from 'lucide-react';
+import { Search, ShoppingCart, Package, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -35,6 +35,10 @@ export function MiniAppHeader({ projectId, showSearch = true }: MiniAppHeaderPro
     router.push(`/app/${projectId}?${params.toString()}`);
   };
 
+  const navigateToHome = () => {
+    router.push(`/app/${projectId}`);
+  };
+
   const navigateToCart = () => {
     router.push(`/app/${projectId}/cart`);
   };
@@ -46,6 +50,16 @@ export function MiniAppHeader({ projectId, showSearch = true }: MiniAppHeaderPro
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
       <div className="flex h-14 items-center gap-3 px-3">
+        {/* Home Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={navigateToHome}
+          className="h-9 w-9 flex-shrink-0"
+        >
+          <Home className="h-5 w-5" />
+        </Button>
+
         {showSearch && (
           <form onSubmit={handleSearch} className="flex-1">
             <div className="relative">

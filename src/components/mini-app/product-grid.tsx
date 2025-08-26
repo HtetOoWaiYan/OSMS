@@ -49,10 +49,15 @@ export function ProductGrid({
   }
 
   return (
-    <div className="space-y-3 px-3 pb-6">
+    <div className="space-y-4 px-4 pb-6">
       {/* Header with filters toggle */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="flex items-center justify-between pt-4">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+          <p className="mt-0.5 text-xs text-gray-500">
+            {items.length} product{items.length !== 1 ? 's' : ''} found
+          </p>
+        </div>
         <Button
           variant="outline"
           size="sm"
@@ -79,11 +84,6 @@ export function ProductGrid({
           </CardContent>
         </Card>
       )}
-
-      {/* Product count */}
-      <p className="text-muted-foreground text-xs">
-        {items.length} product{items.length !== 1 ? 's' : ''} found
-      </p>
 
       {/* Products grid - Mobile optimized 2 columns */}
       <div className="grid grid-cols-2 gap-3">
