@@ -240,24 +240,29 @@ export async function GET(
 
     if (!bot) {
       console.error(`Bot setup failed for project: ${projectId}`);
-      return NextResponse.json(
-        { error: "Bot not configured for this project" },
-        { status: 404 },
-      );
+      return new NextResponse(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
     }
 
     // Return success for webhook verification
-    return NextResponse.json({
-      status: "ok",
-      message: "Webhook verified successfully",
-      project_id: projectId,
+    return new NextResponse(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
   } catch (error) {
     console.error("Webhook GET error:", error);
-    return NextResponse.json(
-      { error: "Webhook verification failed" },
-      { status: 500 },
-    );
+    return new NextResponse(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }
 
@@ -310,13 +315,21 @@ export async function POST(
       // Still return 200 to acknowledge receipt even if processing failed
     }
 
-    // Return 200 OK to acknowledge receipt
-    return NextResponse.json({ status: "ok" });
+    // Return 200 OK immediately to prevent 429 errors
+    return new NextResponse(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   } catch (error) {
     console.error("Webhook POST error:", error);
-    return NextResponse.json(
-      { error: "Webhook processing failed" },
-      { status: 500 },
-    );
+    // Even on error, return 200 to prevent Telegram from retrying
+    return new NextResponse(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }
