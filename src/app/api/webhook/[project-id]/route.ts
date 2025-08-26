@@ -7,13 +7,18 @@ import { getProjectById } from "@/lib/data/projects";
  * Dynamic webhook handler for multiple Telegram bots
  * Route: /api/webhook/[project-id]
  * Each project can have its own bot with different token
+ * 
+ * Launch Parameters Implementation:
+ * - Mini App URLs include launch parameters in the hash (e.g., #tgWebAppData=...&tgWebAppStartParam=...)
+ * - Client-side handler converts hash parameters to search parameters for server-side processing
+ * - This ensures compatibility with Telegram Mini Apps specification while supporting SSR
  */
 
 // Store bot instances in memory (consider Redis for production with multiple servers)
 const botInstances = new Map<string, Bot>();
 
 /**
- * Generate mini app URL for a project
+ * Generate mini app URL for a project - simplified for best practice
  */
 function generateMiniAppUrl(projectId: string): string {
   // Use environment variable or default to localhost for development
@@ -77,6 +82,7 @@ Hello ${user.first_name}! I'm your shopping assistant.
 
 Here are some things I can help you with:
 • Browse our product catalog
+• Add items to cart
 • Place orders directly through chat
 • Check order status
 • Get help and support
