@@ -17,7 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import { updateItemActionSimple, getItemAction } from '@/lib/actions/items';
 import {
   uploadMultipleItemImagesAction,
@@ -111,6 +111,14 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
     setError(null);
 
     try {
+      // Validate required fields before submission
+      const name = formData.get('name') as string;
+      if (!name || name.trim().length === 0) {
+        setError('Product name is required. Please enter a name for your item.');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Add required fields for update
       formData.append('itemId', itemId);
       formData.append('projectId', projectId);
@@ -120,6 +128,7 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
 
       if (result.success) {
         let imageOperationsSuccessful = true;
+        const imageOperationMessages: string[] = [];
 
         // Handle image deletions
         if (removedImageIds.length > 0) {
@@ -134,7 +143,12 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
           }
 
           if (deleteErrors.length > 0) {
-            toast.error(`Image deletion errors: ${deleteErrors.join(', ')}`);
+            const deleteMessage =
+              deleteErrors.length === 1
+                ? `Image deletion failed: ${deleteErrors[0]}`
+                : `${deleteErrors.length} image deletions failed. Please try again later.`;
+            imageOperationMessages.push(deleteMessage);
+            toast.error(deleteMessage);
           }
         }
 
@@ -148,22 +162,34 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
           if (!uploadResult.success) {
             console.error('Failed to upload images:', uploadResult.error);
 
-            // Show specific upload errors
-            const uploadErrors = uploadResult.results
-              .filter((r) => !r.success)
-              .map((r) => r.error)
-              .filter(Boolean);
+            // Show specific upload errors with better formatting
+            const uploadErrors =
+              uploadResult.results
+                ?.filter((r) => !r.success)
+                .map((r) => r.error)
+                .filter(Boolean) || [];
 
             if (uploadErrors.length > 0) {
-              toast.error(`Image upload errors: ${uploadErrors.join(', ')}`);
+              const uploadMessage =
+                uploadErrors.length === 1
+                  ? `Image upload failed: ${uploadErrors[0]}`
+                  : `${uploadErrors.length} image uploads failed. Please try uploading images again later.`;
+              imageOperationMessages.push(uploadMessage);
+              toast.error(uploadMessage);
+            } else {
+              const uploadMessage = `Image upload failed: ${uploadResult.error}`;
+              imageOperationMessages.push(uploadMessage);
+              toast.error(uploadMessage);
             }
 
             imageOperationsSuccessful = false;
           } else {
             // Show success count
-            const successCount = uploadResult.results.filter((r) => r.success).length;
+            const successCount = uploadResult.results?.filter((r) => r.success).length || 0;
             if (successCount > 0) {
-              toast.success(`${successCount} image(s) uploaded successfully`);
+              const successMessage = `${successCount} image${successCount !== 1 ? 's' : ''} uploaded successfully`;
+              imageOperationMessages.push(successMessage);
+              toast.success(successMessage);
             }
           }
         }
@@ -176,11 +202,41 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
 
         router.push(`/dashboard/${projectId}/items`);
       } else {
-        setError(result.error || 'Failed to update item');
+        // Enhanced error handling with specific error messages
+        const errorMessage = result.error || 'Failed to update item';
+
+        // Provide more user-friendly error messages
+        if (errorMessage.includes('duplicate') || errorMessage.includes('unique')) {
+          setError(
+            'An item with this name or SKU already exists. Please choose a different name or SKU.',
+          );
+        } else if (errorMessage.includes('permission') || errorMessage.includes('access')) {
+          setError(
+            "You don't have permission to update items in this project. Please contact your administrator.",
+          );
+        } else if (errorMessage.includes('validation') || errorMessage.includes('invalid')) {
+          setError('Please check your input and ensure all required fields are filled correctly.');
+        } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+          setError('Network error. Please check your internet connection and try again.');
+        } else if (errorMessage.includes('not found') || errorMessage.includes('does not exist')) {
+          setError('The item you are trying to edit no longer exists or has been moved.');
+        } else {
+          setError(`Unable to update item: ${errorMessage}`);
+        }
       }
     } catch (err) {
       console.error('Form submission error:', err);
-      setError('An unexpected error occurred');
+
+      // Handle specific error types
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        setError('Network error. Please check your internet connection and try again.');
+      } else if (err instanceof Error) {
+        setError(`An unexpected error occurred: ${err.message}`);
+      } else {
+        setError(
+          'An unexpected error occurred. Please try again or contact support if the problem persists.',
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -537,7 +593,16 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
           {/* Error Display */}
           {error && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  <p className="font-medium">Unable to update item</p>
+                  <p className="text-sm">{error}</p>
+                  <p className="text-muted-foreground text-xs">
+                    Please check your input and try again. If the problem persists, contact support.
+                  </p>
+                </div>
+              </AlertDescription>
             </Alert>
           )}
 

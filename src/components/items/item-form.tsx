@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { CreateCategoryDialog } from './create-category-dialog';
 import { ImageUpload } from './image-upload';
@@ -56,6 +56,14 @@ export function ItemForm({ projectId, categories }: ItemFormProps) {
       const formData = new FormData(event.currentTarget);
       formData.append('projectId', projectId);
 
+      // Validate required fields before submission
+      const name = formData.get('name') as string;
+      if (!name || name.trim().length === 0) {
+        setError('Product name is required. Please enter a name for your item.');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Create the item first
       const itemResult = await createItemActionSimple(formData);
 
@@ -69,22 +77,33 @@ export function ItemForm({ projectId, categories }: ItemFormProps) {
           );
 
           if (!imageResult.success) {
-            // Show specific upload errors
-            const uploadErrors = imageResult.results
-              .filter((r) => !r.success)
-              .map((r) => r.error)
-              .filter(Boolean);
+            // Show specific upload errors with better formatting
+            const uploadErrors =
+              imageResult.results
+                ?.filter((r) => !r.success)
+                .map((r) => r.error)
+                .filter(Boolean) || [];
 
             if (uploadErrors.length > 0) {
-              toast.error(`Item created but image upload failed: ${uploadErrors.join(', ')}`);
+              const errorMessage =
+                uploadErrors.length === 1
+                  ? `Item created successfully, but image upload failed: ${uploadErrors[0]}`
+                  : `Item created successfully, but ${uploadErrors.length} image uploads failed. Please try uploading images again later.`;
+              toast.error(errorMessage);
             } else {
-              toast.error(`Item created but image upload failed: ${imageResult.error}`);
+              toast.error(
+                `Item created successfully, but image upload failed: ${imageResult.error}`,
+              );
             }
           } else {
-            const successCount = imageResult.results.filter((r) => r.success).length;
-            toast.success(
-              `Item created successfully with ${successCount} image${successCount !== 1 ? 's' : ''}!`,
-            );
+            const successCount = imageResult.results?.filter((r) => r.success).length || 0;
+            if (successCount > 0) {
+              toast.success(
+                `Item created successfully with ${successCount} image${successCount !== 1 ? 's' : ''}!`,
+              );
+            } else {
+              toast.success('Item created successfully!');
+            }
           }
         } else {
           toast.success('Item created successfully!');
@@ -92,11 +111,39 @@ export function ItemForm({ projectId, categories }: ItemFormProps) {
 
         router.push(`/dashboard/${projectId}/items`);
       } else {
-        setError(itemResult.error || 'Failed to create item');
+        // Enhanced error handling with specific error messages
+        const errorMessage = itemResult.error || 'Failed to create item';
+
+        // Provide more user-friendly error messages
+        if (errorMessage.includes('duplicate') || errorMessage.includes('unique')) {
+          setError(
+            'An item with this name or SKU already exists. Please choose a different name or SKU.',
+          );
+        } else if (errorMessage.includes('permission') || errorMessage.includes('access')) {
+          setError(
+            "You don't have permission to create items in this project. Please contact your administrator.",
+          );
+        } else if (errorMessage.includes('validation') || errorMessage.includes('invalid')) {
+          setError('Please check your input and ensure all required fields are filled correctly.');
+        } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+          setError('Network error. Please check your internet connection and try again.');
+        } else {
+          setError(`Unable to create item: ${errorMessage}`);
+        }
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      setError('An unexpected error occurred');
+
+      // Handle specific error types
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        setError('Network error. Please check your internet connection and try again.');
+      } else if (error instanceof Error) {
+        setError(`An unexpected error occurred: ${error.message}`);
+      } else {
+        setError(
+          'An unexpected error occurred. Please try again or contact support if the problem persists.',
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -350,7 +397,16 @@ export function ItemForm({ projectId, categories }: ItemFormProps) {
       {/* Error Display */}
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="space-y-1">
+              <p className="font-medium">Unable to create item</p>
+              <p className="text-sm">{error}</p>
+              <p className="text-muted-foreground text-xs">
+                Please check your input and try again. If the problem persists, contact support.
+              </p>
+            </div>
+          </AlertDescription>
         </Alert>
       )}
 
