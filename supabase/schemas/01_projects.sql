@@ -7,6 +7,7 @@ create table projects (
     description text,
     telegram_bot_token varchar(255) unique,
     telegram_webhook_url varchar(500),
+    payment_methods jsonb default '{}',
     is_active boolean default true,
     created_at timestamp with time zone default now(),
     updated_at timestamp with time zone default now()

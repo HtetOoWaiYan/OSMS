@@ -1,6 +1,6 @@
-import "server-only";
-import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
-import type { Tables, TablesInsert } from "@/lib/supabase/database.types";
+import 'server-only';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import type { Tables, TablesInsert } from '@/lib/supabase/database.types';
 import type {
   BulkUpdateItemsData,
   CreateCategoryData,
@@ -10,13 +10,13 @@ import type {
   StockAdjustmentData,
   UpdateCategoryData,
   UpdateItemData,
-} from "@/lib/validations/items";
+} from '@/lib/validations/items';
 
 // Type aliases for better readability
-type Item = Tables<"items">;
-type ItemWithPrice = Tables<"items"> & {
-  current_price?: Partial<Tables<"item_prices">> | null;
-  category?: Tables<"categories"> | null;
+type Item = Tables<'items'>;
+type ItemWithPrice = Tables<'items'> & {
+  current_price?: Partial<Tables<'item_prices'>> | null;
+  category?: Tables<'categories'> | null;
   item_images?: Array<{
     image_url: string;
     display_order: number | null;
@@ -25,13 +25,13 @@ type ItemWithPrice = Tables<"items"> & {
   first_image_url?: string;
   image_count?: number;
 };
-type Category = Tables<"categories">;
-type ItemPrice = Tables<"item_prices">;
+type Category = Tables<'categories'>;
+type ItemPrice = Tables<'item_prices'>;
 
-type ItemInsert = TablesInsert<"items">;
-type CategoryInsert = TablesInsert<"categories">;
-type ItemPriceInsert = TablesInsert<"item_prices">;
-type StockMovementInsert = TablesInsert<"stock_movements">;
+type ItemInsert = TablesInsert<'items'>;
+type CategoryInsert = TablesInsert<'categories'>;
+type ItemPriceInsert = TablesInsert<'item_prices'>;
+type StockMovementInsert = TablesInsert<'stock_movements'>;
 
 /**
  * Data access layer for item management
@@ -62,15 +62,19 @@ export async function getItems(
     const supabase = await createClient();
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     // Build query with filters
     let query = supabase
-      .from("items")
-      .select(`
+      .from('items')
+      .select(
+        `
         *,
         category:categories(*),
         item_prices!left(
@@ -87,37 +91,38 @@ export async function getItems(
           display_order,
           is_primary
         )
-      `)
-      .eq("project_id", projectId);
+      `,
+      )
+      .eq('project_id', projectId);
 
     // Apply filters
     if (filters?.search) {
-      query = query.ilike("name", `%${filters.search}%`);
+      query = query.ilike('name', `%${filters.search}%`);
     }
     if (filters?.categoryId !== undefined) {
       if (filters.categoryId === null) {
-        query = query.is("category_id", null);
+        query = query.is('category_id', null);
       } else {
-        query = query.eq("category_id", filters.categoryId);
+        query = query.eq('category_id', filters.categoryId);
       }
     }
     if (filters?.isActive !== undefined) {
-      query = query.eq("is_active", filters.isActive);
+      query = query.eq('is_active', filters.isActive);
     }
     if (filters?.isFeatured !== undefined) {
-      query = query.eq("is_featured", filters.isFeatured);
+      query = query.eq('is_featured', filters.isFeatured);
     }
     if (filters?.minStock !== undefined) {
-      query = query.gte("stock_quantity", filters.minStock);
+      query = query.gte('stock_quantity', filters.minStock);
     }
     if (filters?.maxStock !== undefined) {
-      query = query.lte("stock_quantity", filters.maxStock);
+      query = query.lte('stock_quantity', filters.maxStock);
     }
 
     // Apply sorting
-    const sortBy = filters?.sortBy || "created_at";
-    const sortOrder = filters?.sortOrder || "desc";
-    query = query.order(sortBy, { ascending: sortOrder === "asc" });
+    const sortBy = filters?.sortBy || 'created_at';
+    const sortOrder = filters?.sortOrder || 'desc';
+    query = query.order(sortBy, { ascending: sortOrder === 'asc' });
 
     // Apply pagination - build separate count query
     const page = filters?.page || 1;
@@ -126,81 +131,78 @@ export async function getItems(
 
     // Get total count
     let countQuery = supabase
-      .from("items")
-      .select("*", { count: "exact", head: true })
-      .eq("project_id", projectId);
+      .from('items')
+      .select('*', { count: 'exact', head: true })
+      .eq('project_id', projectId);
 
     // Apply same filters to count query
     if (filters?.search) {
-      countQuery = countQuery.ilike("name", `%${filters.search}%`);
+      countQuery = countQuery.ilike('name', `%${filters.search}%`);
     }
     if (filters?.categoryId !== undefined) {
       if (filters.categoryId === null) {
-        countQuery = countQuery.is("category_id", null);
+        countQuery = countQuery.is('category_id', null);
       } else {
-        countQuery = countQuery.eq("category_id", filters.categoryId);
+        countQuery = countQuery.eq('category_id', filters.categoryId);
       }
     }
     if (filters?.isActive !== undefined) {
-      countQuery = countQuery.eq("is_active", filters.isActive);
+      countQuery = countQuery.eq('is_active', filters.isActive);
     }
     if (filters?.isFeatured !== undefined) {
-      countQuery = countQuery.eq("is_featured", filters.isFeatured);
+      countQuery = countQuery.eq('is_featured', filters.isFeatured);
     }
     if (filters?.minStock !== undefined) {
-      countQuery = countQuery.gte("stock_quantity", filters.minStock);
+      countQuery = countQuery.gte('stock_quantity', filters.minStock);
     }
     if (filters?.maxStock !== undefined) {
-      countQuery = countQuery.lte("stock_quantity", filters.maxStock);
+      countQuery = countQuery.lte('stock_quantity', filters.maxStock);
     }
 
     query = query.range(offset, offset + limit - 1);
 
-    const [{ data: items, error }, { count }] = await Promise.all([
-      query,
-      countQuery,
-    ]);
+    const [{ data: items, error }, { count }] = await Promise.all([query, countQuery]);
 
     if (error) {
       throw error;
     }
 
     // Transform data to include current price and first image
-    const itemsWithPrices = items?.map((item) => {
-      // Handle items that might not have prices or active prices
-      const activePrices = item.item_prices?.filter((p) => p && p.is_active) || [];
-      const currentPrice = activePrices.length > 0
-        ? activePrices.sort((a, b) =>
-            new Date(b.effective_from!).getTime() -
-            new Date(a.effective_from!).getTime()
-          )[0]
-        : null; // No active price found
+    const itemsWithPrices =
+      items?.map((item) => {
+        // Handle items that might not have prices or active prices
+        const activePrices = item.item_prices?.filter((p) => p && p.is_active) || [];
+        const currentPrice =
+          activePrices.length > 0
+            ? activePrices.sort(
+                (a, b) =>
+                  new Date(b.effective_from!).getTime() - new Date(a.effective_from!).getTime(),
+              )[0]
+            : null; // No active price found
 
-      // Get first image URL - prefer primary image, then by display order
-      let firstImageUrl: string | undefined = undefined;
-      if (item.item_images && item.item_images.length > 0) {
-        // First try to find a primary image
-        const primaryImage = item.item_images.find((img) =>
-          img.is_primary
-        );
-        if (primaryImage) {
-          firstImageUrl = primaryImage.image_url;
-        } else {
-          // Otherwise, use the first image sorted by display order
-          const sortedImages = [...item.item_images].sort((a, b) =>
-            (a.display_order || 0) - (b.display_order || 0)
-          );
-          firstImageUrl = sortedImages[0]?.image_url;
+        // Get first image URL - prefer primary image, then by display order
+        let firstImageUrl: string | undefined = undefined;
+        if (item.item_images && item.item_images.length > 0) {
+          // First try to find a primary image
+          const primaryImage = item.item_images.find((img) => img.is_primary);
+          if (primaryImage) {
+            firstImageUrl = primaryImage.image_url;
+          } else {
+            // Otherwise, use the first image sorted by display order
+            const sortedImages = [...item.item_images].sort(
+              (a, b) => (a.display_order || 0) - (b.display_order || 0),
+            );
+            firstImageUrl = sortedImages[0]?.image_url;
+          }
         }
-      }
 
-      return {
-        ...item,
-        current_price: currentPrice,
-        first_image_url: firstImageUrl,
-        image_count: item.item_images?.length || 0,
-      };
-    }) || [];
+        return {
+          ...item,
+          current_price: currentPrice,
+          first_image_url: firstImageUrl,
+          image_count: item.item_images?.length || 0,
+        };
+      }) || [];
 
     return {
       success: true,
@@ -212,10 +214,10 @@ export async function getItems(
       },
     };
   } catch (error) {
-    console.error("Error getting items:", error);
+    console.error('Error getting items:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to get items",
+      error: error instanceof Error ? error.message : 'Failed to get items',
     };
   }
 }
@@ -232,14 +234,18 @@ export async function getItem(itemId: string): Promise<{
     const supabase = await createClient();
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     const { data: item, error } = await supabase
-      .from("items")
-      .select(`
+      .from('items')
+      .select(
+        `
         *,
         category:categories(*),
         item_prices(
@@ -252,22 +258,22 @@ export async function getItem(itemId: string): Promise<{
           effective_until
         ),
         item_images(*)
-      `)
-      .eq("id", itemId)
+      `,
+      )
+      .eq('id', itemId)
       .single();
 
     if (error) {
-      if (error.code === "PGRST116") {
-        return { success: false, error: "Item not found or access denied" };
+      if (error.code === 'PGRST116') {
+        return { success: false, error: 'Item not found or access denied' };
       }
       throw error;
     }
 
     // Get current active price
     const activePrices = item.item_prices?.filter((p) => p.is_active) || [];
-    const currentPrice = activePrices.sort((a, b) =>
-      new Date(b.effective_from!).getTime() -
-      new Date(a.effective_from!).getTime()
+    const currentPrice = activePrices.sort(
+      (a, b) => new Date(b.effective_from!).getTime() - new Date(a.effective_from!).getTime(),
     )[0];
 
     const itemWithPrice = {
@@ -278,10 +284,10 @@ export async function getItem(itemId: string): Promise<{
 
     return { success: true, data: itemWithPrice };
   } catch (error) {
-    console.error("Error getting item:", error);
+    console.error('Error getting item:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to get item",
+      error: error instanceof Error ? error.message : 'Failed to get item',
     };
   }
 }
@@ -301,29 +307,31 @@ export async function generateNextSku(
     const supabase = await createClient();
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     // Get project details for SKU prefix
     const { data: project } = await supabase
-      .from("projects")
-      .select("name")
-      .eq("id", projectId)
+      .from('projects')
+      .select('name')
+      .eq('id', projectId)
       .single();
 
-    const skuPrefix = prefix || project?.name?.substring(0, 4).toUpperCase() ||
-      "PROJ";
+    const skuPrefix = prefix || project?.name?.substring(0, 4).toUpperCase() || 'PROJ';
 
     // Get the latest item number for this project
     const { data: latestItem } = await supabase
-      .from("items")
-      .select("sku")
-      .eq("project_id", projectId)
-      .not("sku", "is", null)
-      .ilike("sku", `${skuPrefix}-%`)
-      .order("created_at", { ascending: false })
+      .from('items')
+      .select('sku')
+      .eq('project_id', projectId)
+      .not('sku', 'is', null)
+      .ilike('sku', `${skuPrefix}-%`)
+      .order('created_at', { ascending: false })
       .limit(1)
       .single();
 
@@ -335,14 +343,14 @@ export async function generateNextSku(
       }
     }
 
-    const nextSku = `${skuPrefix}-${nextNumber.toString().padStart(3, "0")}`;
+    const nextSku = `${skuPrefix}-${nextNumber.toString().padStart(3, '0')}`;
 
     return { success: true, data: nextSku };
   } catch (error) {
-    console.error("Error generating SKU:", error);
+    console.error('Error generating SKU:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to generate SKU",
+      error: error instanceof Error ? error.message : 'Failed to generate SKU',
     };
   }
 }
@@ -364,22 +372,25 @@ export async function createItem(
     const supabaseAdmin = await createServiceRoleClient();
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     // Check user permissions
     const { data: userRole } = await supabase
-      .from("user_roles")
-      .select("role, project_id")
-      .eq("user_id", user.id)
-      .eq("project_id", projectId)
-      .eq("is_active", true)
+      .from('user_roles')
+      .select('role, project_id')
+      .eq('user_id', user.id)
+      .eq('project_id', projectId)
+      .eq('is_active', true)
       .single();
 
     if (!userRole) {
-      return { success: false, error: "No access to this project" };
+      return { success: false, error: 'No access to this project' };
     }
 
     // Generate SKU if not provided
@@ -402,25 +413,17 @@ export async function createItem(
       stock_quantity: itemData.initialStockQuantity,
       min_stock_level: itemData.initialMinStockLevel,
       weight: itemData.weight,
-      dimensions: itemData.dimensions
-        ? JSON.parse(JSON.stringify(itemData.dimensions))
-        : null,
+      dimensions: itemData.dimensions ? JSON.parse(JSON.stringify(itemData.dimensions)) : null,
       is_active: itemData.isActive,
       is_featured: itemData.isFeatured,
       tags: itemData.tags,
     };
 
-
-
-
-
     const { data: item, error: itemError } = await supabaseAdmin
-      .from("items")
+      .from('items')
       .insert(itemInsert)
       .select()
       .single();
-
-
 
     if (itemError) {
       throw itemError;
@@ -429,21 +432,22 @@ export async function createItem(
     // Always create initial stock movement record for audit trail
     const initialStockMovement: StockMovementInsert = {
       item_id: item.id,
-      movement_type: itemData.initialStockQuantity > 0 ? "in" : "adjustment",
-      reason: "initial",
+      movement_type: itemData.initialStockQuantity > 0 ? 'in' : 'adjustment',
+      reason: 'initial',
       quantity: itemData.initialStockQuantity,
-      notes: itemData.initialStockQuantity > 0
-        ? `Initial stock set during item creation (${itemData.initialStockQuantity} units)`
-        : "Item created with zero initial stock",
+      notes:
+        itemData.initialStockQuantity > 0
+          ? `Initial stock set during item creation (${itemData.initialStockQuantity} units)`
+          : 'Item created with zero initial stock',
       created_by: user.id,
     };
 
     const { error: stockMovementError } = await supabaseAdmin
-      .from("stock_movements")
+      .from('stock_movements')
       .insert(initialStockMovement);
 
     if (stockMovementError) {
-      console.error("Create initial stock movement error:", stockMovementError);
+      console.error('Create initial stock movement error:', stockMovementError);
       // Don't fail the entire creation if stock movement fails
       // The item is created successfully, just log the error
     }
@@ -455,29 +459,23 @@ export async function createItem(
       selling_price: priceData.sellingPrice,
       discount_percentage: priceData.discountPercentage,
       is_active: true,
-      effective_from: priceData.effectiveFrom?.toISOString() ||
-        new Date().toISOString(),
+      effective_from: priceData.effectiveFrom?.toISOString() || new Date().toISOString(),
     };
 
-    const { error: priceError } = await supabaseAdmin
-      .from("item_prices")
-      .insert(priceInsert);
+    const { error: priceError } = await supabaseAdmin.from('item_prices').insert(priceInsert);
 
     if (priceError) {
       // Rollback item creation if price creation fails
-      await supabaseAdmin
-        .from("items")
-        .delete()
-        .eq("id", item.id);
+      await supabaseAdmin.from('items').delete().eq('id', item.id);
       throw priceError;
     }
 
     return { success: true, data: item };
   } catch (error) {
-    console.error("Error creating item:", error);
+    console.error('Error creating item:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create item",
+      error: error instanceof Error ? error.message : 'Failed to create item',
     };
   }
 }
@@ -498,33 +496,36 @@ export async function updateItem(
     const supabaseAdmin = await createServiceRoleClient();
 
     // Check authentication and get current item for permission check
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     // Get current item to check project access
     const { data: currentItem } = await supabase
-      .from("items")
-      .select("project_id")
-      .eq("id", itemId)
+      .from('items')
+      .select('project_id')
+      .eq('id', itemId)
       .single();
 
     if (!currentItem) {
-      return { success: false, error: "Item not found or access denied" };
+      return { success: false, error: 'Item not found or access denied' };
     }
 
     // Check user permissions
     const { data: userRole } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("project_id", currentItem.project_id)
-      .eq("is_active", true)
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('project_id', currentItem.project_id)
+      .eq('is_active', true)
       .single();
 
     if (!userRole) {
-      return { success: false, error: "No access to this project" };
+      return { success: false, error: 'No access to this project' };
     }
 
     // Update item using service role client
@@ -562,9 +563,9 @@ export async function updateItem(
     updateData.updated_at = new Date().toISOString();
 
     const { data: item, error } = await supabaseAdmin
-      .from("items")
+      .from('items')
       .update(updateData)
-      .eq("id", itemId)
+      .eq('id', itemId)
       .select()
       .single();
 
@@ -574,10 +575,10 @@ export async function updateItem(
 
     return { success: true, data: item };
   } catch (error) {
-    console.error("Error updating item:", error);
+    console.error('Error updating item:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update item",
+      error: error instanceof Error ? error.message : 'Failed to update item',
     };
   }
 }
@@ -594,43 +595,46 @@ export async function deleteItem(itemId: string): Promise<{
     const supabaseAdmin = await createServiceRoleClient();
 
     // Check authentication and get current item for permission check
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     // Get current item to check project access
     const { data: currentItem } = await supabase
-      .from("items")
-      .select("project_id")
-      .eq("id", itemId)
+      .from('items')
+      .select('project_id')
+      .eq('id', itemId)
       .single();
 
     if (!currentItem) {
-      return { success: false, error: "Item not found or access denied" };
+      return { success: false, error: 'Item not found or access denied' };
     }
 
     // Check user permissions
     const { data: userRole } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("project_id", currentItem.project_id)
-      .eq("is_active", true)
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('project_id', currentItem.project_id)
+      .eq('is_active', true)
       .single();
 
     if (!userRole) {
-      return { success: false, error: "No access to this project" };
+      return { success: false, error: 'No access to this project' };
     }
 
     // Soft delete by setting is_active to false
     const { error } = await supabaseAdmin
-      .from("items")
+      .from('items')
       .update({
         is_active: false,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", itemId);
+      .eq('id', itemId);
 
     if (error) {
       throw error;
@@ -638,11 +642,11 @@ export async function deleteItem(itemId: string): Promise<{
 
     return { success: true };
   } catch (error: unknown) {
-    console.error("Error deleting item:", error);
+    console.error('Error deleting item:', error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: "Failed to delete item" };
+    return { success: false, error: 'Failed to delete item' };
   }
 }
 
@@ -661,45 +665,48 @@ export async function bulkUpdateItems(
     const supabaseAdmin = await createServiceRoleClient();
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     // Check user permissions
     const { data: userRole } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("project_id", projectId)
-      .eq("is_active", true)
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('project_id', projectId)
+      .eq('is_active', true)
       .single();
 
     if (!userRole) {
-      return { success: false, error: "No access to this project" };
+      return { success: false, error: 'No access to this project' };
     }
 
     // Prepare update data based on action
     let updateData: Partial<ItemInsert> = {};
 
     switch (data.action) {
-      case "activate":
+      case 'activate':
         updateData = { is_active: true };
         break;
-      case "deactivate":
+      case 'deactivate':
         updateData = { is_active: false };
         break;
-      case "feature":
+      case 'feature':
         updateData = { is_featured: true };
         break;
-      case "unfeature":
+      case 'unfeature':
         updateData = { is_featured: false };
         break;
-      case "delete":
+      case 'delete':
         updateData = { is_active: false };
         break;
       default:
-        return { success: false, error: "Invalid action" };
+        return { success: false, error: 'Invalid action' };
     }
 
     // Add category update if provided
@@ -709,10 +716,10 @@ export async function bulkUpdateItems(
 
     // Perform bulk update
     const { error } = await supabaseAdmin
-      .from("items")
+      .from('items')
       .update(updateData)
-      .in("id", data.itemIds)
-      .eq("project_id", projectId);
+      .in('id', data.itemIds)
+      .eq('project_id', projectId);
 
     if (error) {
       throw error;
@@ -720,10 +727,10 @@ export async function bulkUpdateItems(
 
     return { success: true };
   } catch (error) {
-    console.error("Error bulk updating items:", error);
+    console.error('Error bulk updating items:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update items",
+      error: error instanceof Error ? error.message : 'Failed to update items',
     };
   }
 }
@@ -735,9 +742,7 @@ export async function bulkUpdateItems(
 /**
  * Adjust item stock quantity
  */
-export async function adjustStock(
-  data: StockAdjustmentData,
-): Promise<{
+export async function adjustStock(data: StockAdjustmentData): Promise<{
   success: boolean;
   error?: string;
 }> {
@@ -746,33 +751,36 @@ export async function adjustStock(
     const supabaseAdmin = await createServiceRoleClient();
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     // Get current item and check permissions
     const { data: item } = await supabase
-      .from("items")
-      .select("project_id, stock_quantity, name")
-      .eq("id", data.itemId)
+      .from('items')
+      .select('project_id, stock_quantity, name')
+      .eq('id', data.itemId)
       .single();
 
     if (!item) {
-      return { success: false, error: "Item not found or access denied" };
+      return { success: false, error: 'Item not found or access denied' };
     }
 
     // Check user permissions
     const { data: userRole } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("project_id", item.project_id)
-      .eq("is_active", true)
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('project_id', item.project_id)
+      .eq('is_active', true)
       .single();
 
     if (!userRole) {
-      return { success: false, error: "No access to this project" };
+      return { success: false, error: 'No access to this project' };
     }
 
     const newQuantity = item.stock_quantity + data.adjustment;
@@ -780,15 +788,15 @@ export async function adjustStock(
     if (newQuantity < 0) {
       return {
         success: false,
-        error: "Insufficient stock for this adjustment",
+        error: 'Insufficient stock for this adjustment',
       };
     }
 
     // Update stock quantity
     const { error: updateError } = await supabaseAdmin
-      .from("items")
+      .from('items')
       .update({ stock_quantity: newQuantity })
-      .eq("id", data.itemId);
+      .eq('id', data.itemId);
 
     if (updateError) {
       throw updateError;
@@ -797,28 +805,28 @@ export async function adjustStock(
     // Record stock movement
     const stockMovementInsert: StockMovementInsert = {
       item_id: data.itemId,
-      movement_type: data.adjustment > 0 ? "in" : "out",
+      movement_type: data.adjustment > 0 ? 'in' : 'out',
       quantity: Math.abs(data.adjustment),
-      reason: "adjustment",
+      reason: 'adjustment',
       notes: data.notes,
       created_by: user.id,
     };
 
     const { error: movementError } = await supabaseAdmin
-      .from("stock_movements")
+      .from('stock_movements')
       .insert(stockMovementInsert);
 
     if (movementError) {
       // Don't fail the entire operation if stock movement logging fails
-      console.error("Failed to log stock movement:", movementError);
+      console.error('Failed to log stock movement:', movementError);
     }
 
     return { success: true };
   } catch (error) {
-    console.error("Error adjusting stock:", error);
+    console.error('Error adjusting stock:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to adjust stock",
+      error: error instanceof Error ? error.message : 'Failed to adjust stock',
     };
   }
 }
@@ -839,16 +847,19 @@ export async function getCategories(projectId: string): Promise<{
     const supabase = await createClient();
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     const { data: categories, error } = await supabase
-      .from("categories")
-      .select("*")
-      .eq("project_id", projectId)
-      .order("name");
+      .from('categories')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('name');
 
     if (error) {
       throw error;
@@ -856,12 +867,10 @@ export async function getCategories(projectId: string): Promise<{
 
     return { success: true, data: categories || [] };
   } catch (error) {
-    console.error("Error getting categories:", error);
+    console.error('Error getting categories:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Failed to get categories",
+      error: error instanceof Error ? error.message : 'Failed to get categories',
     };
   }
 }
@@ -882,22 +891,25 @@ export async function createCategory(
     const supabaseAdmin = await createServiceRoleClient();
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     // Check user permissions
     const { data: userRole } = await supabase
-      .from("user_roles")
-      .select("role, project_id")
-      .eq("user_id", user.id)
-      .eq("project_id", projectId)
-      .eq("is_active", true)
+      .from('user_roles')
+      .select('role, project_id')
+      .eq('user_id', user.id)
+      .eq('project_id', projectId)
+      .eq('is_active', true)
       .single();
 
     if (!userRole) {
-      return { success: false, error: "No access to this project" };
+      return { success: false, error: 'No access to this project' };
     }
 
     // Create category using service role client
@@ -909,16 +921,17 @@ export async function createCategory(
     };
 
     const { data: category, error } = await supabaseAdmin
-      .from("categories")
+      .from('categories')
       .insert(categoryInsert)
       .select()
       .single();
 
     if (error) {
-      if (error.code === "23505") { // Unique constraint violation
+      if (error.code === '23505') {
+        // Unique constraint violation
         return {
           success: false,
-          error: "A category with this name already exists",
+          error: 'A category with this name already exists',
         };
       }
       throw error;
@@ -926,12 +939,10 @@ export async function createCategory(
 
     return { success: true, data: category };
   } catch (error) {
-    console.error("Error creating category:", error);
+    console.error('Error creating category:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Failed to create category",
+      error: error instanceof Error ? error.message : 'Failed to create category',
     };
   }
 }
@@ -952,51 +963,55 @@ export async function updateCategory(
     const supabaseAdmin = await createServiceRoleClient();
 
     // Check authentication and get current category for permission check
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     // Get current category to check project access
     const { data: currentCategory } = await supabase
-      .from("categories")
-      .select("project_id")
-      .eq("id", categoryId)
+      .from('categories')
+      .select('project_id')
+      .eq('id', categoryId)
       .single();
 
     if (!currentCategory) {
-      return { success: false, error: "Category not found or access denied" };
+      return { success: false, error: 'Category not found or access denied' };
     }
 
     // Check user permissions
     const { data: userRole } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("project_id", currentCategory.project_id)
-      .eq("is_active", true)
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('project_id', currentCategory.project_id)
+      .eq('is_active', true)
       .single();
 
     if (!userRole) {
-      return { success: false, error: "No access to this project" };
+      return { success: false, error: 'No access to this project' };
     }
 
     // Update category using service role client
     const { data: category, error } = await supabaseAdmin
-      .from("categories")
+      .from('categories')
       .update({
         ...data,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", categoryId)
+      .eq('id', categoryId)
       .select()
       .single();
 
     if (error) {
-      if (error.code === "23505") { // Unique constraint violation
+      if (error.code === '23505') {
+        // Unique constraint violation
         return {
           success: false,
-          error: "A category with this name already exists",
+          error: 'A category with this name already exists',
         };
       }
       throw error;
@@ -1004,12 +1019,10 @@ export async function updateCategory(
 
     return { success: true, data: category };
   } catch (error) {
-    console.error("Error updating category:", error);
+    console.error('Error updating category:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Failed to update category",
+      error: error instanceof Error ? error.message : 'Failed to update category',
     };
   }
 }
@@ -1031,9 +1044,7 @@ export async function deleteCategory(categoryId: string): Promise<{
 /**
  * Create a new price for an item
  */
-export async function createItemPrice(
-  data: CreateItemPriceData,
-): Promise<{
+export async function createItemPrice(data: CreateItemPriceData): Promise<{
   success: boolean;
   error?: string;
   data?: ItemPrice;
@@ -1043,53 +1054,55 @@ export async function createItemPrice(
     const supabaseAdmin = await createServiceRoleClient();
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return { success: false, error: "Authentication required" };
+      return { success: false, error: 'Authentication required' };
     }
 
     // Check access to item
     const { data: item } = await supabase
-      .from("items")
-      .select("project_id")
-      .eq("id", data.itemId)
+      .from('items')
+      .select('project_id')
+      .eq('id', data.itemId)
       .single();
 
     if (!item) {
-      return { success: false, error: "Item not found or access denied" };
+      return { success: false, error: 'Item not found or access denied' };
     }
 
     // Check user permissions
     const { data: userRole } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("project_id", item.project_id)
-      .eq("is_active", true)
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('project_id', item.project_id)
+      .eq('is_active', true)
       .single();
 
     if (!userRole) {
-      return { success: false, error: "No access to this project" };
+      return { success: false, error: 'No access to this project' };
     }
 
     // Deactivate current active price by setting effective_until to now
     const now = new Date();
     const { error: deactivateError } = await supabaseAdmin
-      .from("item_prices")
+      .from('item_prices')
       .update({
         is_active: false,
         effective_until: now.toISOString(),
       })
-      .eq("item_id", data.itemId)
-      .eq("is_active", true)
-      .is("effective_until", null);
+      .eq('item_id', data.itemId)
+      .eq('is_active', true)
+      .is('effective_until', null);
 
     if (deactivateError) {
-      console.error("Failed to deactivate previous prices:", deactivateError);
+      console.error('Failed to deactivate previous prices:', deactivateError);
       return {
         success: false,
-        error: "Failed to deactivate previous prices: " +
-          deactivateError.message,
+        error: 'Failed to deactivate previous prices: ' + deactivateError.message,
       };
     }
 
@@ -1100,13 +1113,12 @@ export async function createItemPrice(
       selling_price: data.sellingPrice,
       discount_percentage: data.discountPercentage,
       is_active: true,
-      effective_from: data.effectiveFrom?.toISOString() ||
-        new Date().toISOString(),
+      effective_from: data.effectiveFrom?.toISOString() || new Date().toISOString(),
       effective_until: data.effectiveUntil?.toISOString(),
     };
 
     const { data: price, error } = await supabaseAdmin
-      .from("item_prices")
+      .from('item_prices')
       .insert(priceInsert)
       .select()
       .single();
@@ -1117,10 +1129,10 @@ export async function createItemPrice(
 
     return { success: true, data: price };
   } catch (error) {
-    console.error("Error creating item price:", error);
+    console.error('Error creating item price:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to create price",
+      error: error instanceof Error ? error.message : 'Failed to create price',
     };
   }
 }
@@ -1135,20 +1147,20 @@ export async function createItemPrice(
 export async function getItemImages(itemId: string): Promise<{
   success: boolean;
   error?: string;
-  data?: Tables<"item_images">[];
+  data?: Tables<'item_images'>[];
 }> {
   try {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from("item_images")
-      .select("*")
-      .eq("item_id", itemId)
-      .order("display_order", { ascending: true })
-      .order("created_at", { ascending: true });
+      .from('item_images')
+      .select('*')
+      .eq('item_id', itemId)
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: true });
 
     if (error) {
-      console.error("Get item images error:", error);
+      console.error('Get item images error:', error);
       return {
         success: false,
         error: error.message,
@@ -1160,12 +1172,10 @@ export async function getItemImages(itemId: string): Promise<{
       data: data || [],
     };
   } catch (error) {
-    console.error("Get item images error:", error);
+    console.error('Get item images error:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Failed to get item images",
+      error: error instanceof Error ? error.message : 'Failed to get item images',
     };
   }
 }
@@ -1182,13 +1192,13 @@ export async function createItemImage(imageData: {
 }): Promise<{
   success: boolean;
   error?: string;
-  data?: Tables<"item_images">;
+  data?: Tables<'item_images'>;
 }> {
   try {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from("item_images")
+      .from('item_images')
       .insert({
         item_id: imageData.item_id,
         image_url: imageData.image_url,
@@ -1200,7 +1210,7 @@ export async function createItemImage(imageData: {
       .single();
 
     if (error) {
-      console.error("Create item image error:", error);
+      console.error('Create item image error:', error);
       return {
         success: false,
         error: error.message,
@@ -1212,12 +1222,10 @@ export async function createItemImage(imageData: {
       data,
     };
   } catch (error) {
-    console.error("Create item image error:", error);
+    console.error('Create item image error:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Failed to create item image",
+      error: error instanceof Error ? error.message : 'Failed to create item image',
     };
   }
 }
@@ -1235,20 +1243,20 @@ export async function updateItemImage(
 ): Promise<{
   success: boolean;
   error?: string;
-  data?: Tables<"item_images">;
+  data?: Tables<'item_images'>;
 }> {
   try {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from("item_images")
+      .from('item_images')
       .update(updateData)
-      .eq("id", imageId)
+      .eq('id', imageId)
       .select()
       .single();
 
     if (error) {
-      console.error("Update item image error:", error);
+      console.error('Update item image error:', error);
       return {
         success: false,
         error: error.message,
@@ -1260,12 +1268,10 @@ export async function updateItemImage(
       data,
     };
   } catch (error) {
-    console.error("Update item image error:", error);
+    console.error('Update item image error:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Failed to update item image",
+      error: error instanceof Error ? error.message : 'Failed to update item image',
     };
   }
 }
@@ -1280,13 +1286,10 @@ export async function deleteItemImage(imageId: string): Promise<{
   try {
     const supabase = await createClient();
 
-    const { error } = await supabase
-      .from("item_images")
-      .delete()
-      .eq("id", imageId);
+    const { error } = await supabase.from('item_images').delete().eq('id', imageId);
 
     if (error) {
-      console.error("Delete item image error:", error);
+      console.error('Delete item image error:', error);
       return {
         success: false,
         error: error.message,
@@ -1297,12 +1300,10 @@ export async function deleteItemImage(imageId: string): Promise<{
       success: true,
     };
   } catch (error) {
-    console.error("Delete item image error:", error);
+    console.error('Delete item image error:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Failed to delete item image",
+      error: error instanceof Error ? error.message : 'Failed to delete item image',
     };
   }
 }

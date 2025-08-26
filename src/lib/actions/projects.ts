@@ -1,9 +1,11 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { createClient } from '@/lib/supabase/server';
 import { createProjectSchema, updateProjectSchema } from '@/lib/validations/projects';
 import { createProject, getUserProject, updateProject } from '@/lib/data/projects';
+import type { Json } from '@/lib/supabase/database.types';
 
 /**
  * Server Actions for project management
@@ -37,7 +39,9 @@ export async function createProjectAction(formData: FormData) {
       if (result.webhookSetup.success) {
         console.log(`Webhook setup successful for new project: ${result.data!.id}`);
       } else {
-        console.warn(`Webhook setup failed for new project: ${result.data!.id} - ${result.webhookSetup.error}`);
+        console.warn(
+          `Webhook setup failed for new project: ${result.data!.id} - ${result.webhookSetup.error}`,
+        );
       }
     }
 
@@ -98,6 +102,79 @@ export async function checkUserProjectAndRedirect() {
 }
 
 /**
+ * Payment method configuration type
+ */
+interface PaymentMethodConfig {
+  enabled: boolean;
+  name: string;
+  phone?: string;
+  hasQR?: boolean;
+  qrCodeFileName?: string;
+}
+
+type PaymentMethodsData = Record<string, PaymentMethodConfig>;
+
+/**
+ * Update project payment methods configuration
+ */
+export async function updateProjectPaymentMethodsAction(data: {
+  projectId: string;
+  paymentMethods: PaymentMethodsData;
+}) {
+  try {
+    const supabase = await createClient();
+
+    // Check authentication
+    const {
+      data: { user },
+      error: getUserError,
+    } = await supabase.auth.getUser();
+    if (getUserError || !user) {
+      return { success: false, error: 'Authentication required' };
+    }
+
+    // Check if user has permission to update this project
+    const { data: userRole, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('project_id', data.projectId)
+      .eq('is_active', true)
+      .single();
+
+    if (roleError || !userRole || userRole.role !== 'admin') {
+      return { success: false, error: 'Permission denied' };
+    }
+
+    // Update the project's payment methods
+    const { error: updateError } = await supabase
+      .from('projects')
+      .update({
+        payment_methods: data.paymentMethods as unknown as Json,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', data.projectId);
+
+    if (updateError) {
+      console.error('Update payment methods error:', updateError);
+      return { success: false, error: 'Failed to update payment methods' };
+    }
+
+    // Revalidate project data
+    revalidateTag(`project-${data.projectId}`);
+    revalidateTag('user-projects');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Update payment methods error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update payment methods',
+    };
+  }
+}
+
+/**
  * Get user project information for UI display
  */
 export async function getUserProjectAction() {
@@ -122,7 +199,7 @@ export async function updateProjectAction(formData: FormData) {
     const rawData = {
       projectId: formData.get('projectId') as string,
       name: formData.get('name') as string,
-      description: formData.get('description') as string || null,
+      description: (formData.get('description') as string) || null,
       telegram_bot_token: formData.get('telegram_bot_token') as string,
     };
 
@@ -174,7 +251,9 @@ export async function updateProjectAction(formData: FormData) {
       if (result.webhookSetup.success) {
         console.log(`Webhook setup successful for updated project: ${rawData.projectId}`);
       } else {
-        console.warn(`Webhook setup failed for updated project: ${rawData.projectId} - ${result.webhookSetup.error}`);
+        console.warn(
+          `Webhook setup failed for updated project: ${rawData.projectId} - ${result.webhookSetup.error}`,
+        );
       }
     }
 
@@ -184,10 +263,9 @@ export async function updateProjectAction(formData: FormData) {
       data: result.data,
       webhookSetup: result.webhookSetup,
     };
-
   } catch (error) {
     console.error('Error in updateProjectAction:', error);
-    
+
     // Handle Zod validation errors
     if (error && typeof error === 'object' && 'issues' in error) {
       const zodError = error as { issues: Array<{ path: string[]; message: string }> };

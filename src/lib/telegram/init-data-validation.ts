@@ -1,5 +1,5 @@
-import "server-only";
-import { createHmac } from "crypto";
+import 'server-only';
+import { createHmac } from 'crypto';
 
 export interface TelegramUser {
   id: number;
@@ -29,12 +29,12 @@ export async function validateTelegramInitData(
   try {
     // Step 1: Parse initData as query parameters
     const params = new URLSearchParams(initDataRaw);
-    const hash = params.get("hash");
+    const hash = params.get('hash');
 
     if (!hash) {
       return {
         isValid: false,
-        error: "No hash found in initData",
+        error: 'No hash found in initData',
       };
     }
 
@@ -42,7 +42,7 @@ export async function validateTelegramInitData(
     const pairs: string[] = [];
 
     for (const [key, value] of params.entries()) {
-      if (key !== "hash") {
+      if (key !== 'hash') {
         pairs.push(`${key}=${value}`);
       }
     }
@@ -51,40 +51,36 @@ export async function validateTelegramInitData(
     pairs.sort();
 
     // Step 4: Join with newline
-    const dataCheckString = pairs.join("\n");
+    const dataCheckString = pairs.join('\n');
 
     // Step 5: Create HMAC-SHA256 using WebAppData as key and bot token
-    const secretKey = createHmac("sha256", "WebAppData")
-      .update(botToken)
-      .digest();
+    const secretKey = createHmac('sha256', 'WebAppData').update(botToken).digest();
 
     // Step 6: Create HMAC-SHA256 using secretKey and dataCheckString
-    const calculatedHash = createHmac("sha256", secretKey)
-      .update(dataCheckString)
-      .digest("hex");
+    const calculatedHash = createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
 
     // Step 7: Compare hashes
     if (calculatedHash !== hash) {
       return {
         isValid: false,
-        error: "Hash validation failed",
+        error: 'Hash validation failed',
       };
     }
 
     // Step 8: Parse user data if present
-    const userParam = params.get("user");
+    const userParam = params.get('user');
     let user: TelegramUser | undefined;
 
     if (userParam) {
       try {
         user = JSON.parse(decodeURIComponent(userParam));
       } catch (parseError) {
-        console.warn("Failed to parse user data from initData:", parseError);
+        console.warn('Failed to parse user data from initData:', parseError);
       }
     }
 
     // Step 9: Get auth date
-    const authDateParam = params.get("auth_date");
+    const authDateParam = params.get('auth_date');
     const authDate = authDateParam ? parseInt(authDateParam, 10) : undefined;
 
     // Step 10: Validate auth date (not older than 24 hours)
@@ -95,7 +91,7 @@ export async function validateTelegramInitData(
       if (now - authDate > maxAge) {
         return {
           isValid: false,
-          error: "initData is too old (more than 24 hours)",
+          error: 'initData is too old (more than 24 hours)',
         };
       }
     }
@@ -106,12 +102,10 @@ export async function validateTelegramInitData(
       authDate,
     };
   } catch (error) {
-    console.error("Error validating Telegram initData:", error);
+    console.error('Error validating Telegram initData:', error);
     return {
       isValid: false,
-      error: error instanceof Error
-        ? error.message
-        : "Unexpected validation error",
+      error: error instanceof Error ? error.message : 'Unexpected validation error',
     };
   }
 }
@@ -119,12 +113,12 @@ export async function validateTelegramInitData(
 /**
  * Extract initData from URL search params (for client components)
  */
-export function extractInitData(
-  searchParams: { [key: string]: string | string[] | undefined },
-): string | null {
+export function extractInitData(searchParams: {
+  [key: string]: string | string[] | undefined;
+}): string | null {
   const initData = searchParams.initData;
 
-  if (typeof initData === "string") {
+  if (typeof initData === 'string') {
     return initData;
   }
 

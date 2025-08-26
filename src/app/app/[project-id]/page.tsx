@@ -1,16 +1,66 @@
-import { TelegramProvider } from '@/components/telegram-provider';
-import MiniAppContent from './mini-app-content';
+import { MiniAppLayout } from '@/components/mini-app/mini-app-layout';
+import { FeaturedProducts } from '@/components/mini-app/featured-products';
+import { ProductGrid } from '@/components/mini-app/product-grid';
+import {
+  getItemsForMiniApp,
+  getFeaturedItemsForMiniApp,
+  getCategoriesForMiniApp,
+} from '@/lib/data/mini-app';
+import type { ItemFilters } from '@/lib/data/mini-app';
 
 interface AppPageProps {
   params: Promise<{ 'project-id': string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function AppPage({ params }: AppPageProps) {
+export default async function AppPage({ params, searchParams }: AppPageProps) {
   const { 'project-id': projectId } = await params;
+  const searchParamsResolved = await searchParams;
+
+  // Parse search parameters for filtering
+  const filters: ItemFilters = {
+    search: typeof searchParamsResolved.q === 'string' ? searchParamsResolved.q : undefined,
+    category:
+      typeof searchParamsResolved.category === 'string' ? searchParamsResolved.category : undefined,
+    sort:
+      typeof searchParamsResolved.sort === 'string'
+        ? (searchParamsResolved.sort as 'name' | 'price' | 'created_at')
+        : 'created_at',
+    order:
+      typeof searchParamsResolved.order === 'string'
+        ? (searchParamsResolved.order as 'asc' | 'desc')
+        : 'desc',
+  };
+
+  // Fetch data server-side with caching
+  const [items, featuredItems, categories] = await Promise.all([
+    getItemsForMiniApp(projectId, filters),
+    getFeaturedItemsForMiniApp(projectId),
+    getCategoriesForMiniApp(projectId),
+  ]);
 
   return (
-    <TelegramProvider projectId={projectId}>
-      <MiniAppContent />
-    </TelegramProvider>
+    <MiniAppLayout projectId={projectId}>
+      <div className="container mx-auto max-w-md space-y-6 px-4 py-6">
+        {/* Featured Products - only show if no search/filters applied */}
+        {!filters.search && !filters.category && featuredItems.length > 0 && (
+          <FeaturedProducts items={featuredItems} projectId={projectId} />
+        )}
+
+        {/* All Products */}
+        <ProductGrid
+          items={items}
+          categories={categories}
+          projectId={projectId}
+          title={
+            filters.search
+              ? `Search results for "${filters.search}"`
+              : filters.category
+                ? `${categories.find((c) => c.id === filters.category)?.name || 'Category'}`
+                : 'All Products'
+          }
+        />
+      </div>
+    </MiniAppLayout>
   );
 }

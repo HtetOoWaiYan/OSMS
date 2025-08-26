@@ -1,7 +1,7 @@
-"use server";
+'use server';
 
-import { validateTelegramInitData } from "@/lib/telegram/init-data-validation";
-import { getProjectById } from "@/lib/data/projects";
+import { validateTelegramInitData } from '@/lib/telegram/init-data-validation';
+import { getProjectById } from '@/lib/data/projects';
 
 export interface TelegramValidationResult {
   success: boolean;
@@ -35,7 +35,7 @@ export async function validateTelegramUser(
     if (!projectResult.success || !projectResult.data?.telegram_bot_token) {
       return {
         success: false,
-        error: "Project not found or bot token missing",
+        error: 'Project not found or bot token missing',
       };
     }
 
@@ -50,14 +50,14 @@ export async function validateTelegramUser(
     if (!validationResult.isValid) {
       return {
         success: false,
-        error: "Invalid initData signature",
+        error: 'Invalid initData signature',
       };
     }
 
     if (!validationResult.user) {
       return {
         success: false,
-        error: "No user data in initData",
+        error: 'No user data in initData',
       };
     }
 
@@ -67,14 +67,14 @@ export async function validateTelegramUser(
       authDate: validationResult.authDate,
       project: {
         id: project.id,
-        name: project.name || "Purple Shopping",
+        name: project.name || 'Purple Shopping',
       },
     };
   } catch (error) {
-    console.error("Telegram validation error:", error);
+    console.error('Telegram validation error:', error);
     return {
       success: false,
-      error: "Validation failed",
+      error: 'Validation failed',
     };
   }
 }

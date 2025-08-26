@@ -1,5 +1,5 @@
-import "server-only";
-import { getProjectById } from "@/lib/data/projects";
+import 'server-only';
+import { getProjectById } from '@/lib/data/projects';
 
 /**
  * Test utility for webhook functionality
@@ -21,9 +21,7 @@ export interface WebhookTestResult {
 /**
  * Test webhook setup for a specific project
  */
-export async function testWebhookSetup(
-  projectId: string,
-): Promise<WebhookTestResult> {
+export async function testWebhookSetup(projectId: string): Promise<WebhookTestResult> {
   try {
     console.log(`Testing webhook setup for project: ${projectId}`);
 
@@ -33,7 +31,7 @@ export async function testWebhookSetup(
     if (!projectResult.success) {
       return {
         success: false,
-        message: "Project not found or inactive",
+        message: 'Project not found or inactive',
         error: projectResult.error,
       };
     }
@@ -44,10 +42,10 @@ export async function testWebhookSetup(
     if (!hasBotToken) {
       return {
         success: false,
-        message: "Project exists but no bot token configured",
+        message: 'Project exists but no bot token configured',
         project: {
           id: project.id,
-          name: project.name || "Unnamed Project",
+          name: project.name || 'Unnamed Project',
           hasBotToken: false,
           isActive: project.is_active || false,
         },
@@ -56,19 +54,19 @@ export async function testWebhookSetup(
 
     // Test bot token format (basic validation)
     const token = project.telegram_bot_token!;
-    const tokenParts = token.split(":");
+    const tokenParts = token.split(':');
 
     if (tokenParts.length !== 2) {
       return {
         success: false,
-        message: "Invalid bot token format",
+        message: 'Invalid bot token format',
         project: {
           id: project.id,
-          name: project.name || "Unnamed Project",
+          name: project.name || 'Unnamed Project',
           hasBotToken: true,
           isActive: project.is_active || false,
         },
-        error: "Bot token should be in format: bot_id:secret",
+        error: 'Bot token should be in format: bot_id:secret',
       };
     }
 
@@ -78,33 +76,33 @@ export async function testWebhookSetup(
     if (!botId || !secret || secret.length < 30) {
       return {
         success: false,
-        message: "Bot token appears invalid",
+        message: 'Bot token appears invalid',
         project: {
           id: project.id,
-          name: project.name || "Unnamed Project",
+          name: project.name || 'Unnamed Project',
           hasBotToken: true,
           isActive: project.is_active || false,
         },
-        error: "Bot token format or length is suspicious",
+        error: 'Bot token format or length is suspicious',
       };
     }
 
     return {
       success: true,
-      message: "Webhook setup validated successfully",
+      message: 'Webhook setup validated successfully',
       project: {
         id: project.id,
-        name: project.name || "Unnamed Project",
+        name: project.name || 'Unnamed Project',
         hasBotToken: true,
         isActive: project.is_active || false,
       },
     };
   } catch (error) {
-    console.error("Webhook test error:", error);
+    console.error('Webhook test error:', error);
     return {
       success: false,
-      message: "Unexpected error during webhook test",
-      error: error instanceof Error ? error.message : "Unknown error",
+      message: 'Unexpected error during webhook test',
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -112,12 +110,8 @@ export async function testWebhookSetup(
 /**
  * Generate webhook URL for a project
  */
-export function generateWebhookUrl(
-  projectId: string,
-  baseUrl?: string,
-): string {
-  const base = baseUrl || process.env.NEXT_PUBLIC_SITE_URL ||
-    "http://localhost:3000";
+export function generateWebhookUrl(projectId: string, baseUrl?: string): string {
+  const base = baseUrl || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return `${base}/api/webhook/${projectId}`;
 }
 
@@ -129,7 +123,7 @@ export function validateWebhookUrl(url: string): boolean {
     const parsedUrl = new URL(url);
 
     // Check if it's HTTPS (required for Telegram webhooks)
-    if (parsedUrl.protocol !== "https:") {
+    if (parsedUrl.protocol !== 'https:') {
       return false;
     }
 

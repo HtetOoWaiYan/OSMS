@@ -1,4 +1,4 @@
-import "server-only";
+import 'server-only';
 
 /**
  * Telegram API utilities for bot management
@@ -22,40 +22,37 @@ export interface SetWebhookResult {
  * @param webhookUrl - The full webhook URL (e.g., https://mydomain.com/api/webhook/project-id)
  * @returns Promise<SetWebhookResult>
  */
-export async function setWebhook(
-  botToken: string,
-  webhookUrl: string,
-): Promise<SetWebhookResult> {
+export async function setWebhook(botToken: string, webhookUrl: string): Promise<SetWebhookResult> {
   try {
     // Validate inputs
     if (!botToken || !webhookUrl) {
       return {
         success: false,
-        error: "Bot token and webhook URL are required",
+        error: 'Bot token and webhook URL are required',
       };
     }
 
     // Validate bot token format (basic check)
-    if (!botToken.includes(":")) {
+    if (!botToken.includes(':')) {
       return {
         success: false,
-        error: "Invalid bot token format",
+        error: 'Invalid bot token format',
       };
     }
 
     // Validate webhook URL format
     try {
       const url = new URL(webhookUrl);
-      if (url.protocol !== "https:") {
+      if (url.protocol !== 'https:') {
         return {
           success: false,
-          error: "Webhook URL must use HTTPS protocol",
+          error: 'Webhook URL must use HTTPS protocol',
         };
       }
     } catch {
       return {
         success: false,
-        error: "Invalid webhook URL format",
+        error: 'Invalid webhook URL format',
       };
     }
 
@@ -63,9 +60,9 @@ export async function setWebhook(
     const apiUrl = `https://api.telegram.org/bot${botToken}/setWebhook`;
 
     const response = await fetch(apiUrl, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         url: webhookUrl,
@@ -77,11 +74,11 @@ export async function setWebhook(
     const data = await response.json();
 
     if (!response.ok || !data.ok) {
-      console.error("Telegram setWebhook API error:", data);
+      console.error('Telegram setWebhook API error:', data);
 
       return {
         success: false,
-        error: data.description || "Failed to set webhook with Telegram API",
+        error: data.description || 'Failed to set webhook with Telegram API',
       };
     }
 
@@ -98,12 +95,10 @@ export async function setWebhook(
       },
     };
   } catch (error) {
-    console.error("Error setting Telegram webhook:", error);
+    console.error('Error setting Telegram webhook:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Unexpected error setting webhook",
+      error: error instanceof Error ? error.message : 'Unexpected error setting webhook',
     };
   }
 }
@@ -117,19 +112,19 @@ export async function removeWebhook(
   botToken: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    if (!botToken || !botToken.includes(":")) {
+    if (!botToken || !botToken.includes(':')) {
       return {
         success: false,
-        error: "Invalid bot token",
+        error: 'Invalid bot token',
       };
     }
 
     const apiUrl = `https://api.telegram.org/bot${botToken}/deleteWebhook`;
 
     const response = await fetch(apiUrl, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         drop_pending_updates: true,
@@ -139,27 +134,23 @@ export async function removeWebhook(
     const data = await response.json();
 
     if (!response.ok || !data.ok) {
-      console.error("Telegram deleteWebhook API error:", data);
+      console.error('Telegram deleteWebhook API error:', data);
       return {
         success: false,
-        error: data.description || "Failed to remove webhook",
+        error: data.description || 'Failed to remove webhook',
       };
     }
 
     console.log(
-      `Webhook removed successfully for bot token ending with: ...${
-        botToken.slice(-10)
-      }`,
+      `Webhook removed successfully for bot token ending with: ...${botToken.slice(-10)}`,
     );
 
     return { success: true };
   } catch (error) {
-    console.error("Error removing Telegram webhook:", error);
+    console.error('Error removing Telegram webhook:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Unexpected error removing webhook",
+      error: error instanceof Error ? error.message : 'Unexpected error removing webhook',
     };
   }
 }
@@ -184,10 +175,10 @@ export async function getWebhookInfo(botToken: string): Promise<{
   };
 }> {
   try {
-    if (!botToken || !botToken.includes(":")) {
+    if (!botToken || !botToken.includes(':')) {
       return {
         success: false,
-        error: "Invalid bot token",
+        error: 'Invalid bot token',
       };
     }
 
@@ -197,10 +188,10 @@ export async function getWebhookInfo(botToken: string): Promise<{
     const data = await response.json();
 
     if (!response.ok || !data.ok) {
-      console.error("Telegram getWebhookInfo API error:", data);
+      console.error('Telegram getWebhookInfo API error:', data);
       return {
         success: false,
-        error: data.description || "Failed to get webhook info",
+        error: data.description || 'Failed to get webhook info',
       };
     }
 
@@ -209,12 +200,10 @@ export async function getWebhookInfo(botToken: string): Promise<{
       webhookInfo: data.result,
     };
   } catch (error) {
-    console.error("Error getting Telegram webhook info:", error);
+    console.error('Error getting Telegram webhook info:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Unexpected error getting webhook info",
+      error: error instanceof Error ? error.message : 'Unexpected error getting webhook info',
     };
   }
 }
@@ -225,11 +214,7 @@ export async function getWebhookInfo(botToken: string): Promise<{
  * @param baseUrl - Optional base URL, defaults to NEXT_PUBLIC_APP_URL or localhost
  * @returns string - The complete webhook URL
  */
-export function generateWebhookUrl(
-  projectId: string,
-  baseUrl?: string,
-): string {
-  const base = baseUrl || process.env.NEXT_PUBLIC_SITE_URL ||
-    "http://localhost:3000";
+export function generateWebhookUrl(projectId: string, baseUrl?: string): string {
+  const base = baseUrl || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
   return `${base}/api/webhook/${projectId}`;
 }

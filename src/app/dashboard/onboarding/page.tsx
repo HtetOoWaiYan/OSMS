@@ -23,7 +23,7 @@ export default function WelcomePage() {
               />
             </div>
             <CardTitle className="text-xl">Welcome!</CardTitle>
-            <CardDescription>Set up your shop management system in 3 simple steps</CardDescription>
+            <CardDescription>Set up your shop management system in 4 simple steps</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* What You Get */}
@@ -36,7 +36,7 @@ export default function WelcomePage() {
                 </div>
                 <div className="flex items-center space-x-3">
                   <Check className="h-4 w-4 text-green-600" />
-                  <span className="text-sm">Automated Telegram customer service</span>
+                  <span className="text-sm">Telegram Mini-App for customers</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Check className="h-4 w-4 text-green-600" />
@@ -64,6 +64,12 @@ export default function WelcomePage() {
                 <div className="flex items-center space-x-3">
                   <span className="bg-muted text-muted-foreground flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium">
                     3
+                  </span>
+                  <span>Configure payment methods</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <span className="bg-muted text-muted-foreground flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium">
+                    4
                   </span>
                   <span>Start managing your business</span>
                 </div>

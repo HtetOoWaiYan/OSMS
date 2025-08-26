@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { Database } from './database.types'
+import { Database } from './database.types';
 import { createServerClient } from '@supabase/ssr';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
@@ -34,7 +34,7 @@ export async function createClient() {
   );
 }
 
-export async function createServiceRoleClient() {
+export function createServiceRoleClient() {
   return createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SECRET_KEY!,

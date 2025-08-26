@@ -11,15 +11,12 @@ export const telegramBotTokenSchema = z
   .min(1, 'Telegram bot token is required')
   .regex(
     /^\d+:[A-Za-z0-9_-]+$/,
-    'Invalid bot token format. Should be in format: 123456789:AAEhBOweik6ad...'
+    'Invalid bot token format. Should be in format: 123456789:AAEhBOweik6ad...',
   )
-  .refine(
-    (token) => {
-      const parts = token.split(':');
-      return parts.length === 2 && parts[0].length > 0 && parts[1].length >= 35;
-    },
-    'Bot token appears to be invalid. Please check the format from @BotFather'
-  );
+  .refine((token) => {
+    const parts = token.split(':');
+    return parts.length === 2 && parts[0].length > 0 && parts[1].length >= 35;
+  }, 'Bot token appears to be invalid. Please check the format from @BotFather');
 
 /**
  * Project Creation Schema

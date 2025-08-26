@@ -1,9 +1,9 @@
-"server-only";
+'server-only';
 
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
-export type UserRole = "admin" | "agent";
+export type UserRole = 'admin' | 'agent';
 
 export interface UserRoleData {
   userId: string;
@@ -20,17 +20,20 @@ export async function getUserRole(): Promise<UserRoleData | null> {
     const supabase = await createClient();
 
     // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return null;
     }
 
     // Get user's role in their project
     const { data: userRole, error: roleError } = await supabase
-      .from("user_roles")
-      .select("project_id, role, is_active")
-      .eq("user_id", user.id)
-      .eq("is_active", true)
+      .from('user_roles')
+      .select('project_id, role, is_active')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
       .single();
 
     if (roleError || !userRole) {
@@ -44,7 +47,7 @@ export async function getUserRole(): Promise<UserRoleData | null> {
       isActive: userRole.is_active ?? false,
     };
   } catch (error) {
-    console.error("Error getting user role:", error);
+    console.error('Error getting user role:', error);
     return null;
   }
 }
@@ -57,7 +60,7 @@ export async function hasRole(requiredRole: UserRole): Promise<boolean> {
   if (!userRole) return false;
 
   // Admin has access to everything
-  if (userRole.role === "admin") return true;
+  if (userRole.role === 'admin') return true;
 
   // Otherwise, check if user has exactly the required role
   return userRole.role === requiredRole;
@@ -67,7 +70,7 @@ export async function hasRole(requiredRole: UserRole): Promise<boolean> {
  * Check if current user is an admin
  */
 export async function isAdmin(): Promise<boolean> {
-  return await hasRole("admin");
+  return await hasRole('admin');
 }
 
 /**
@@ -77,11 +80,11 @@ export async function requireAdmin(): Promise<UserRoleData> {
   const userRole = await getUserRole();
 
   if (!userRole) {
-    redirect("/dashboard/auth/login");
+    redirect('/dashboard/auth/login');
   }
 
-  if (userRole.role !== "admin") {
-    redirect("/dashboard/unauthorized");
+  if (userRole.role !== 'admin') {
+    redirect('/dashboard/unauthorized');
   }
 
   return userRole;
@@ -94,7 +97,7 @@ export async function requireAuth(): Promise<UserRoleData> {
   const userRole = await getUserRole();
 
   if (!userRole) {
-    redirect("/dashboard/auth/login");
+    redirect('/dashboard/auth/login');
   }
 
   return userRole;

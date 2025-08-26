@@ -7,6 +7,8 @@ create table user_roles (
     project_id uuid not null references projects(id) on delete cascade,
     role user_role_enum not null default 'agent',
     permissions jsonb default '{}',
+    telegram_username varchar(255),
+    telegram_user_id bigint,
     is_active boolean default true,
     created_at timestamp with time zone default now(),
     updated_at timestamp with time zone default now(),

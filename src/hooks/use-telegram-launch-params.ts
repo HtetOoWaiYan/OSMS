@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useLaunchParams } from "@telegram-apps/sdk-react";
+import { useEffect, useState } from 'react';
+import { useLaunchParams } from '@telegram-apps/sdk-react';
 
 /**
  * Type definition for stored launch parameters
@@ -24,33 +24,27 @@ interface StoredLaunchParams {
  */
 export function useTelegramLaunchParams() {
   const sdkLaunchParams = useLaunchParams();
-  const [storedParams, setStoredParams] = useState<StoredLaunchParams | null>(
-    null,
-  );
+  const [storedParams, setStoredParams] = useState<StoredLaunchParams | null>(null);
 
   useEffect(() => {
     // Get stored launch parameters from sessionStorage
     try {
-      const stored = sessionStorage.getItem("telegramLaunchParams");
+      const stored = sessionStorage.getItem('telegramLaunchParams');
       if (stored) {
         setStoredParams(JSON.parse(stored) as StoredLaunchParams);
       }
     } catch (error) {
-      console.error("Failed to parse stored launch parameters:", error);
+      console.error('Failed to parse stored launch parameters:', error);
     }
   }, []);
 
   // Prefer SDK parameters over stored ones
   const launchParams =
-    sdkLaunchParams && Object.keys(sdkLaunchParams).length > 0
-      ? sdkLaunchParams
-      : storedParams;
+    sdkLaunchParams && Object.keys(sdkLaunchParams).length > 0 ? sdkLaunchParams : storedParams;
 
   return {
     launchParams,
-    isFromSDK: Boolean(
-      sdkLaunchParams && Object.keys(sdkLaunchParams).length > 0,
-    ),
+    isFromSDK: Boolean(sdkLaunchParams && Object.keys(sdkLaunchParams).length > 0),
     isFromStorage: Boolean(storedParams && !sdkLaunchParams),
     hasParams: Boolean(launchParams && Object.keys(launchParams).length > 0),
   };

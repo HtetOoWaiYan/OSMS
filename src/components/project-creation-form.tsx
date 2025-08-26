@@ -26,8 +26,10 @@ export function ProjectCreationForm() {
         return;
       }
 
-      // Success - redirect to dashboard
-      if (result.redirect) {
+      // Success - redirect to payment setup
+      if (result.data?.id) {
+        router.push(`/dashboard/onboarding/payment-setup?projectId=${result.data.id}`);
+      } else if (result.redirect) {
         router.push(result.redirect);
       } else {
         router.push('/dashboard');

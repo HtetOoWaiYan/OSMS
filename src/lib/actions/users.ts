@@ -1,23 +1,23 @@
-"use server";
+'use server';
 
-import { revalidatePath } from "next/cache";
-import { 
-  type InviteUserData, 
+import { revalidatePath } from 'next/cache';
+import {
+  type InviteUserData,
   inviteUserSchema,
   type UpdateUserRoleData,
   updateUserRoleSchema,
   type RemoveUserData,
   removeUserSchema,
   type ResendInvitationData,
-  resendInvitationSchema
-} from "@/lib/validations/users";
-import { 
-  getProjectUsers, 
-  inviteUserToProject, 
+  resendInvitationSchema,
+} from '@/lib/validations/users';
+import {
+  getProjectUsers,
+  inviteUserToProject,
   updateUserRole,
   removeUserFromProject,
-  resendUserInvitation
-} from "@/lib/data/users";
+  resendUserInvitation,
+} from '@/lib/data/users';
 
 export async function inviteUserAction(data: InviteUserData) {
   try {
@@ -29,15 +29,15 @@ export async function inviteUserAction(data: InviteUserData) {
 
     if (result.success) {
       // Revalidate the users page to show the new invitation
-      revalidatePath("/dashboard/users");
+      revalidatePath('/dashboard/users');
     }
 
     return result;
   } catch (error) {
-    console.error("Error in inviteUserAction:", error);
+    console.error('Error in inviteUserAction:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to invite user",
+      error: error instanceof Error ? error.message : 'Failed to invite user',
     };
   }
 }
@@ -48,12 +48,10 @@ export async function getProjectUsersAction() {
 
     return result;
   } catch (error) {
-    console.error("Error in getProjectUsersAction:", error);
+    console.error('Error in getProjectUsersAction:', error);
     return {
       success: false,
-      error: error instanceof Error
-        ? error.message
-        : "Failed to fetch project users",
+      error: error instanceof Error ? error.message : 'Failed to fetch project users',
     };
   }
 }
@@ -68,15 +66,15 @@ export async function updateUserRoleAction(data: UpdateUserRoleData) {
 
     if (result.success) {
       // Revalidate the users page to show the updated role
-      revalidatePath("/dashboard/[project-id]/users");
+      revalidatePath('/dashboard/[project-id]/users');
     }
 
     return result;
   } catch (error) {
-    console.error("Error in updateUserRoleAction:", error);
+    console.error('Error in updateUserRoleAction:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to update user role",
+      error: error instanceof Error ? error.message : 'Failed to update user role',
     };
   }
 }
@@ -91,15 +89,15 @@ export async function removeUserAction(data: RemoveUserData) {
 
     if (result.success) {
       // Revalidate the users page to show the user removed
-      revalidatePath("/dashboard/[project-id]/users");
+      revalidatePath('/dashboard/[project-id]/users');
     }
 
     return result;
   } catch (error) {
-    console.error("Error in removeUserAction:", error);
+    console.error('Error in removeUserAction:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to remove user",
+      error: error instanceof Error ? error.message : 'Failed to remove user',
     };
   }
 }
@@ -114,15 +112,15 @@ export async function resendInvitationAction(data: ResendInvitationData) {
 
     if (result.success) {
       // Revalidate the users page to show the invitation sent
-      revalidatePath("/dashboard/[project-id]/users");
+      revalidatePath('/dashboard/[project-id]/users');
     }
 
     return result;
   } catch (error) {
-    console.error("Error in resendInvitationAction:", error);
+    console.error('Error in resendInvitationAction:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to resend invitation",
+      error: error instanceof Error ? error.message : 'Failed to resend invitation',
     };
   }
 }

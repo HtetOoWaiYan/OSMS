@@ -9,11 +9,11 @@
  * - Optimistic updates
  */
 
-"use client";
+'use client';
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getProjectUsersAction, inviteUserAction } from "@/lib/actions/users";
-import type { InviteUserData } from "@/lib/validations/users";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getProjectUsersAction, inviteUserAction } from '@/lib/actions/users';
+import type { InviteUserData } from '@/lib/validations/users';
 
 /**
  * Example: Client-side users fetching (USE ONLY WHEN NECESSARY)
@@ -21,11 +21,11 @@ import type { InviteUserData } from "@/lib/validations/users";
  */
 export function useProjectUsers() {
   return useQuery({
-    queryKey: ["project-users"],
+    queryKey: ['project-users'],
     queryFn: async () => {
       const result = await getProjectUsersAction();
       if (!result.success) {
-        throw new Error(result.error || "Failed to fetch users");
+        throw new Error(result.error || 'Failed to fetch users');
       }
       return result.data;
     },
@@ -43,13 +43,13 @@ export function useInviteUser() {
     mutationFn: async (data: InviteUserData) => {
       const result = await inviteUserAction(data);
       if (!result.success) {
-        throw new Error(result.error || "Failed to invite user");
+        throw new Error(result.error || 'Failed to invite user');
       }
       return result.data;
     },
     onSuccess: () => {
       // Invalidate and refetch users list
-      queryClient.invalidateQueries({ queryKey: ["project-users"] });
+      queryClient.invalidateQueries({ queryKey: ['project-users'] });
     },
   });
 }
@@ -58,9 +58,7 @@ export function useInviteUser() {
  * Generic hook for server actions with TanStack Query
  */
 export function useServerAction<TData, TVariables>(
-  actionFn: (
-    variables: TVariables,
-  ) => Promise<{ success: boolean; error?: string; data?: TData }>,
+  actionFn: (variables: TVariables) => Promise<{ success: boolean; error?: string; data?: TData }>,
   options?: {
     onSuccess?: (data: TData) => void;
     onError?: (error: string) => void;
@@ -73,10 +71,10 @@ export function useServerAction<TData, TVariables>(
     mutationFn: async (variables: TVariables): Promise<TData> => {
       const result = await actionFn(variables);
       if (!result.success) {
-        throw new Error(result.error || "Operation failed");
+        throw new Error(result.error || 'Operation failed');
       }
       if (!result.data) {
-        throw new Error("No data returned from operation");
+        throw new Error('No data returned from operation');
       }
       return result.data;
     },

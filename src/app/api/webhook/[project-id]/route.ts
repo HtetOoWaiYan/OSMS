@@ -1,13 +1,13 @@
-import "server-only";
-import { NextRequest, NextResponse } from "next/server";
-import { Bot } from "grammy";
-import { getProjectById } from "@/lib/data/projects";
+import 'server-only';
+import { NextRequest, NextResponse } from 'next/server';
+import { Bot } from 'grammy';
+import { getProjectById } from '@/lib/data/projects';
 
 /**
  * Dynamic webhook handler for multiple Telegram bots
  * Route: /api/webhook/[project-id]
  * Each project can have its own bot with different token
- * 
+ *
  * Launch Parameters Implementation:
  * - Mini App URLs include launch parameters in the hash (e.g., #tgWebAppData=...&tgWebAppStartParam=...)
  * - Client-side handler converts hash parameters to search parameters for server-side processing
@@ -72,7 +72,7 @@ async function getBotForProject(projectId: string): Promise<Bot | null> {
  */
 function setupBotCommands(bot: Bot, projectId: string, projectName: string) {
   // Handle /start command
-  bot.command("start", async (ctx) => {
+  bot.command('start', async (ctx) => {
     const user = ctx.from;
     if (!user) return;
 
@@ -95,17 +95,17 @@ Use /catalog to start browsing our products!`.trim();
     await ctx.reply(welcomeMessage, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: "🚀 Launch Mini App", web_app: { url: miniAppUrl } }],
-          [{ text: "🛍️ Browse Catalog", callback_data: "catalog" }],
-          [{ text: "📦 My Orders", callback_data: "orders" }],
-          [{ text: "❓ Help", callback_data: "help" }],
+          [{ text: '🚀 Launch Mini App', web_app: { url: miniAppUrl } }],
+          [{ text: '🛍️ Browse Catalog', callback_data: 'catalog' }],
+          [{ text: '📦 My Orders', callback_data: 'orders' }],
+          [{ text: '❓ Help', callback_data: 'help' }],
         ],
       },
     });
   });
 
   // Handle /help command
-  bot.command("help", async (ctx) => {
+  bot.command('help', async (ctx) => {
     const helpMessage = `🆘 Help & Support
 
 Available commands:
@@ -124,19 +124,19 @@ For support, contact our team directly.`.trim();
   });
 
   // Handle /catalog command
-  bot.command("catalog", async (ctx) => {
+  bot.command('catalog', async (ctx) => {
     // TODO: Implement catalog browsing
-    await ctx.reply("🛍️ Product catalog feature coming soon! Stay tuned.");
+    await ctx.reply('🛍️ Product catalog feature coming soon! Stay tuned.');
   });
 
   // Handle /orders command
-  bot.command("orders", async (ctx) => {
+  bot.command('orders', async (ctx) => {
     // TODO: Implement order history
-    await ctx.reply("📦 Order history feature coming soon! Stay tuned.");
+    await ctx.reply('📦 Order history feature coming soon! Stay tuned.');
   });
 
   // Handle /launch command
-  bot.command("launch", async (ctx) => {
+  bot.command('launch', async (ctx) => {
     const miniAppUrl = generateMiniAppUrl(projectId);
 
     await ctx.reply(
@@ -145,31 +145,25 @@ For support, contact our team directly.`.trim();
 Click the button below to open our mobile shopping app:`,
       {
         reply_markup: {
-          inline_keyboard: [
-            [{ text: "🛍️ Open Purple Shopping", web_app: { url: miniAppUrl } }],
-          ],
+          inline_keyboard: [[{ text: '🛍️ Open Purple Shopping', web_app: { url: miniAppUrl } }]],
         },
-        parse_mode: "Markdown",
-      }
+        parse_mode: 'Markdown',
+      },
     );
   });
 
   // Handle callback queries from inline keyboards
-  bot.on("callback_query:data", async (ctx) => {
+  bot.on('callback_query:data', async (ctx) => {
     const data = ctx.callbackQuery.data;
 
     switch (data) {
-      case "catalog":
-        await ctx.editMessageText(
-          "🛍️ Product catalog feature coming soon! Stay tuned.",
-        );
+      case 'catalog':
+        await ctx.editMessageText('🛍️ Product catalog feature coming soon! Stay tuned.');
         break;
-      case "orders":
-        await ctx.editMessageText(
-          "📦 Order history feature coming soon! Stay tuned.",
-        );
+      case 'orders':
+        await ctx.editMessageText('📦 Order history feature coming soon! Stay tuned.');
         break;
-      case "help":
+      case 'help':
         const helpMessage = `🆘 Help & Support
 
 Available commands:
@@ -181,28 +175,26 @@ Available commands:
         await ctx.editMessageText(helpMessage);
         break;
       default:
-        await ctx.answerCallbackQuery("Unknown action");
+        await ctx.answerCallbackQuery('Unknown action');
     }
 
     await ctx.answerCallbackQuery();
   });
 
   // Handle text messages
-  bot.on("message:text", async (ctx) => {
+  bot.on('message:text', async (ctx) => {
     const message = ctx.message.text.toLowerCase();
 
     // Simple keyword responses
-    if (message.includes("hello") || message.includes("hi")) {
+    if (message.includes('hello') || message.includes('hi')) {
+      await ctx.reply(`Hello! Welcome to ${projectName}. How can I help you today?`);
+    } else if (message.includes('catalog') || message.includes('product')) {
       await ctx.reply(
-        `Hello! Welcome to ${projectName}. How can I help you today?`,
+        '🛍️ Product catalog feature is coming soon! Use /catalog to browse when available.',
       );
-    } else if (message.includes("catalog") || message.includes("product")) {
+    } else if (message.includes('order')) {
       await ctx.reply(
-        "🛍️ Product catalog feature is coming soon! Use /catalog to browse when available.",
-      );
-    } else if (message.includes("order")) {
-      await ctx.reply(
-        "📦 Order management feature is coming soon! Use /orders to check your orders when available.",
+        '📦 Order management feature is coming soon! Use /orders to check your orders when available.',
       );
     } else {
       // Default response for unrecognized messages
@@ -210,9 +202,7 @@ Available commands:
         `I understand you said: "${ctx.message.text}"\n\nI'm still learning! For now, please use the commands above or type /help for assistance.`,
         {
           reply_markup: {
-            inline_keyboard: [
-              [{ text: "🆘 Help", callback_data: "help" }],
-            ],
+            inline_keyboard: [[{ text: '🆘 Help', callback_data: 'help' }]],
           },
         },
       );
@@ -228,10 +218,10 @@ Available commands:
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ "project-id": string }> },
+  { params }: { params: Promise<{ 'project-id': string }> },
 ) {
   try {
-    const { "project-id": projectId } = await params;
+    const { 'project-id': projectId } = await params;
 
     console.log(`Webhook verification request for project: ${projectId}`);
 
@@ -256,7 +246,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Webhook GET error:", error);
+    console.error('Webhook GET error:', error);
     return new NextResponse(JSON.stringify({ ok: true }), {
       status: 200,
       headers: {
@@ -271,10 +261,10 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ "project-id": string }> },
+  { params }: { params: Promise<{ 'project-id': string }> },
 ) {
   try {
-    const { "project-id": projectId } = await params;
+    const { 'project-id': projectId } = await params;
 
     console.log(`Incoming webhook for project: ${projectId}`);
 
@@ -283,10 +273,7 @@ export async function POST(
 
     if (!bot) {
       console.error(`Bot not found for project: ${projectId}`);
-      return NextResponse.json(
-        { error: "Bot not configured for this project" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: 'Bot not configured for this project' }, { status: 404 });
     }
 
     // Get raw request body
@@ -297,21 +284,18 @@ export async function POST(
     try {
       update = JSON.parse(body);
     } catch (parseError) {
-      console.error("Failed to parse webhook body:", parseError);
-      return NextResponse.json(
-        { error: "Invalid JSON in webhook body" },
-        { status: 400 },
-      );
+      console.error('Failed to parse webhook body:', parseError);
+      return NextResponse.json({ error: 'Invalid JSON in webhook body' }, { status: 400 });
     }
 
-    console.log("Received update:", JSON.stringify(update, null, 2));
+    console.log('Received update:', JSON.stringify(update, null, 2));
 
     // Handle the update with Grammy
     try {
       await bot.handleUpdate(update);
-      console.log("Update handled successfully");
+      console.log('Update handled successfully');
     } catch (handleError) {
-      console.error("Error handling update:", handleError);
+      console.error('Error handling update:', handleError);
       // Still return 200 to acknowledge receipt even if processing failed
     }
 
@@ -323,7 +307,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error("Webhook POST error:", error);
+    console.error('Webhook POST error:', error);
     // Even on error, return 200 to prevent Telegram from retrying
     return new NextResponse(JSON.stringify({ ok: true }), {
       status: 200,

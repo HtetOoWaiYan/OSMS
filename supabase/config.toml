@@ -66,6 +66,7 @@ schema_paths = [
   "./schemas/12_cart_items.sql",
   "./schemas/13_chat_messages.sql",
   "./schemas/14_stock_movements.sql",
+  "./schemas/15_payment_qr_codes.sql",
   "./schemas/80_rls_policies.sql",
   "./schemas/90_functions.sql",
   "./schemas/91_views.sql"

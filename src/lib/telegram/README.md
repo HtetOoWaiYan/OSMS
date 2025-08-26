@@ -5,6 +5,7 @@ This directory contains all Telegram-related functionality for the Purple Shoppi
 ## Mini App Setup
 
 ### Route Structure
+
 - **Mini App URL**: `/app/[project-id]`
 - **Example**: `https://your-domain.com/app/project-uuid-123`
 - **Authentication**: Automatic via `initData` validation
@@ -15,13 +16,11 @@ The mini app uses server-side validation of Telegram's `initData` to ensure auth
 
 ```typescript
 // Automatic validation in layout.tsx
-const validationResult = await validateTelegramInitData(
-  initDataRaw,
-  project.telegram_bot_token
-);
+const validationResult = await validateTelegramInitData(initDataRaw, project.telegram_bot_token);
 ```
 
 **Validation Process:**
+
 1. Parse `initData` as query parameters
 2. Extract key-value pairs (excluding `hash`)
 3. Sort alphabetically
@@ -43,6 +42,7 @@ await setWebhook(botToken, webhookUrl);
 ## API Functions
 
 ### Webhook Management
+
 ```typescript
 import { setWebhook, removeWebhook, getWebhookInfo } from '@/lib/telegram/api';
 
@@ -57,6 +57,7 @@ const info = await getWebhookInfo(botToken);
 ```
 
 ### InitData Validation
+
 ```typescript
 import { validateTelegramInitData } from '@/lib/telegram/init-data-validation';
 
@@ -72,6 +73,7 @@ if (result.isValid) {
 ## Mini App Features
 
 ### Current Status
+
 - ✅ **Authentication**: Server-side `initData` validation
 - ✅ **User Verification**: Automatic user data extraction
 - ✅ **Error Handling**: Comprehensive error pages
@@ -81,11 +83,14 @@ if (result.isValid) {
 - ⏳ **Order Management**: Coming in Phase 4
 
 ### URL Parameters
+
 Telegram passes the following via URL search params:
+
 - `initData`: Authentication data (required)
 - Other parameters as documented in Telegram Mini Apps spec
 
 ### Error Codes
+
 - `no_init_data`: No authentication data provided
 - `project_not_found`: Project doesn't exist or has no bot token
 - `invalid_init_data`: Hash validation failed
@@ -94,11 +99,13 @@ Telegram passes the following via URL search params:
 ## Development
 
 ### Testing Locally
+
 1. Use ngrok to expose local server: `ngrok http 3000`
 2. Update project webhook URL to: `https://xxx.ngrok.io/api/webhook/project-id`
 3. Test mini app at: `https://xxx.ngrok.io/app/project-id`
 
 ### Environment Variables
+
 ```env
 NEXT_PUBLIC_APP_URL=https://your-production-domain.com
 # For local development: http://localhost:3000
@@ -114,6 +121,7 @@ The bot includes a **Launch Mini App** button that opens the Telegram Mini App:
 - **Dynamic URLs**: Automatically generates project-specific URLs
 
 ### Debugging
+
 - Check server logs for validation results
 - Use the debug panel in development mode
 - Verify webhook setup with `getWebhookInfo()`

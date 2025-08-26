@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { init, useLaunchParams, useRawInitData } from '@telegram-apps/sdk-react';
+import dynamic from 'next/dynamic';
 import { validateTelegramUser, TelegramValidationResult } from '@/lib/actions/telegram-validation';
 
 interface TelegramContextValue {
@@ -27,32 +27,66 @@ interface TelegramProviderProps {
   projectId: string;
 }
 
-export function TelegramProvider({ children, projectId }: TelegramProviderProps) {
+// Client-only component that actually uses Telegram hooks
+function TelegramProviderClient({ children, projectId }: TelegramProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [validationResult, setValidationResult] = useState<TelegramValidationResult | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize Telegram SDK
+  // Dynamic import to load Telegram SDK hooks only on client
+  const [telegramHooks, setTelegramHooks] = useState<{
+    init: () => void;
+    useLaunchParams: () => Record<string, unknown> | undefined;
+    useRawInitData: () => string | undefined;
+  } | null>(null);
+
   useEffect(() => {
-    try {
-      init();
-      setIsInitialized(true);
-      console.log('Telegram SDK initialized');
-    } catch (err) {
-      console.error('Failed to initialize Telegram SDK:', err);
-      setError('Failed to initialize Telegram SDK');
-      setIsLoading(false);
-    }
+    const loadTelegramSDK = async () => {
+      try {
+        const telegram = await import('@telegram-apps/sdk-react');
+        setTelegramHooks(telegram);
+
+        // Initialize SDK
+        telegram.init();
+        setIsInitialized(true);
+        console.log('Telegram SDK initialized');
+      } catch (err) {
+        console.error('Failed to load Telegram SDK:', err);
+        setError('Failed to load Telegram SDK');
+        setIsLoading(false);
+      }
+    };
+
+    loadTelegramSDK();
   }, []);
 
-  // Get launch parameters and initData from SDK
-  const launchParams = useLaunchParams();
-  const rawInitData = useRawInitData();
+  // Get Telegram data using imported hooks
+  const [launchParams, setLaunchParams] = useState<Record<string, unknown> | null>(null);
+  const [rawInitData, setRawInitData] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!telegramHooks || !isInitialized) return;
+
+    try {
+      const params = telegramHooks.useLaunchParams();
+      const initData = telegramHooks.useRawInitData();
+      setLaunchParams(params || null);
+      setRawInitData(initData || null);
+      console.log('Telegram data retrieved');
+    } catch (err) {
+      console.debug('Telegram hooks not available:', err);
+      setLaunchParams(null);
+      setRawInitData(null);
+    }
+  }, [telegramHooks, isInitialized]);
 
   // Validate initData when we have it
   useEffect(() => {
-    if (!isInitialized || !rawInitData) return;
+    if (!isInitialized || !rawInitData) {
+      setIsLoading(false);
+      return;
+    }
 
     const validateData = async () => {
       try {
@@ -80,13 +114,47 @@ export function TelegramProvider({ children, projectId }: TelegramProviderProps)
   const contextValue: TelegramContextValue = {
     isLoading,
     validationResult,
-    launchParams: launchParams || null,
-    rawInitData: rawInitData || null,
+    launchParams,
+    rawInitData,
     isInitialized,
     error,
   };
 
   return <TelegramContext.Provider value={contextValue}>{children}</TelegramContext.Provider>;
+}
+
+// Wrapper that provides SSR-safe fallback
+function TelegramProviderSSRFallback({ children }: { children: React.ReactNode }) {
+  const contextValue: TelegramContextValue = {
+    isLoading: true,
+    validationResult: null,
+    launchParams: null,
+    rawInitData: null,
+    isInitialized: false,
+    error: null,
+  };
+
+  return <TelegramContext.Provider value={contextValue}>{children}</TelegramContext.Provider>;
+}
+
+// Dynamic import with no SSR
+const DynamicTelegramProvider = dynamic(() => Promise.resolve(TelegramProviderClient), {
+  ssr: false,
+  loading: () => null,
+});
+
+export function TelegramProvider({ children, projectId }: TelegramProviderProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <TelegramProviderSSRFallback>{children}</TelegramProviderSSRFallback>;
+  }
+
+  return <DynamicTelegramProvider projectId={projectId}>{children}</DynamicTelegramProvider>;
 }
 
 /**

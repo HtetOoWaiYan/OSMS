@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getProject, maskBotToken, checkUserPermissions } from '@/lib/data/projects';
 import { updateProjectAction } from '@/lib/actions/projects';
 import { ProjectSettingsForm } from '@/components/project-settings-form';
+import { PaymentMethodsSettings } from '@/components/dashboard/payment-methods-settings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -48,6 +49,8 @@ async function ProjectSettingsContent({ projectId }: { projectId: string }) {
           />
         </CardContent>
       </Card>
+
+      <PaymentMethodsSettings project={project} />
 
       <Card>
         <CardHeader>

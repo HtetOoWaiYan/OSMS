@@ -1,10 +1,6 @@
-import "server-only";
+import 'server-only';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
-import type {
-  Tables,
-  TablesInsert,
-  Enums
-} from '@/lib/supabase/database.types';
+import type { Tables, TablesInsert, Enums } from '@/lib/supabase/database.types';
 import type { CreateProjectData, UpdateProjectData } from '@/lib/validations/projects';
 import { setWebhook, generateWebhookUrl } from '@/lib/telegram/api';
 
@@ -30,9 +26,12 @@ export async function getUserProjects(): Promise<{
 }> {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return { success: false, error: 'Authentication required' };
     }
@@ -40,10 +39,12 @@ export async function getUserProjects(): Promise<{
     // Get all user's projects through user_roles relationship
     const { data: userRoles, error: roleError } = await supabase
       .from('user_roles')
-      .select(`
+      .select(
+        `
         *,
         projects:project_id (*)
-      `)
+      `,
+      )
       .eq('user_id', user.id)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
@@ -53,20 +54,21 @@ export async function getUserProjects(): Promise<{
     }
 
     // Transform data to include project info with user role
-    const projectsWithRoles = userRoles?.map(userRole => {
-      const project = userRole.projects as unknown as Project;
-      return {
-        ...project,
-        userRole: userRole
-      };
-    }) || [];
-    
+    const projectsWithRoles =
+      userRoles?.map((userRole) => {
+        const project = userRole.projects as unknown as Project;
+        return {
+          ...project,
+          userRole: userRole,
+        };
+      }) || [];
+
     return { success: true, data: projectsWithRoles };
   } catch (error) {
     console.error('Error getting user projects:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to get user projects' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get user projects',
     };
   }
 }
@@ -89,13 +91,13 @@ export async function getUserProject(): Promise<{
     const firstProject = projectsResult.data?.[0];
     return {
       success: true,
-      data: firstProject
+      data: firstProject,
     };
   } catch (error) {
     console.error('Error getting user project:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to get user project' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get user project',
     };
   }
 }
@@ -122,9 +124,12 @@ export async function createProject(data: CreateProjectData): Promise<{
   try {
     const supabase = await createClient();
     const supabaseAdmin = await createServiceRoleClient();
-    
+
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return { success: false, error: 'Authentication required' };
     }
@@ -155,32 +160,29 @@ export async function createProject(data: CreateProjectData): Promise<{
       is_active: true,
     };
 
-    const { error: roleError } = await supabaseAdmin
-      .from('user_roles')
-      .insert(userRoleData);
+    const { error: roleError } = await supabaseAdmin.from('user_roles').insert(userRoleData);
 
     if (roleError) {
       // If role assignment fails, clean up the project
-      await supabaseAdmin
-        .from('projects')
-        .delete()
-        .eq('id', project.id);
+      await supabaseAdmin.from('projects').delete().eq('id', project.id);
 
       throw new Error('Failed to assign admin role');
     }
 
     // Set up Telegram webhook (don't fail project creation if this fails)
-    let webhookSetupResult: {
-      success: boolean;
-      error?: string;
-      webhookInfo?: {
-        url: string;
-        has_custom_certificate: boolean;
-        pending_update_count: number;
-        max_connections?: number;
-        ip_address?: string;
-      };
-    } | undefined;
+    let webhookSetupResult:
+      | {
+          success: boolean;
+          error?: string;
+          webhookInfo?: {
+            url: string;
+            has_custom_certificate: boolean;
+            pending_update_count: number;
+            max_connections?: number;
+            ip_address?: string;
+          };
+        }
+      | undefined;
 
     try {
       const webhookUrl = generateWebhookUrl(project.id);
@@ -210,15 +212,15 @@ export async function createProject(data: CreateProjectData): Promise<{
       success: true,
       data: {
         ...project,
-        telegram_webhook_url: generateWebhookUrl(project.id)
+        telegram_webhook_url: generateWebhookUrl(project.id),
       },
-      webhookSetup: webhookSetupResult
+      webhookSetup: webhookSetupResult,
     };
   } catch (error) {
     console.error('Error creating project:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to create project' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create project',
     };
   }
 }
@@ -235,7 +237,10 @@ export async function getProject(projectId: string): Promise<{
     const supabase = await createClient();
 
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return { success: false, error: 'Authentication required' };
     }
@@ -259,7 +264,7 @@ export async function getProject(projectId: string): Promise<{
     console.error('Error getting project:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get project'
+      error: error instanceof Error ? error.message : 'Failed to get project',
     };
   }
 }
@@ -296,7 +301,7 @@ export async function getProjectById(projectId: string): Promise<{
     console.error('Error getting project by ID:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get project'
+      error: error instanceof Error ? error.message : 'Failed to get project',
     };
   }
 }
@@ -315,9 +320,12 @@ export async function checkUserPermissions(projectId: string): Promise<{
 }> {
   try {
     const supabase = await createClient();
-    
+
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return { success: false, error: 'Authentication required' };
     }
@@ -348,9 +356,9 @@ export async function checkUserPermissions(projectId: string): Promise<{
     };
   } catch (error) {
     console.error('Error checking user permissions:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to check permissions' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to check permissions',
     };
   }
 }
@@ -360,7 +368,7 @@ export async function checkUserPermissions(projectId: string): Promise<{
  */
 export async function updateProject(
   projectId: string,
-  data: UpdateProjectData
+  data: UpdateProjectData,
 ): Promise<{
   success: boolean;
   error?: string;
@@ -380,9 +388,12 @@ export async function updateProject(
   try {
     const supabase = await createClient();
     const supabaseAdmin = await createServiceRoleClient();
-    
+
     // Check authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return { success: false, error: 'Authentication required' };
     }
@@ -397,8 +408,9 @@ export async function updateProject(
     const updateData: Partial<Project> = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.telegram_bot_token !== undefined) updateData.telegram_bot_token = data.telegram_bot_token;
-    
+    if (data.telegram_bot_token !== undefined)
+      updateData.telegram_bot_token = data.telegram_bot_token;
+
     // Always update the timestamp
     updateData.updated_at = new Date().toISOString();
 
@@ -415,17 +427,19 @@ export async function updateProject(
     }
 
     // Set up or update Telegram webhook if bot token was provided
-    let webhookSetupResult: {
-      success: boolean;
-      error?: string;
-      webhookInfo?: {
-        url: string;
-        has_custom_certificate: boolean;
-        pending_update_count: number;
-        max_connections?: number;
-        ip_address?: string;
-      };
-    } | undefined;
+    let webhookSetupResult:
+      | {
+          success: boolean;
+          error?: string;
+          webhookInfo?: {
+            url: string;
+            has_custom_certificate: boolean;
+            pending_update_count: number;
+            max_connections?: number;
+            ip_address?: string;
+          };
+        }
+      | undefined;
 
     if (data.telegram_bot_token && data.telegram_bot_token.trim() !== '') {
       try {
@@ -457,15 +471,15 @@ export async function updateProject(
       success: true,
       data: {
         ...project,
-        telegram_webhook_url: generateWebhookUrl(projectId)
+        telegram_webhook_url: generateWebhookUrl(projectId),
       },
-      webhookSetup: webhookSetupResult
+      webhookSetup: webhookSetupResult,
     };
   } catch (error) {
     console.error('Error updating project:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update project' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update project',
     };
   }
 }
@@ -478,7 +492,7 @@ export function maskBotToken(token: string): string {
   if (!token || token.length < 15) {
     return token; // Too short to mask effectively
   }
-  
+
   const colonIndex = token.indexOf(':');
   if (colonIndex === -1) {
     // No colon found, mask middle part
@@ -487,18 +501,18 @@ export function maskBotToken(token: string): string {
     const maskedLength = Math.min(15, token.length - 10);
     return `${start}${'*'.repeat(maskedLength)}${end}`;
   }
-  
+
   // Mask the secret part after the colon
   const botId = token.slice(0, colonIndex + 1); // Include the colon
   const secret = token.slice(colonIndex + 1);
-  
+
   if (secret.length < 10) {
     return token; // Secret too short to mask effectively
   }
-  
+
   const secretStart = secret.slice(0, 6);
   const secretEnd = secret.slice(-4);
   const maskedLength = Math.min(15, secret.length - 10);
-  
+
   return `${botId}${secretStart}${'*'.repeat(maskedLength)}${secretEnd}`;
 }
