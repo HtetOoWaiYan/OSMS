@@ -85,7 +85,7 @@ export default function CartPage({ params }: CartPageProps) {
   if (items.length === 0) {
     return (
       <MiniAppLayout projectId={projectId}>
-        <div className="container mx-auto max-w-md px-4 py-6">
+        <div className="min-h-screen bg-gray-50 px-3 py-6">
           <EmptyCart projectId={projectId} />
         </div>
       </MiniAppLayout>
@@ -94,27 +94,35 @@ export default function CartPage({ params }: CartPageProps) {
 
   return (
     <MiniAppLayout projectId={projectId}>
-      <div className="container mx-auto max-w-md space-y-6 px-4 py-6">
+      <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Shopping Cart</h1>
-          <span className="text-muted-foreground text-sm">
-            {items.length} item{items.length !== 1 ? 's' : ''}
-          </span>
+        <div className="border-b border-gray-200 bg-white px-3 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold">Cart</h1>
+            <span className="text-muted-foreground text-sm">
+              {items.length} item{items.length !== 1 ? 's' : ''}
+            </span>
+          </div>
         </div>
 
-        {/* Stock validation warning */}
-        {isValidating && (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-            <p className="text-sm text-blue-800">🔄 Checking stock availability...</p>
-          </div>
-        )}
+        <div className="space-y-3 p-3">
+          {/* Stock validation warning */}
+          {isValidating && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+              <p className="text-sm text-blue-800">🔄 Checking stock availability...</p>
+            </div>
+          )}
 
-        {/* Cart Items */}
-        <CartItemsList items={items} onValidateStock={validateStock} isValidating={isValidating} />
+          {/* Cart Items */}
+          <CartItemsList
+            items={items}
+            onValidateStock={validateStock}
+            isValidating={isValidating}
+          />
 
-        {/* Cart Summary */}
-        <CartSummary projectId={projectId} onValidateStock={validateStock} />
+          {/* Cart Summary */}
+          <CartSummary projectId={projectId} onValidateStock={validateStock} />
+        </div>
       </div>
     </MiniAppLayout>
   );

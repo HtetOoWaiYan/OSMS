@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { QuantitySelector } from './quantity-selector';
 import { useCartStore } from '@/hooks/use-cart-store';
 import { ShoppingCart } from 'lucide-react';
@@ -73,13 +72,13 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
     : item.stock_quantity;
 
   return (
-    <Card>
-      <CardContent className="space-y-4 p-6">
+    <div className="safe-area-inset-bottom fixed right-0 bottom-0 left-0 z-40 border-t border-gray-200 bg-white p-3">
+      <div className="mx-auto max-w-md space-y-3">
         {/* Quantity Selector */}
         {!isOutOfStock && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Quantity</label>
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Quantity:</span>
+            <div className="flex items-center gap-3">
               <QuantitySelector
                 value={selectedQuantity}
                 onChange={setSelectedQuantity}
@@ -87,21 +86,18 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
                 max={maxSelectableQuantity}
                 disabled={isOutOfStock}
               />
-              <span className="text-muted-foreground text-sm">
-                {isInCart && <span>({cartItem.quantity} already in cart) •</span>}
-                {item.stock_quantity} available
-              </span>
+              <span className="text-muted-foreground text-xs">{item.stock_quantity} available</span>
             </div>
           </div>
         )}
 
         {/* Action Buttons */}
-        <div className="space-y-3">
+        <div className="flex gap-3">
           {/* Add to Cart Button */}
           <Button
             onClick={handleAddToCart}
             disabled={isOutOfStock || maxSelectableQuantity === 0}
-            className="w-full"
+            className="h-11 flex-1"
             size="lg"
           >
             <ShoppingCart className="mr-2 h-4 w-4" />
@@ -110,7 +106,7 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
 
           {/* Buy Now Button */}
           {!isOutOfStock && (
-            <Button onClick={handleBuyNow} variant="outline" className="w-full" size="lg">
+            <Button onClick={handleBuyNow} variant="outline" className="h-11 flex-1" size="lg">
               Buy Now
             </Button>
           )}
@@ -118,18 +114,18 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
 
         {/* Stock Warning */}
         {!isOutOfStock && item.stock_quantity <= 5 && (
-          <div className="rounded bg-orange-50 p-2 text-center text-sm text-orange-600">
-            ⚠️ Only {item.stock_quantity} left in stock!
+          <div className="rounded bg-orange-50 px-2 py-1 text-center text-xs text-orange-600">
+            ⚠️ Only {item.stock_quantity} left!
           </div>
         )}
 
         {/* Cart Info */}
         {isInCart && (
-          <div className="text-muted-foreground bg-muted rounded p-2 text-center text-sm">
-            You have {cartItem.quantity} of this item in your cart
+          <div className="text-muted-foreground rounded bg-gray-50 px-2 py-1 text-center text-xs">
+            {cartItem.quantity} in cart
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

@@ -44,15 +44,15 @@ export function MiniAppHeader({ projectId, showSearch = true }: MiniAppHeaderPro
   };
 
   return (
-    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b backdrop-blur">
-      <div className="container flex h-16 items-center gap-4 px-4">
+    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
+      <div className="flex h-14 items-center gap-3 px-3">
         {showSearch && (
           <form onSubmit={handleSearch} className="flex-1">
             <div className="relative">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Search products..."
-                className="pr-4 pl-10"
+                className="h-9 rounded-full border-gray-200 bg-gray-50 pr-4 pl-10 text-sm focus:bg-white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -60,15 +60,15 @@ export function MiniAppHeader({ projectId, showSearch = true }: MiniAppHeaderPro
           </form>
         )}
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={navigateToOrders}>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={navigateToOrders} className="h-9 w-9">
             <Package className="h-5 w-5" />
           </Button>
 
-          <Button variant="ghost" size="icon" onClick={navigateToCart} className="relative">
+          <Button variant="ghost" size="icon" onClick={navigateToCart} className="relative h-9 w-9">
             <ShoppingCart className="h-5 w-5" />
             {cartItemCount > 0 && (
-              <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-xs">
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
                 {cartItemCount > 99 ? '99+' : cartItemCount}
               </span>
             )}

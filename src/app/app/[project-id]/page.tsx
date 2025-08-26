@@ -41,25 +41,29 @@ export default async function AppPage({ params, searchParams }: AppPageProps) {
 
   return (
     <MiniAppLayout projectId={projectId}>
-      <div className="container mx-auto max-w-md space-y-6 px-4 py-6">
+      <div className="min-h-screen bg-gray-50">
         {/* Featured Products - only show if no search/filters applied */}
         {!filters.search && !filters.category && featuredItems.length > 0 && (
-          <FeaturedProducts items={featuredItems} projectId={projectId} />
+          <div className="bg-white px-3 py-4">
+            <FeaturedProducts items={featuredItems} projectId={projectId} />
+          </div>
         )}
 
         {/* All Products */}
-        <ProductGrid
-          items={items}
-          categories={categories}
-          projectId={projectId}
-          title={
-            filters.search
-              ? `Search results for "${filters.search}"`
-              : filters.category
-                ? `${categories.find((c) => c.id === filters.category)?.name || 'Category'}`
-                : 'All Products'
-          }
-        />
+        <div className="mt-2 bg-white">
+          <ProductGrid
+            items={items}
+            categories={categories}
+            projectId={projectId}
+            title={
+              filters.search
+                ? `Search: "${filters.search}"`
+                : filters.category
+                  ? `${categories.find((c) => c.id === filters.category)?.name || 'Category'}`
+                  : 'All Products'
+            }
+          />
+        </div>
       </div>
     </MiniAppLayout>
   );

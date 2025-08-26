@@ -15,14 +15,14 @@ export function MiniAppLayout({
   children,
   projectId,
   showHeader = true,
-  showBottomNav = true,
+  showBottomNav = false,
 }: MiniAppLayoutProps) {
   return (
     <TelegramProvider projectId={projectId}>
       <div className="bg-background flex min-h-screen flex-col">
         {showHeader && <MiniAppHeader projectId={projectId} />}
 
-        <main className={`flex-1 ${showBottomNav ? 'pb-16' : ''}`}>{children}</main>
+        <main className="flex-1">{children}</main>
 
         {showBottomNav && <MiniAppBottomNav projectId={projectId} />}
       </div>

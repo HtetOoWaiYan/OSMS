@@ -49,25 +49,25 @@ export function ProductGrid({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 px-3 pb-6">
       {/* Header with filters toggle */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{title}</h2>
+        <h2 className="text-lg font-semibold">{title}</h2>
         <Button
           variant="outline"
           size="sm"
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2"
+          className="flex h-8 items-center gap-1 px-3"
         >
-          <Filter className="h-4 w-4" />
-          Filters
+          <Filter className="h-3 w-3" />
+          <span className="text-xs">Filter</span>
         </Button>
       </div>
 
       {/* Filters */}
       {showFilters && (
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="mx-0">
+          <CardContent className="p-3">
             <ProductFilters
               categories={categories.map((cat) => ({
                 id: cat.id,
@@ -81,14 +81,14 @@ export function ProductGrid({
       )}
 
       {/* Product count */}
-      <p className="text-muted-foreground text-sm">
+      <p className="text-muted-foreground text-xs">
         {items.length} product{items.length !== 1 ? 's' : ''} found
       </p>
 
-      {/* Products grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Products grid - Mobile optimized 2 columns */}
+      <div className="grid grid-cols-2 gap-3">
         {items.map((item) => (
-          <ProductCard key={item.id} item={item} projectId={projectId} />
+          <ProductCard key={item.id} item={item} projectId={projectId} compact />
         ))}
       </div>
     </div>

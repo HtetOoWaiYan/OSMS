@@ -33,22 +33,24 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
       projectId={projectId}
       showBottomNav={false} // Hide bottom nav for better UX on detail page
     >
-      <div className="container mx-auto max-w-md">
+      <div className="min-h-screen bg-white">
         {/* Image Gallery */}
         <ItemImageGallery images={item.item_images || []} itemName={item.name} />
 
         {/* Item Information */}
-        <div className="space-y-6 px-4 py-6">
+        <div className="space-y-4">
           <ItemInfo item={item} />
-
-          {/* Add to Cart Section */}
-          <AddToCartSection item={item} />
 
           {/* Related Products */}
           {relatedItems.length > 0 && (
-            <RelatedProducts items={relatedItems} projectId={projectId} />
+            <div className="px-3 pb-4">
+              <RelatedProducts items={relatedItems} projectId={projectId} />
+            </div>
           )}
         </div>
+
+        {/* Sticky Add to Cart Section */}
+        <AddToCartSection item={item} />
       </div>
     </MiniAppLayout>
   );

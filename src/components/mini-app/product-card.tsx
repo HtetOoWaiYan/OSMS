@@ -71,14 +71,14 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
 
   return (
     <Card
-      className={`cursor-pointer transition-all hover:shadow-lg ${
+      className={`cursor-pointer transition-all hover:shadow-md active:scale-95 ${
         compact ? 'h-full' : ''
       } ${isOutOfStock ? 'opacity-60' : ''}`}
       onClick={handleCardClick}
     >
       <CardContent className="p-0">
         {/* Image */}
-        <div className={`relative ${compact ? 'aspect-square' : 'aspect-[4/3]'} bg-muted`}>
+        <div className={`relative aspect-square overflow-hidden bg-gray-100`}>
           {item.first_image_url ? (
             <Image
               src={item.first_image_url}
@@ -88,25 +88,31 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
               sizes="(max-width: 768px) 50vw, 25vw"
             />
           ) : (
-            <div className="text-muted-foreground flex h-full items-center justify-center">
-              <div className="text-center">
-                <ShoppingCart className="mx-auto mb-2 h-8 w-8" />
-                <p className="text-sm">No Image</p>
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+              <div className="text-center text-gray-400">
+                <div className="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
+                  <ShoppingCart className="h-4 w-4" />
+                </div>
+                <p className="text-xs font-medium">No Image</p>
               </div>
             </div>
           )}
 
           {/* Badges */}
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
+          <div className="absolute top-1 left-1 flex flex-col gap-1">
             {item.is_featured && (
-              <Badge variant="default" className="bg-yellow-500 text-white">
-                <Star className="mr-1 h-3 w-3" />
-                Featured
+              <Badge variant="default" className="h-4 bg-yellow-500 px-1 py-0 text-xs text-white">
+                <Star className="mr-0.5 h-2 w-2" />
+                <span className="text-xs">Featured</span>
               </Badge>
             )}
-            {isOutOfStock && <Badge variant="destructive">Out of Stock</Badge>}
+            {isOutOfStock && (
+              <Badge variant="destructive" className="h-4 px-1 py-0 text-xs">
+                Out
+              </Badge>
+            )}
             {hasDiscount && !isOutOfStock && (
-              <Badge variant="secondary" className="bg-green-500 text-white">
+              <Badge variant="secondary" className="h-4 bg-green-500 px-1 py-0 text-xs text-white">
                 {item.current_price?.discount_percentage}% OFF
               </Badge>
             )}
@@ -114,17 +120,17 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
 
           {/* Add to cart button overlay */}
           {!isOutOfStock && (
-            <div className="absolute right-2 bottom-2">
+            <div className="absolute right-1 bottom-1">
               <Button
                 size="icon"
                 variant={isInCart(item.id) ? 'default' : 'secondary'}
-                className="h-8 w-8 rounded-full shadow-lg"
+                className="h-7 w-7 rounded-full shadow-lg"
                 onClick={handleAddToCart}
               >
                 {isInCart(item.id) ? (
                   <span className="text-xs font-bold">{cartItem?.quantity}</span>
                 ) : (
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-3 w-3" />
                 )}
               </Button>
             </div>
@@ -132,27 +138,13 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
         </div>
 
         {/* Content */}
-        <div className={`p-3 ${compact ? 'space-y-1' : 'space-y-2'}`}>
-          {/* Category */}
-          {item.category && !compact && (
-            <p className="text-muted-foreground text-xs tracking-wide uppercase">
-              {item.category.name}
-            </p>
-          )}
-
+        <div className="space-y-1 p-2">
           {/* Name */}
-          <h3 className={`line-clamp-2 font-semibold ${compact ? 'text-sm' : 'text-base'}`}>
-            {item.name}
-          </h3>
-
-          {/* SKU */}
-          {item.sku && !compact && <p className="text-muted-foreground text-xs">SKU: {item.sku}</p>}
+          <h3 className="line-clamp-2 text-sm leading-tight font-semibold">{item.name}</h3>
 
           {/* Price */}
-          <div className="flex items-center gap-2">
-            <span className={`font-bold ${compact ? 'text-sm' : 'text-lg'} text-primary`}>
-              {formatPrice(currentPrice)}
-            </span>
+          <div className="flex items-center gap-1">
+            <span className="text-primary text-sm font-bold">{formatPrice(currentPrice)}</span>
             {hasDiscount && (
               <span className="text-muted-foreground text-xs line-through">
                 {formatPrice(originalPrice!)}
@@ -160,12 +152,10 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
             )}
           </div>
 
-          {/* Stock info */}
-          {!compact && (
-            <p className="text-muted-foreground text-xs">
-              {isOutOfStock ? 'Out of stock' : `${item.stock_quantity} in stock`}
-            </p>
-          )}
+          {/* Stock info - compact */}
+          <p className="text-muted-foreground text-xs">
+            {isOutOfStock ? 'Out of stock' : `${item.stock_quantity} left`}
+          </p>
         </div>
       </CardContent>
     </Card>
