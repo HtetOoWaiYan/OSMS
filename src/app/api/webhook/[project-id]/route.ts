@@ -156,7 +156,6 @@ Click the button below to open our mobile shopping app:`,
 
   // Handle /debug command for development
   bot.command('debug', async (ctx) => {
-    const miniAppUrl = generateMiniAppUrl(projectId);
     const user = ctx.from;
     
     if (!user) {
@@ -178,7 +177,6 @@ Click the button below to open our mobile shopping app:`,
 **First Name:** ${user.first_name || 'Not set'}
 
 **🌐 URLs:**
-**Mini App URL:** \`${miniAppUrl}\`
 **Localhost with Params:** \`${localhostUrlWithParams}\`
 
 **🔑 Mock initData for localhost:**
@@ -210,8 +208,7 @@ ${JSON.stringify(mockInitData.userData, null, 2)}
     await ctx.reply(debugInfo, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '🚀 Test Mini App', web_app: { url: miniAppUrl } }],
-          [{ text: '🖥️ Open Localhost with Mock Data', url: localhostUrlWithParams }],
+          [{ text: '�🖥️ Open Localhost with Mock Data', url: localhostUrlWithParams }],
           [{ text: '📋 Copy Mock initData', callback_data: `copy_initdata_${user.id}` }],
         ],
       },
