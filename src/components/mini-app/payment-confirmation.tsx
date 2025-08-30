@@ -77,9 +77,9 @@ export function PaymentConfirmation({ order }: PaymentConfirmationProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-background min-h-screen">
       {/* Header - Figma style */}
-      <div className="border-b border-gray-200 bg-white px-4 py-4">
+      <div className="border-border bg-card border-b px-4 py-4">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -90,7 +90,7 @@ export function PaymentConfirmation({ order }: PaymentConfirmationProps) {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-lg font-semibold text-gray-900">Payment Method</h1>
+            <h1 className="text-card-foreground text-lg font-semibold">Payment Method</h1>
           </div>
         </div>
       </div>
@@ -105,12 +105,12 @@ export function PaymentConfirmation({ order }: PaymentConfirmationProps) {
               className="space-y-4"
             >
               {/* Cash on Delivery Option */}
-              <div className="flex items-center space-x-3 rounded-lg border-2 p-4 hover:bg-gray-50 data-[state=checked]:border-green-500 data-[state=checked]:bg-green-50">
+              <div className="hover:bg-muted data-[state=checked]:border-chart-1 data-[state=checked]:bg-chart-1/5 flex items-center space-x-3 rounded-lg border-2 p-4">
                 <RadioGroupItem value="cod" id="cod" />
                 <div className="flex-1">
                   <Label htmlFor="cod" className="cursor-pointer">
-                    <div className="font-semibold text-gray-900">Cash on Delivery</div>
-                    <div className="mt-1 text-sm text-gray-600">
+                    <div className="text-card-foreground font-semibold">Cash on Delivery</div>
+                    <div className="text-muted-foreground mt-1 text-sm">
                       🚚 ရန်ကုန်, မန်းလေး မြို့တွင်း ၂ ရက်- ၄ရက် အတွင်း
                       အိမ်တိုင်ရာရောက်ဝန်ဆောင်မှုရှိပြီး (ပစ္စည်းပို့ငွေရှင်းပါ)
                     </div>
@@ -119,12 +119,12 @@ export function PaymentConfirmation({ order }: PaymentConfirmationProps) {
               </div>
 
               {/* Bank Transfer Option */}
-              <div className="flex items-center space-x-3 rounded-lg border-2 p-4 hover:bg-gray-50 data-[state=checked]:border-blue-500 data-[state=checked]:bg-blue-50">
+              <div className="hover:bg-muted data-[state=checked]:border-primary data-[state=checked]:bg-primary/5 flex items-center space-x-3 rounded-lg border-2 p-4">
                 <RadioGroupItem value="bank" id="bank" />
                 <div className="flex-1">
                   <Label htmlFor="bank" className="cursor-pointer">
-                    <div className="font-semibold text-gray-900">Bank Transfer</div>
-                    <div className="mt-1 flex items-center gap-2 text-sm text-gray-600">
+                    <div className="text-card-foreground font-semibold">Bank Transfer</div>
+                    <div className="text-muted-foreground mt-1 flex items-center gap-2 text-sm">
                       <Banknote className="h-4 w-4" />
                       ဘဏ်မှ တိုက်ရိုက်ငွေလွှဲရန်
                     </div>
@@ -137,12 +137,14 @@ export function PaymentConfirmation({ order }: PaymentConfirmationProps) {
 
         {/* Instructions Text - Figma style */}
         <div className="px-2">
-          <p className="text-sm text-gray-700">အောက်ပါ ဘဏ်အကောင့်ငွေသွင်း ပေးချေနိုင်ပါသည်။</p>
+          <p className="text-muted-foreground text-sm">
+            အောက်ပါ ဘဏ်အကောင့်ငွေသွင်း ပေးချေနိုင်ပါသည်။
+          </p>
         </div>
 
         {/* Bank Account Information - Figma style */}
         {selectedMethod === 'bank' && (
-          <Card className="border border-gray-300">
+          <Card className="border-border border">
             <CardContent className="space-y-6 p-6">
               {/* KBZ Pay */}
               <div className="space-y-4">

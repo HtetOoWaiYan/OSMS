@@ -23,8 +23,8 @@ export default function AppNotFoundPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/20">
-            <div className="text-sm text-amber-700 dark:text-amber-300">
+          <div className="border-chart-3/20 bg-chart-3/5 rounded-lg border p-4">
+            <div className="text-chart-3 text-sm">
               <strong>Possible reasons:</strong>
               <ul className="mt-2 list-inside list-disc space-y-1">
                 <li>The shop link might be incorrect</li>

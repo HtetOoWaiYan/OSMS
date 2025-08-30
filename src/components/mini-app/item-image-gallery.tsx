@@ -20,9 +20,9 @@ export function ItemImageGallery({ images, itemName }: ItemImageGalleryProps) {
   // If no images, show placeholder
   if (!images || images.length === 0) {
     return (
-      <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-        <div className="text-center text-gray-400">
-          <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gray-300">
+      <div className="from-muted to-muted/80 flex aspect-square items-center justify-center bg-gradient-to-br">
+        <div className="text-muted-foreground text-center">
+          <div className="bg-muted-foreground/20 mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full">
             <ImageIcon className="h-8 w-8" />
           </div>
           <p className="text-sm font-medium">No Image Available</p>
@@ -45,7 +45,7 @@ export function ItemImageGallery({ images, itemName }: ItemImageGalleryProps) {
   return (
     <div className="space-y-3">
       {/* Main Image */}
-      <div className="relative aspect-square overflow-hidden bg-gray-50">
+      <div className="bg-muted relative aspect-square overflow-hidden">
         <Image
           src={currentImage.image_url}
           alt={`${itemName} - Image ${currentImageIndex + 1}`}

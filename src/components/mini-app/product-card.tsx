@@ -78,7 +78,7 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
     >
       <CardContent className="p-0">
         {/* Image */}
-        <div className={`relative aspect-square overflow-hidden bg-gray-100`}>
+        <div className={`bg-muted relative aspect-square overflow-hidden`}>
           <ImagePlaceholder
             src={item.first_image_url}
             alt={item.name}
@@ -91,7 +91,7 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
           {/* Discount Badge - Figma style */}
           {hasDiscount && !isOutOfStock && (
             <div className="absolute top-2 left-2">
-              <div className="rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white shadow-sm">
+              <div className="bg-destructive text-destructive-foreground rounded-full px-2 py-1 text-xs font-bold shadow-sm">
                 -{item.current_price?.discount_percentage}%
               </div>
             </div>
@@ -100,7 +100,7 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
           {/* Status Badges */}
           <div className="absolute top-2 right-2 flex flex-col gap-1">
             {item.is_featured && (
-              <Badge variant="default" className="h-5 bg-yellow-500 px-2 py-0 text-xs text-white">
+              <Badge variant="default" className="bg-chart-3 h-5 px-2 py-0 text-xs text-white">
                 <Star className="mr-1 h-3 w-3 fill-current" />
                 Featured
               </Badge>
@@ -138,9 +138,11 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
 
           {/* Price - Figma style */}
           <div className="flex flex-wrap items-baseline gap-1 break-all">
-            <span className="text-lg font-bold text-gray-900">{formatPrice(currentPrice)}</span>
+            <span className="text-card-foreground text-lg font-bold">
+              {formatPrice(currentPrice)}
+            </span>
             {hasDiscount && (
-              <span className="text-sm text-gray-500 line-through">
+              <span className="text-muted-foreground text-sm line-through">
                 {originalPrice.toLocaleString()}
               </span>
             )}

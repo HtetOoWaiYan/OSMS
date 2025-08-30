@@ -100,24 +100,24 @@ export default function AppErrorPage() {
           </div>
 
           {process.env.NODE_ENV === 'development' && (
-            <details className="rounded-lg border bg-gray-50 p-3 dark:bg-gray-950/20">
-              <summary className="cursor-pointer text-xs font-medium text-gray-700 dark:text-gray-300">
+            <details className="bg-muted rounded-lg border p-3">
+              <summary className="text-muted-foreground cursor-pointer text-xs font-medium">
                 🔍 Debug Info (Development Only)
               </summary>
               <div className="mt-2 space-y-1 font-mono text-xs">
                 <div>
-                  <span className="text-gray-500">Error Code:</span>
-                  <span className="ml-2 text-gray-700 dark:text-gray-300">{error || 'null'}</span>
+                  <span className="text-muted-foreground">Error Code:</span>
+                  <span className="text-foreground ml-2">{error || 'null'}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500">User Agent:</span>
-                  <span className="ml-2 break-all text-gray-700 dark:text-gray-300">
+                  <span className="text-muted-foreground">User Agent:</span>
+                  <span className="text-foreground ml-2 break-all">
                     {typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">URL:</span>
-                  <span className="ml-2 break-all text-gray-700 dark:text-gray-300">
+                  <span className="text-muted-foreground">URL:</span>
+                  <span className="text-foreground ml-2 break-all">
                     {typeof window !== 'undefined' ? window.location.href : 'N/A'}
                   </span>
                 </div>

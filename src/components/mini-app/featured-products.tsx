@@ -30,10 +30,10 @@ export function FeaturedProducts({ items, projectId }: FeaturedProductsProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Star className="h-5 w-5 fill-current text-yellow-500" />
-          <h2 className="text-lg font-bold text-gray-900">Featured Products</h2>
+          <Star className="text-chart-3 h-5 w-5 fill-current" />
+          <h2 className="text-card-foreground text-lg font-bold">Featured Products</h2>
         </div>
-        <span className="text-sm font-medium text-gray-500">{items.length} items</span>
+        <span className="text-muted-foreground text-sm font-medium">{items.length} items</span>
       </div>
 
       {/* Horizontal scrolling featured items */}

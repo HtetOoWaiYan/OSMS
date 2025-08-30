@@ -23,9 +23,9 @@ export default async function OrdersPage({ params, searchParams }: OrdersPagePro
 
   return (
     <MiniAppLayout projectId={projectId} showBottomNav={false}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-background min-h-screen">
         {/* Header - Figma style */}
-        <div className="border-b border-gray-200 bg-white">
+        <div className="border-border bg-card border-b">
           <div className="px-4 py-4">
             <div className="flex items-center gap-3">
               <Link href={`/app/${projectId}`}>
@@ -34,7 +34,7 @@ export default async function OrdersPage({ params, searchParams }: OrdersPagePro
                 </Button>
               </Link>
               <div className="flex-1">
-                <h1 className="text-lg font-semibold text-gray-900">Orders</h1>
+                <h1 className="text-card-foreground text-lg font-semibold">Orders</h1>
               </div>
             </div>
           </div>

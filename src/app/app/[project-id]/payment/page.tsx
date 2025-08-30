@@ -39,7 +39,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
   if (order.payment_method === 'cod') {
     return (
       <MiniAppLayout projectId={projectId} showBottomNav={false}>
-        <div className="min-h-screen bg-gray-50">
+        <div className="bg-background min-h-screen">
           <CODConfirmation order={order} />
         </div>
       </MiniAppLayout>
@@ -57,7 +57,7 @@ export default async function PaymentPage({ params, searchParams }: PaymentPageP
 
   return (
     <MiniAppLayout projectId={projectId} showBottomNav={false}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-background min-h-screen">
         <PaymentConfirmation order={order} paymentMethodConfig={paymentMethodConfig} />
       </div>
     </MiniAppLayout>

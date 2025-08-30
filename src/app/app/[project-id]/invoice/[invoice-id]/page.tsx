@@ -32,7 +32,7 @@ export default async function InvoicePage({ params }: InvoicePageProps) {
 
   return (
     <MiniAppLayout projectId={projectId} showBottomNav={false}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-background min-h-screen">
         <div className="space-y-4">
           <InvoiceHeader orderNumber={order.order_number} projectId={projectId} />
 

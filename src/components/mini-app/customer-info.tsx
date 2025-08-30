@@ -60,27 +60,27 @@ export function CustomerInfo({ order }: CustomerInfoProps) {
       {/* Customer Details */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-            <User className="h-5 w-5 text-blue-600" />
+          <CardTitle className="text-card-foreground flex items-center gap-2 text-lg">
+            <User className="text-primary h-5 w-5" />
             Customer Information
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-3 rounded-lg bg-gray-50 p-3">
+          <div className="bg-muted space-y-3 rounded-lg p-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Name</span>
-              <span className="font-medium text-gray-900">{getCustomerName()}</span>
+              <span className="text-muted-foreground text-sm">Name</span>
+              <span className="text-card-foreground font-medium">{getCustomerName()}</span>
             </div>
 
             {/* Get primary phone from customer or shipping address */}
             {(order.customers?.phone ||
               (typeof shippingData.phone === 'string' ? shippingData.phone : undefined)) && (
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1 text-sm text-gray-600">
+                <span className="text-muted-foreground flex items-center gap-1 text-sm">
                   <Phone className="h-4 w-4" />
                   Phone
                 </span>
-                <span className="font-medium text-gray-900">
+                <span className="text-card-foreground font-medium">
                   {String(order.customers?.phone || shippingData.phone || '')}
                 </span>
               </div>
@@ -88,8 +88,8 @@ export function CustomerInfo({ order }: CustomerInfoProps) {
 
             {order.customers?.telegram_username && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Telegram</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-muted-foreground text-sm">Telegram</span>
+                <span className="text-card-foreground font-medium">
                   @{order.customers.telegram_username}
                 </span>
               </div>
@@ -101,18 +101,18 @@ export function CustomerInfo({ order }: CustomerInfoProps) {
       {/* Delivery Information */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-            <MapPin className="h-5 w-5 text-green-600" />
+          <CardTitle className="text-card-foreground flex items-center gap-2 text-lg">
+            <MapPin className="text-chart-1 h-5 w-5" />
             Delivery Information
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-3 rounded-lg border border-green-200 bg-green-50 p-3">
+          <div className="border-chart-1/20 bg-chart-1/5 space-y-3 rounded-lg border p-3">
             {/* Extract delivery address from shipping_address JSON */}
             {shippingData && Object.keys(shippingData).length > 0 && (
               <div>
-                <span className="text-sm font-medium text-green-700">Delivery Address</span>
-                <p className="mt-1 text-sm text-green-800">
+                <span className="text-chart-1 text-sm font-medium">Delivery Address</span>
+                <p className="text-chart-1/80 mt-1 text-sm">
                   {typeof shippingData.address === 'string'
                     ? shippingData.address
                     : 'Address not available'}
@@ -122,8 +122,8 @@ export function CustomerInfo({ order }: CustomerInfoProps) {
 
             {order.delivery_city && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-green-700">City</span>
-                <Badge variant="outline" className="border-green-300 text-green-700">
+                <span className="text-chart-1 text-sm">City</span>
+                <Badge variant="outline" className="border-chart-1/30 text-chart-1">
                   {order.delivery_city}
                 </Badge>
               </div>
@@ -131,8 +131,8 @@ export function CustomerInfo({ order }: CustomerInfoProps) {
 
             {order.delivery_notes && (
               <div>
-                <span className="text-sm font-medium text-green-700">Special Instructions</span>
-                <p className="mt-1 text-sm text-green-800">{order.delivery_notes}</p>
+                <span className="text-chart-1 text-sm font-medium">Special Instructions</span>
+                <p className="text-chart-1/80 mt-1 text-sm">{order.delivery_notes}</p>
               </div>
             )}
           </div>
@@ -142,36 +142,33 @@ export function CustomerInfo({ order }: CustomerInfoProps) {
       {/* Order Timeline */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-            <Calendar className="h-5 w-5 text-purple-600" />
+          <CardTitle className="text-card-foreground flex items-center gap-2 text-lg">
+            <Calendar className="text-chart-2 h-5 w-5" />
             Order Details
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-3 rounded-lg border border-purple-200 bg-purple-50 p-3">
+          <div className="border-chart-2/20 bg-chart-2/5 space-y-3 rounded-lg border p-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-purple-700">Order Placed</span>
-              <span className="text-sm font-medium text-purple-800">
+              <span className="text-chart-2 text-sm">Order Placed</span>
+              <span className="text-chart-2/80 text-sm font-medium">
                 {formatDate(order.created_at)}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-purple-700">Order ID</span>
-              <Badge
-                variant="outline"
-                className="border-purple-300 font-mono text-xs text-purple-700"
-              >
+              <span className="text-chart-2 text-sm">Order ID</span>
+              <Badge variant="outline" className="border-chart-2/30 text-chart-2 font-mono text-xs">
                 {order.id.slice(-8).toUpperCase()}
               </Badge>
             </div>
 
             {order.payment_reference && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-purple-700">Payment Reference</span>
+                <span className="text-chart-2 text-sm">Payment Reference</span>
                 <Badge
                   variant="outline"
-                  className="border-purple-300 font-mono text-xs text-purple-700"
+                  className="border-chart-2/30 text-chart-2 font-mono text-xs"
                 >
                   {order.payment_reference}
                 </Badge>

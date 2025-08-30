@@ -61,8 +61,8 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
       {/* Order Items */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-            <ShoppingBag className="h-5 w-5 text-purple-600" />
+          <CardTitle className="text-card-foreground flex items-center gap-2 text-lg">
+            <ShoppingBag className="text-primary h-5 w-5" />
             Order Items
           </CardTitle>
         </CardHeader>
@@ -70,8 +70,8 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
           {order.order_items.map((item) => {
             const itemData = getItemSnapshot(item.item_snapshot);
             return (
-              <div key={item.id} className="flex items-center gap-4 rounded-lg bg-gray-50 p-3">
-                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-white">
+              <div key={item.id} className="bg-muted flex items-center gap-4 rounded-lg p-3">
+                <div className="bg-card h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
                   <ImagePlaceholder
                     src={itemData.image_url || ''}
                     alt={itemData.name}
@@ -81,15 +81,17 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-gray-900">{itemData.name}</p>
-                  <p className="text-xs text-gray-500">SKU: {itemData.sku}</p>
-                  <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                  <p className="text-card-foreground truncate font-medium">{itemData.name}</p>
+                  <p className="text-muted-foreground text-xs">SKU: {itemData.sku}</p>
+                  <p className="text-muted-foreground text-sm">Qty: {item.quantity}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gray-900">
+                  <p className="text-card-foreground font-semibold">
                     {formatCurrency(item.quantity * item.unit_price)}
                   </p>
-                  <p className="text-xs text-gray-500">{formatCurrency(item.unit_price)} each</p>
+                  <p className="text-muted-foreground text-xs">
+                    {formatCurrency(item.unit_price)} each
+                  </p>
                 </div>
               </div>
             );
@@ -100,25 +102,27 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
       {/* Pricing Breakdown */}
       <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg text-gray-900">Order Summary</CardTitle>
+          <CardTitle className="text-card-foreground text-lg">Order Summary</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Pricing breakdown */}
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Subtotal</span>
-              <span className="font-medium">{formatCurrency(subtotal)}</span>
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="text-card-foreground font-medium">{formatCurrency(subtotal)}</span>
             </div>
 
             {order.shipping_cost && order.shipping_cost > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Delivery Fee</span>
-                <span className="font-medium">{formatCurrency(order.shipping_cost)}</span>
+                <span className="text-muted-foreground">Delivery Fee</span>
+                <span className="text-card-foreground font-medium">
+                  {formatCurrency(order.shipping_cost)}
+                </span>
               </div>
             )}
 
             {order.discount_amount && order.discount_amount > 0 && (
-              <div className="flex items-center justify-between text-green-600">
+              <div className="text-chart-1 flex items-center justify-between">
                 <span>Discount</span>
                 <span className="font-medium">-{formatCurrency(order.discount_amount)}</span>
               </div>
@@ -127,8 +131,8 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
             <Separator />
 
             <div className="flex items-center justify-between text-lg font-bold">
-              <span>Total</span>
-              <span className="text-purple-600">{formatCurrency(order.total_amount)}</span>
+              <span className="text-card-foreground">Total</span>
+              <span className="text-primary">{formatCurrency(order.total_amount)}</span>
             </div>
           </div>
 
@@ -137,7 +141,7 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
           {/* Payment info */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Payment Method</span>
+              <span className="text-muted-foreground text-sm">Payment Method</span>
               <Badge variant="outline" className="capitalize">
                 {order.payment_method?.replace('_', ' ') || 'COD'}
               </Badge>
@@ -145,7 +149,7 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
 
             {order.payment_status && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Payment Status</span>
+                <span className="text-muted-foreground text-sm">Payment Status</span>
                 <Badge
                   variant={order.payment_status === 'paid' ? 'default' : 'secondary'}
                   className="capitalize"
@@ -162,11 +166,11 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
       {order.notes && (
         <Card className="border-0 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg text-gray-900">Order Notes</CardTitle>
+            <CardTitle className="text-card-foreground text-lg">Order Notes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-              <p className="text-sm whitespace-pre-wrap text-amber-800">{order.notes}</p>
+            <div className="border-chart-3/20 bg-chart-3/5 rounded-lg border p-3">
+              <p className="text-chart-3 text-sm whitespace-pre-wrap">{order.notes}</p>
             </div>
           </CardContent>
         </Card>

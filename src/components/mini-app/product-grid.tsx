@@ -53,8 +53,8 @@ export function ProductGrid({
       {/* Header with filters toggle */}
       <div className="flex items-center justify-between pt-4">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-          <p className="mt-0.5 text-sm text-gray-500">
+          <h2 className="text-card-foreground text-lg font-bold">{title}</h2>
+          <p className="text-muted-foreground mt-0.5 text-sm">
             {items.length} product{items.length !== 1 ? 's' : ''} found
           </p>
         </div>

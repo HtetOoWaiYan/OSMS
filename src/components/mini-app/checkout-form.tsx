@@ -205,8 +205,8 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
         {/* Customer Information */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-              <User className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-card-foreground flex items-center gap-2 text-lg">
+              <User className="text-primary h-5 w-5" />
               Customer Information
             </CardTitle>
           </CardHeader>
@@ -217,13 +217,13 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-semibold text-gray-700">
+                    <FormLabel className="text-card-foreground text-sm font-semibold">
                       First Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="John"
-                        className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        className="border-border focus:border-primary focus:ring-primary h-11"
                         {...field}
                       />
                     </FormControl>
@@ -237,11 +237,13 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-semibold text-gray-700">Last Name</FormLabel>
+                    <FormLabel className="text-card-foreground text-sm font-semibold">
+                      Last Name
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Doe"
-                        className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        className="border-border focus:border-primary focus:ring-primary h-11"
                         {...field}
                       />
                     </FormControl>
@@ -256,13 +258,13 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-semibold text-gray-700">
+                  <FormLabel className="text-card-foreground text-sm font-semibold">
                     Phone Number
                   </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="09123456789"
-                      className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      className="border-border focus:border-primary focus:ring-primary h-11"
                       {...field}
                       onChange={(e) => {
                         // Auto-format phone number
@@ -314,8 +316,8 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
         {/* Delivery Address */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-              <MapPin className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-card-foreground flex items-center gap-2 text-lg">
+              <MapPin className="text-chart-1 h-5 w-5" />
               Delivery Address
             </CardTitle>
           </CardHeader>
@@ -394,8 +396,8 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
         {/* Payment Method */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-              <CreditCard className="h-5 w-5 text-purple-600" />
+            <CardTitle className="text-card-foreground flex items-center gap-2 text-lg">
+              <CreditCard className="text-chart-2 h-5 w-5" />
               Payment Method
             </CardTitle>
           </CardHeader>
@@ -410,13 +412,13 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
                 .map((method) => (
                   <div
                     key={method.id}
-                    className="flex items-center space-x-3 rounded-xl border-2 p-4 transition-colors hover:bg-gray-50 data-[state=checked]:border-blue-500 data-[state=checked]:bg-blue-50"
+                    className="hover:bg-muted data-[state=checked]:border-primary data-[state=checked]:bg-primary/5 flex items-center space-x-3 rounded-xl border-2 p-4 transition-colors"
                   >
                     <RadioGroupItem value={method.id} id={method.id} className="flex-shrink-0" />
                     <Label htmlFor={method.id} className="flex-1 cursor-pointer">
                       <div>
-                        <p className="font-semibold text-gray-900">{method.name}</p>
-                        <p className="text-sm text-gray-600">{method.description}</p>
+                        <p className="text-card-foreground font-semibold">{method.name}</p>
+                        <p className="text-muted-foreground text-sm">{method.description}</p>
                       </div>
                     </Label>
                   </div>
@@ -433,13 +435,13 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-semibold text-gray-900">
+                  <FormLabel className="text-card-foreground text-base font-semibold">
                     Delivery Notes (Optional)
                   </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Special instructions for delivery..."
-                      className="resize-none border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      className="border-border focus:border-primary focus:ring-primary resize-none"
                       rows={3}
                       {...field}
                     />
@@ -456,7 +458,7 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
           <Button
             type="submit"
             disabled={isSubmitting || items.length === 0}
-            className="h-12 w-full bg-blue-600 text-base font-semibold shadow-sm hover:bg-blue-700"
+            className="bg-primary hover:bg-primary/90 h-12 w-full text-base font-semibold shadow-sm"
             size="lg"
           >
             {isSubmitting ? (

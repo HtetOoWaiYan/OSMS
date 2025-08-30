@@ -41,10 +41,10 @@ export default async function AppPage({ params, searchParams }: AppPageProps) {
 
   return (
     <MiniAppLayout projectId={projectId} showBottomNav={true}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-background min-h-screen">
         {/* Featured Products Section */}
         {!filters.search && !filters.category && featuredItems.length > 0 && (
-          <div className="border-b border-gray-100 bg-white">
+          <div className="border-border bg-card border-b">
             <div className="px-4 py-4">
               <FeaturedProducts items={featuredItems} projectId={projectId} />
             </div>
@@ -52,7 +52,7 @@ export default async function AppPage({ params, searchParams }: AppPageProps) {
         )}
 
         {/* Main Products Section */}
-        <div className="bg-white">
+        <div className="bg-card">
           <div className="px-1">
             <ProductGrid
               items={items}
@@ -70,7 +70,7 @@ export default async function AppPage({ params, searchParams }: AppPageProps) {
         </div>
 
         {/* Bottom Spacing for mobile navigation */}
-        <div className="h-20 bg-gray-50" />
+        <div className="bg-background h-20" />
       </div>
     </MiniAppLayout>
   );

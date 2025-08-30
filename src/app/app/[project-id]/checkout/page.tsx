@@ -67,9 +67,9 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
 
   return (
     <MiniAppLayout projectId={projectId} showBottomNav={false}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-background min-h-screen">
         {/* Header */}
-        <div className="border-b border-gray-200 bg-white px-4 py-4">
+        <div className="border-border bg-card border-b px-4 py-4">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -80,8 +80,8 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex-1">
-              <h1 className="text-xl font-bold text-gray-900">Checkout</h1>
-              <p className="text-sm text-gray-600">
+              <h1 className="text-card-foreground text-xl font-bold">Checkout</h1>
+              <p className="text-muted-foreground text-sm">
                 {getItemCount()} items •{' '}
                 {new Intl.NumberFormat('en-MM', {
                   style: 'currency',

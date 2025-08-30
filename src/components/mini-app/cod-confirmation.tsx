@@ -66,13 +66,13 @@ export function CODConfirmation({ order }: CODConfirmationProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-background min-h-screen">
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white px-4 py-4">
+      <div className="border-border bg-card border-b px-4 py-4">
         <div className="text-center">
-          <CheckCircle2 className="mx-auto mb-3 h-16 w-16 text-green-500" />
-          <h1 className="mb-2 text-2xl font-bold text-gray-900">Order Confirmed!</h1>
-          <p className="text-gray-600">Your order has been successfully placed.</p>
+          <CheckCircle2 className="text-chart-1 mx-auto mb-3 h-16 w-16" />
+          <h1 className="text-card-foreground mb-2 text-2xl font-bold">Order Confirmed!</h1>
+          <p className="text-muted-foreground">Your order has been successfully placed.</p>
         </div>
       </div>
 
@@ -80,9 +80,9 @@ export function CODConfirmation({ order }: CODConfirmationProps) {
         {/* Order Summary Card */}
         <Card className="border-0 shadow-sm">
           <CardContent className="p-6 text-center">
-            <div className="rounded-xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-4">
-              <p className="mb-1 text-lg font-bold text-green-800">Order #{order.order_number}</p>
-              <p className="text-2xl font-bold text-green-900">{formatPrice(order.total_amount)}</p>
+            <div className="rounded-xl border border-chart-1/20 bg-chart-1/5 p-4">
+              <p className="text-chart-1 mb-1 text-lg font-bold">Order #{order.order_number}</p>
+              <p className="text-chart-1 text-2xl font-bold">{formatPrice(order.total_amount)}</p>
             </div>
           </CardContent>
         </Card>
@@ -90,39 +90,41 @@ export function CODConfirmation({ order }: CODConfirmationProps) {
         {/* COD Information */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-              <Package className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-card-foreground flex items-center gap-2 text-lg">
+              <Package className="text-primary h-5 w-5" />
               Cash on Delivery (COD)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-              <h3 className="mb-3 text-base font-semibold text-blue-900">Payment Instructions</h3>
-              <ul className="space-y-2 text-sm text-blue-800">
+            <div className="border-primary/20 bg-primary/5 rounded-xl border p-4">
+              <h3 className="text-primary mb-3 text-base font-semibold">Payment Instructions</h3>
+              <ul className="text-primary/80 space-y-2 text-sm">
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 text-blue-600">•</span>
+                  <span className="text-primary mt-1">•</span>
                   Pay the total amount when your order arrives
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 text-blue-600">•</span>
+                  <span className="text-primary mt-1">•</span>
                   Have exact change ready if possible
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 text-blue-600">•</span>
+                  <span className="text-primary mt-1">•</span>
                   Payment accepted in Myanmar Kyat (MMK) only
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 text-blue-600">•</span>
+                  <span className="text-primary mt-1">•</span>
                   Please check your order before payment
                 </li>
               </ul>
             </div>
 
-            <div className="flex items-center gap-3 rounded-xl border bg-gray-50 p-4">
-              <Clock className="h-6 w-6 flex-shrink-0 text-gray-600" />
+            <div className="bg-muted flex items-center gap-3 rounded-xl border p-4">
+              <Clock className="text-muted-foreground h-6 w-6 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-gray-900">Estimated Delivery</p>
-                <p className="text-sm text-gray-600">2-3 business days from order confirmation</p>
+                <p className="text-card-foreground font-semibold">Estimated Delivery</p>
+                <p className="text-muted-foreground text-sm">
+                  2-3 business days from order confirmation
+                </p>
               </div>
             </div>
           </CardContent>
@@ -131,15 +133,15 @@ export function CODConfirmation({ order }: CODConfirmationProps) {
         {/* Delivery Information */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-              <MapPin className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-card-foreground flex items-center gap-2 text-lg">
+              <MapPin className="text-chart-1 h-5 w-5" />
               Delivery Details
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-xl border bg-gray-50 p-4">
-              <p className="mb-2 font-semibold text-gray-900">Delivery Address:</p>
-              <div className="space-y-1 text-sm text-gray-700">
+            <div className="bg-muted rounded-xl border p-4">
+              <p className="text-card-foreground mb-2 font-semibold">Delivery Address:</p>
+              <div className="text-muted-foreground space-y-1 text-sm">
                 <p className="font-medium">
                   {firstName} {lastName}
                 </p>
@@ -149,16 +151,16 @@ export function CODConfirmation({ order }: CODConfirmationProps) {
                 {postalCode && <p>{postalCode}</p>}
               </div>
 
-              <div className="mt-3 flex items-center gap-2 border-t border-gray-200 pt-3">
-                <Phone className="h-4 w-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">{phone}</span>
+              <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">{phone}</span>
               </div>
             </div>
 
             {order.delivery_notes && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <p className="mb-1 text-sm font-semibold text-amber-900">Delivery Notes:</p>
-                <p className="text-sm text-amber-800">{order.delivery_notes}</p>
+              <div className="rounded-xl border border-chart-3/20 bg-chart-3/5 p-4">
+                <p className="mb-1 text-sm font-semibold text-chart-3">Delivery Notes:</p>
+                <p className="text-sm text-chart-3">{order.delivery_notes}</p>
               </div>
             )}
           </CardContent>
@@ -167,23 +169,23 @@ export function CODConfirmation({ order }: CODConfirmationProps) {
         {/* Important Notice */}
         <Card className="border-0 shadow-sm">
           <CardContent className="pt-6">
-            <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
-              <h3 className="mb-3 text-base font-semibold text-yellow-900">Important Notice</h3>
-              <ul className="space-y-2 text-sm text-yellow-800">
+            <div className="rounded-xl border border-chart-3/20 bg-chart-3/5 p-4">
+              <h3 className="mb-3 text-base font-semibold text-chart-3">Important Notice</h3>
+              <ul className="space-y-2 text-sm text-chart-3">
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 text-yellow-600">•</span>
+                  <span className="mt-1 text-chart-3">•</span>
                   Our delivery team will contact you before delivery
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 text-yellow-600">•</span>
+                  <span className="mt-1 text-chart-3">•</span>
                   Please ensure someone is available to receive the order
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 text-yellow-600">•</span>
+                  <span className="mt-1 text-chart-3">•</span>
                   You can track your order status in the Orders section
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 text-yellow-600">•</span>
+                  <span className="mt-1 text-chart-3">•</span>
                   Contact us if you need to modify your order
                 </li>
               </ul>
@@ -195,7 +197,7 @@ export function CODConfirmation({ order }: CODConfirmationProps) {
         <div className="space-y-3 pt-4">
           <Button
             onClick={handleViewOrder}
-            className="h-12 w-full bg-blue-600 font-semibold shadow-sm hover:bg-blue-700"
+            className="h-12 w-full bg-primary font-semibold shadow-sm hover:bg-primary/90"
             size="lg"
           >
             View Order Details
@@ -204,7 +206,7 @@ export function CODConfirmation({ order }: CODConfirmationProps) {
           <Button
             variant="outline"
             onClick={handleContinueShopping}
-            className="h-10 w-full border-gray-300 font-medium text-gray-700 hover:bg-gray-50"
+            className="h-10 w-full border-border font-medium text-muted-foreground hover:bg-muted"
           >
             Continue Shopping
           </Button>

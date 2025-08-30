@@ -25,8 +25,8 @@ export function OrderSummary({ items }: OrderSummaryProps) {
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
-          <Package className="h-5 w-5 text-blue-600" />
+        <CardTitle className="text-card-foreground flex items-center gap-2 text-lg">
+          <Package className="text-primary h-5 w-5" />
           Order Summary
         </CardTitle>
       </CardHeader>
@@ -34,9 +34,9 @@ export function OrderSummary({ items }: OrderSummaryProps) {
         {/* Items List */}
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+            <div key={item.id} className="bg-muted flex items-center gap-3 rounded-lg p-3">
               {/* Item Image */}
-              <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border bg-white">
+              <div className="bg-card h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border">
                 <ImagePlaceholder
                   src={item.imageUrl || ''}
                   alt={item.name}
@@ -48,12 +48,14 @@ export function OrderSummary({ items }: OrderSummaryProps) {
 
               {/* Item Details */}
               <div className="min-w-0 flex-1">
-                <h4 className="line-clamp-2 text-sm leading-tight font-semibold text-gray-900">
+                <h4 className="text-card-foreground line-clamp-2 text-sm leading-tight font-semibold">
                   {item.name}
                 </h4>
                 <div className="mt-1 flex items-center justify-between">
-                  <span className="text-xs font-medium text-gray-600">Qty: {item.quantity}</span>
-                  <span className="text-sm font-bold text-gray-900">
+                  <span className="text-muted-foreground text-xs font-medium">
+                    Qty: {item.quantity}
+                  </span>
+                  <span className="text-card-foreground text-sm font-bold">
                     {formatPrice(item.price * item.quantity)}
                   </span>
                 </div>
@@ -63,31 +65,31 @@ export function OrderSummary({ items }: OrderSummaryProps) {
         </div>
 
         {/* Price Breakdown */}
-        <div className="space-y-3 rounded-lg bg-gray-50 p-4">
+        <div className="bg-muted space-y-3 rounded-lg p-4">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Subtotal ({items.length} items)</span>
-            <span className="font-medium text-gray-900">{formatPrice(subtotal)}</span>
+            <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
+            <span className="text-card-foreground font-medium">{formatPrice(subtotal)}</span>
           </div>
 
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Delivery Fee</span>
-            <span className="font-medium text-gray-900">{formatPrice(deliveryFee)}</span>
+            <span className="text-muted-foreground">Delivery Fee</span>
+            <span className="text-card-foreground font-medium">{formatPrice(deliveryFee)}</span>
           </div>
         </div>
 
         {/* Total */}
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div className="border-primary/20 bg-primary/5 rounded-lg border p-4">
           <div className="flex items-center justify-between">
-            <span className="text-lg font-semibold text-gray-900">Total</span>
-            <span className="text-xl font-bold text-blue-600">{formatPrice(total)}</span>
+            <span className="text-card-foreground text-lg font-semibold">Total</span>
+            <span className="text-primary text-xl font-bold">{formatPrice(total)}</span>
           </div>
         </div>
 
         {/* Delivery Notice */}
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+        <div className="border-chart-3/20 bg-chart-3/5 rounded-lg border p-3">
           <div className="flex items-start gap-2">
-            <span className="text-sm text-amber-600">📦</span>
-            <div className="text-xs leading-relaxed text-amber-800">
+            <span className="text-chart-3 text-sm">📦</span>
+            <div className="text-chart-3 text-xs leading-relaxed">
               <p className="mb-1 font-semibold">Delivery Information</p>
               <p>
                 Standard delivery applies. Delivery takes up to 3 days. Orders to non-deliverable

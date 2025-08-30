@@ -194,10 +194,10 @@ export function OrderHistory({ projectId, statusFilter, page }: OrderHistoryProp
   return (
     <div className="space-y-4">
       {/* Filter Section - Figma style */}
-      <div className="rounded-lg border-0 bg-white p-4 shadow-sm">
+      <div className="bg-card rounded-lg border-0 p-4 shadow-sm">
         <div className="mb-3 flex items-center gap-2">
-          <Filter className="h-5 w-5 text-purple-600" />
-          <span className="font-semibold text-gray-900">Filter Orders</span>
+          <Filter className="text-primary h-5 w-5" />
+          <span className="text-card-foreground font-semibold">Filter Orders</span>
         </div>
         <Select value={filter} onValueChange={handleFilterChange}>
           <SelectTrigger className="h-11">
@@ -228,7 +228,7 @@ export function OrderHistory({ projectId, statusFilter, page }: OrderHistoryProp
 
       {/* Pagination - Figma style */}
       {totalPages > 1 && (
-        <div className="rounded-lg border-0 bg-white p-4 shadow-sm">
+        <div className="bg-card rounded-lg border-0 p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <Button
               variant="outline"
@@ -240,7 +240,7 @@ export function OrderHistory({ projectId, statusFilter, page }: OrderHistoryProp
             </Button>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">
+              <span className="text-muted-foreground text-sm">
                 Page {currentPage} of {totalPages}
               </span>
             </div>

@@ -45,10 +45,10 @@ export function ImagePlaceholder({
   if (!src || imageError) {
     return (
       <div
-        className={`flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 ${className}`}
+        className={`from-muted to-muted/80 flex items-center justify-center bg-gradient-to-br ${className}`}
       >
-        <div className="text-center text-gray-400">
-          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
+        <div className="text-muted-foreground text-center">
+          <div className="bg-muted-foreground/20 mx-auto flex h-8 w-8 items-center justify-center rounded-full">
             <PlaceholderIcon className="h-4 w-4" />
           </div>
         </div>
@@ -60,9 +60,9 @@ export function ImagePlaceholder({
     <div className={`relative ${className}`}>
       {/* Loading placeholder */}
       {imageLoading && (
-        <div className="absolute inset-0 flex animate-pulse items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-          <div className="text-center text-gray-400">
-            <div className="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
+        <div className="from-muted to-muted/80 absolute inset-0 flex animate-pulse items-center justify-center bg-gradient-to-br">
+          <div className="text-muted-foreground text-center">
+            <div className="bg-muted-foreground/20 mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full">
               <PlaceholderIcon className="h-4 w-4" />
             </div>
             <p className="text-xs font-medium">Loading...</p>

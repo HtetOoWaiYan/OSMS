@@ -72,12 +72,12 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
     : item.stock_quantity;
 
   return (
-    <div className="safe-area-inset-bottom fixed right-0 bottom-0 left-0 z-40 border-t border-gray-200 bg-white shadow-lg">
+    <div className="safe-area-inset-bottom border-border bg-card fixed right-0 bottom-0 left-0 z-40 border-t shadow-lg">
       <div className="mx-auto max-w-md space-y-4 p-4">
         {/* Quantity Selector */}
         {!isOutOfStock && (
-          <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
-            <span className="text-sm font-medium text-gray-900">Quantity:</span>
+          <div className="bg-muted flex items-center justify-between rounded-lg p-3">
+            <span className="text-card-foreground text-sm font-medium">Quantity:</span>
             <div className="flex items-center gap-3">
               <QuantitySelector
                 value={selectedQuantity}
@@ -86,7 +86,7 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
                 max={maxSelectableQuantity}
                 disabled={isOutOfStock}
               />
-              <span className="text-xs font-medium text-gray-500">
+              <span className="text-muted-foreground text-xs font-medium">
                 {item.stock_quantity} available
               </span>
             </div>
@@ -99,7 +99,7 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
           <Button
             onClick={handleAddToCart}
             disabled={isOutOfStock || maxSelectableQuantity === 0}
-            className="h-12 flex-1 bg-blue-600 font-medium shadow-sm hover:bg-blue-700"
+            className="bg-primary hover:bg-primary/90 h-12 flex-1 font-medium shadow-sm"
             size="lg"
           >
             <ShoppingCart className="mr-2 h-4 w-4" />
@@ -111,7 +111,7 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
             <Button
               onClick={handleBuyNow}
               variant="outline"
-              className="h-12 flex-1 border-blue-600 font-medium text-blue-600 hover:bg-blue-50"
+              className="border-primary text-primary hover:bg-primary/5 h-12 flex-1 font-medium"
               size="lg"
             >
               Buy Now
@@ -123,9 +123,9 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
         <div className="space-y-2">
           {/* Stock Warning */}
           {!isOutOfStock && item.stock_quantity <= 5 && (
-            <div className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-center">
+            <div className="border-chart-3/20 bg-chart-3/5 rounded-lg border px-3 py-2 text-center">
               <div className="flex items-center justify-center gap-1">
-                <span className="text-sm font-medium text-orange-600">
+                <span className="text-chart-3 text-sm font-medium">
                   ⚠️ Only {item.stock_quantity} left in stock!
                 </span>
               </div>
@@ -134,8 +134,8 @@ export function AddToCartSection({ item }: AddToCartSectionProps) {
 
           {/* Cart Info */}
           {isInCart && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-center">
-              <span className="text-sm font-medium text-blue-700">
+            <div className="border-primary/20 bg-primary/5 rounded-lg border px-3 py-2 text-center">
+              <span className="text-primary text-sm font-medium">
                 ✓ {cartItem.quantity} item{cartItem.quantity > 1 ? 's' : ''} in cart
               </span>
             </div>

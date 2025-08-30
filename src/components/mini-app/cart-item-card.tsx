@@ -51,7 +51,7 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
       <CardContent className="p-4">
         <div className="flex gap-4">
           {/* Item Image */}
-          <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
+          <div className="bg-muted h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl">
             <ImagePlaceholder
               src={item.imageUrl}
               alt={item.name}
@@ -66,7 +66,7 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
           <div className="min-w-0 flex-1 space-y-3">
             {/* Name and Action Buttons - Figma style */}
             <div className="flex items-start justify-between gap-2">
-              <h3 className="line-clamp-2 text-sm leading-tight font-semibold text-gray-900">
+              <h3 className="text-card-foreground line-clamp-2 text-sm leading-tight font-semibold">
                 {item.name}
               </h3>
               <div className="flex gap-1">
@@ -78,8 +78,8 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
                   disabled={disabled}
                   className={`h-8 w-8 flex-shrink-0 ${
                     isFavorited
-                      ? 'text-red-500 hover:text-red-600'
-                      : 'text-gray-400 hover:text-red-500'
+                      ? 'text-destructive hover:text-destructive/80'
+                      : 'text-muted-foreground hover:text-destructive'
                   }`}
                 >
                   <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
@@ -91,7 +91,7 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
                   size="icon"
                   onClick={handleRemove}
                   disabled={disabled}
-                  className="h-8 w-8 flex-shrink-0 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                  className="text-muted-foreground hover:bg-destructive/5 hover:text-destructive h-8 w-8 flex-shrink-0"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -99,14 +99,16 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
             </div>
 
             {/* SKU */}
-            {item.sku && <p className="text-xs font-medium text-gray-500">SKU: {item.sku}</p>}
+            {item.sku && (
+              <p className="text-muted-foreground text-xs font-medium">SKU: {item.sku}</p>
+            )}
 
             {/* Price and Quantity Row - Figma style layout */}
             <div className="flex items-center justify-between">
               {/* Price Section */}
               <div className="space-y-1">
-                <p className="text-lg font-bold text-gray-900">{formatPrice(totalPrice)}</p>
-                <p className="text-xs text-gray-500">{formatPrice(item.price)} each</p>
+                <p className="text-card-foreground text-lg font-bold">{formatPrice(totalPrice)}</p>
+                <p className="text-muted-foreground text-xs">{formatPrice(item.price)} each</p>
               </div>
 
               {/* Quantity Section */}
@@ -118,14 +120,16 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
                   max={item.maxStock}
                   disabled={disabled}
                 />
-                <p className="text-xs font-medium text-gray-500">{item.maxStock} available</p>
+                <p className="text-muted-foreground text-xs font-medium">
+                  {item.maxStock} available
+                </p>
               </div>
             </div>
 
             {/* Stock Warning */}
             {isAtMaxStock && (
-              <div className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2">
-                <p className="text-xs font-medium text-orange-700">
+              <div className="border-chart-3/20 bg-chart-3/5 rounded-lg border px-3 py-2">
+                <p className="text-chart-3 text-xs font-medium">
                   ⚠️ Maximum available quantity in cart
                 </p>
               </div>

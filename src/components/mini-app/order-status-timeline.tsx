@@ -36,11 +36,13 @@ export function OrderStatusTimeline({
       string,
       { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; color: string }
     > = {
-      pending: { variant: 'secondary', label: 'Awaiting Payment', color: 'text-yellow-600' },
-      paid: { variant: 'default', label: 'Payment Confirmed', color: 'text-green-600' },
-      failed: { variant: 'destructive', label: 'Payment Failed', color: 'text-red-600' },
+      pending: { variant: 'secondary', label: 'Awaiting Payment', color: 'text-chart-3' },
+      paid: { variant: 'default', label: 'Payment Confirmed', color: 'text-chart-1' },
+      failed: { variant: 'destructive', label: 'Payment Failed', color: 'text-destructive' },
     };
-    return variants[status] || { variant: 'secondary', label: status, color: 'text-gray-600' };
+    return (
+      variants[status] || { variant: 'secondary', label: status, color: 'text-muted-foreground' }
+    );
   };
 
   const getOrderStatusInfo = (status: string) => {
@@ -48,39 +50,39 @@ export function OrderStatusTimeline({
       pending: {
         label: 'Order Placed',
         description: 'Your order is being processed',
-        color: 'text-blue-600',
+        color: 'text-primary',
       },
       confirmed: {
         label: 'Order Confirmed',
         description: 'Your order has been confirmed and is being prepared',
-        color: 'text-green-600',
+        color: 'text-chart-1',
       },
       paid: {
         label: 'Payment Received',
         description: 'Payment confirmed, preparing for delivery',
-        color: 'text-emerald-600',
+        color: 'text-chart-1',
       },
       delivering: {
         label: 'Out for Delivery',
         description: 'Your order is on its way',
-        color: 'text-orange-600',
+        color: 'text-chart-3',
       },
       delivered: {
         label: 'Delivered',
         description: 'Order successfully delivered',
-        color: 'text-green-700',
+        color: 'text-chart-1',
       },
       cancelled: {
         label: 'Order Cancelled',
         description: 'This order has been cancelled',
-        color: 'text-red-600',
+        color: 'text-destructive',
       },
     };
     return (
       statusMap[status] || {
         label: status,
         description: '',
-        color: 'text-gray-600',
+        color: 'text-muted-foreground',
       }
     );
   };
@@ -135,17 +137,17 @@ export function OrderStatusTimeline({
         {/* Current Status Display - Figma style */}
         <div className="mb-6">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Order Status</h3>
+            <h3 className="text-lg font-semibold text-card-foreground">Order Status</h3>
             <Badge variant={paymentInfo.variant} className="capitalize">
               {paymentInfo.label}
             </Badge>
           </div>
 
-          <div className="rounded-lg bg-gray-50 p-4">
+          <div className="rounded-lg bg-muted p-4">
             <div className={`text-lg font-semibold ${orderInfo.color} mb-1`}>{orderInfo.label}</div>
-            <p className="mb-3 text-sm text-gray-600">{orderInfo.description}</p>
+            <p className="mb-3 text-sm text-muted-foreground">{orderInfo.description}</p>
             {timestamps.created_at && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Ordered on {formatDate(timestamps.created_at)}
               </p>
             )}
@@ -155,13 +157,13 @@ export function OrderStatusTimeline({
         {/* Simplified Progress Steps - Figma style */}
         {currentStatus !== 'cancelled' && (
           <div>
-            <h4 className="mb-4 text-sm font-medium text-gray-700">Progress</h4>
+            <h4 className="mb-4 text-sm font-medium text-muted-foreground">Progress</h4>
             <div className="relative flex items-center justify-between">
               {/* Progress line background */}
-              <div className="absolute top-4 right-4 left-4 h-0.5 bg-gray-200"></div>
+              <div className="absolute top-4 right-4 left-4 h-0.5 bg-border"></div>
               {/* Active progress line */}
               <div
-                className="absolute top-4 left-4 h-0.5 bg-green-500 transition-all duration-300"
+                className="absolute top-4 left-4 h-0.5 bg-chart-1 transition-all duration-300"
                 style={{
                   width: `${Math.max(0, (currentStepIndex / (orderSteps.length - 1)) * 100)}%`,
                 }}
@@ -176,15 +178,15 @@ export function OrderStatusTimeline({
                     <div
                       className={`mb-2 flex h-8 w-8 items-center justify-center rounded-full border-2 ${
                         isCompleted
-                          ? 'border-green-500 bg-green-500 text-white'
-                          : 'border-gray-300 bg-white text-gray-400'
+                          ? 'border-chart-1 bg-chart-1 text-white'
+                          : 'border-border bg-card text-muted-foreground'
                       }`}
                     >
                       <StepIcon className="h-4 w-4" />
                     </div>
                     <p
                       className={`max-w-[50px] text-center text-xs ${
-                        isCompleted ? 'font-medium text-green-600' : 'text-gray-500'
+                        isCompleted ? 'font-medium text-chart-1' : 'text-muted-foreground'
                       }`}
                     >
                       {step.label}
@@ -198,12 +200,12 @@ export function OrderStatusTimeline({
 
         {/* Delivery Estimate - Figma style */}
         {currentStatus !== 'cancelled' && currentStatus !== 'delivered' && (
-          <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
             <div className="mb-1 flex items-center gap-2">
-              <Truck className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-900">Estimated Delivery</span>
+              <Truck className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">Estimated Delivery</span>
             </div>
-            <p className="text-sm text-blue-700">
+            <p className="text-sm text-primary/80">
               {currentStatus === 'delivering'
                 ? 'Your order is on the way and should arrive today'
                 : '2-3 business days from order confirmation'}

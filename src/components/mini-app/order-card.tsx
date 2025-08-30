@@ -38,14 +38,14 @@ export function OrderCard({ order, projectId }: OrderCardProps) {
       string,
       { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; color: string }
     > = {
-      pending: { variant: 'secondary', label: 'Processing', color: 'bg-yellow-500' },
-      confirmed: { variant: 'default', label: 'Confirmed', color: 'bg-blue-500' },
-      paid: { variant: 'default', label: 'Paid', color: 'bg-emerald-500' },
-      delivering: { variant: 'default', label: 'Delivering', color: 'bg-orange-500' },
-      delivered: { variant: 'default', label: 'Received', color: 'bg-green-500' },
-      cancelled: { variant: 'destructive', label: 'Cancelled', color: 'bg-red-500' },
+      pending: { variant: 'secondary', label: 'Processing', color: 'bg-chart-3' },
+      confirmed: { variant: 'default', label: 'Confirmed', color: 'bg-primary' },
+      paid: { variant: 'default', label: 'Paid', color: 'bg-chart-1' },
+      delivering: { variant: 'default', label: 'Delivering', color: 'bg-chart-3' },
+      delivered: { variant: 'default', label: 'Received', color: 'bg-chart-1' },
+      cancelled: { variant: 'destructive', label: 'Cancelled', color: 'bg-destructive' },
     };
-    return statusMap[status] || { variant: 'secondary', label: status, color: 'bg-gray-500' };
+    return statusMap[status] || { variant: 'secondary', label: status, color: 'bg-muted' };
   };
 
   const getPaymentStatusBadge = (status: string) => {
@@ -90,19 +90,19 @@ export function OrderCard({ order, projectId }: OrderCardProps) {
   };
 
   return (
-    <Card className="border-0 bg-white shadow-sm">
+    <Card className="bg-card border-0 shadow-sm">
       <CardContent className="p-4">
         {/* Header with order number and status */}
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Receipt className="h-4 w-4 text-purple-600" />
-            <span className="font-mono text-sm font-semibold text-gray-900">
+            <Receipt className="text-chart-2 h-4 w-4" />
+            <span className="text-card-foreground font-mono text-sm font-semibold">
               #{order.order_number}
             </span>
           </div>
           <Badge
             variant={statusInfo.variant}
-            className={` ${statusInfo.variant === 'default' ? 'bg-purple-600 hover:bg-purple-700' : ''} ${statusInfo.variant === 'secondary' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' : ''} ${statusInfo.variant === 'destructive' ? 'bg-red-100 text-red-800 hover:bg-red-200' : ''} `}
+            className={` ${statusInfo.variant === 'default' ? 'bg-chart-2 hover:bg-chart-2/90' : ''} ${statusInfo.variant === 'secondary' ? 'bg-chart-3/10 text-chart-3 hover:bg-chart-3/20' : ''} ${statusInfo.variant === 'destructive' ? 'bg-destructive/10 text-destructive hover:bg-destructive/20' : ''} `}
           >
             {statusInfo.label}
           </Badge>
@@ -111,8 +111,8 @@ export function OrderCard({ order, projectId }: OrderCardProps) {
         {/* Order Items Preview - Figma style */}
         <div className="mb-4">
           {firstItem && (
-            <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
-              <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-white">
+            <div className="bg-muted flex items-center gap-3 rounded-lg p-3">
+              <div className="bg-card h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
                 <ImagePlaceholder
                   src={firstItem.item_snapshot.image_url || ''}
                   alt={firstItem.item_snapshot.name}
@@ -122,10 +122,12 @@ export function OrderCard({ order, projectId }: OrderCardProps) {
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-gray-900">{firstItem.item_snapshot.name}</p>
-                <p className="text-sm text-gray-600">Qty: {firstItem.quantity}</p>
+                <p className="text-card-foreground truncate font-medium">
+                  {firstItem.item_snapshot.name}
+                </p>
+                <p className="text-muted-foreground text-sm">Qty: {firstItem.quantity}</p>
                 {order.order_items.length > 1 && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-muted-foreground text-xs">
                     +{order.order_items.length - 1} more item
                     {order.order_items.length > 2 ? 's' : ''}
                   </p>
@@ -138,19 +140,19 @@ export function OrderCard({ order, projectId }: OrderCardProps) {
         {/* Order Summary - Figma style */}
         <div className="mb-4 space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Total Items</span>
-            <span className="font-medium text-gray-900">{totalItems}</span>
+            <span className="text-muted-foreground">Total Items</span>
+            <span className="text-card-foreground font-medium">{totalItems}</span>
           </div>
 
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Payment</span>
+            <span className="text-muted-foreground">Payment</span>
             <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900 capitalize">
+              <span className="text-card-foreground font-medium capitalize">
                 {order.payment_method.replace('_', ' ')}
               </span>
               <Badge
                 variant={paymentInfo.variant}
-                className={`text-xs ${paymentInfo.variant === 'default' ? 'bg-green-100 text-green-800' : ''}`}
+                className={`text-xs ${paymentInfo.variant === 'default' ? 'bg-chart-1/10 text-chart-1' : ''}`}
               >
                 {paymentInfo.label}
               </Badge>
@@ -160,16 +162,16 @@ export function OrderCard({ order, projectId }: OrderCardProps) {
           <Separator />
 
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-gray-900">Total Amount</span>
-            <span className="text-lg font-bold text-purple-600">
+            <span className="text-card-foreground font-semibold">Total Amount</span>
+            <span className="text-primary text-lg font-bold">
               {formatCurrency(order.total_amount)}
             </span>
           </div>
         </div>
 
         {/* Footer with date and action - Figma style */}
-        <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-          <div className="flex items-center gap-1 text-xs text-gray-500">
+        <div className="border-border flex items-center justify-between border-t pt-3">
+          <div className="text-muted-foreground flex items-center gap-1 text-xs">
             <CalendarDays className="h-3 w-3" />
             {formatDate(order.created_at)}
           </div>
@@ -177,7 +179,7 @@ export function OrderCard({ order, projectId }: OrderCardProps) {
           <Button
             size="sm"
             onClick={handleViewOrder}
-            className="h-8 bg-purple-600 px-4 py-2 text-xs font-medium text-white hover:bg-purple-700"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-4 py-2 text-xs font-medium"
           >
             <Eye className="mr-1 h-3 w-3" />
             View Details

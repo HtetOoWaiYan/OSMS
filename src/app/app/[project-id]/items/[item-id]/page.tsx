@@ -33,20 +33,20 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
       projectId={projectId}
       showBottomNav={false} // Hide bottom nav for better UX on detail page
     >
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-background min-h-screen">
         {/* Image Gallery */}
-        <div className="bg-white">
+        <div className="bg-card">
           <ItemImageGallery images={item.item_images || []} itemName={item.name} />
         </div>
 
         {/* Item Information */}
-        <div className="mt-2 bg-white">
+        <div className="bg-card mt-2">
           <ItemInfo item={item} />
         </div>
 
         {/* Related Products */}
         {relatedItems.length > 0 && (
-          <div className="mt-2 bg-white px-4 py-4">
+          <div className="bg-card mt-2 px-4 py-4">
             <RelatedProducts items={relatedItems} projectId={projectId} />
           </div>
         )}

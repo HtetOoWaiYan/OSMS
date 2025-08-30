@@ -89,9 +89,9 @@ export default function CartPage({ params }: CartPageProps) {
           {/* Header */}
           <div className="border-b border-gray-200 bg-white px-4 py-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold text-gray-900">My Cart</h1>
-              <div className="rounded-full bg-gray-100 px-3 py-1">
-                <span className="text-sm font-medium text-gray-500">0 items</span>
+              <h1 className="text-card-foreground text-xl font-bold">My Cart</h1>
+              <div className="bg-muted rounded-full px-3 py-1">
+                <span className="text-muted-foreground text-sm font-medium">0 items</span>
               </div>
             </div>
           </div>
@@ -104,13 +104,13 @@ export default function CartPage({ params }: CartPageProps) {
 
   return (
     <MiniAppLayout projectId={projectId}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="bg-background min-h-screen">
         {/* Header */}
-        <div className="border-b border-gray-200 bg-white px-4 py-4">
+        <div className="border-border bg-card border-b px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900">My Cart</h1>
-            <div className="rounded-full bg-blue-100 px-3 py-1">
-              <span className="text-sm font-medium text-blue-700">
+            <h1 className="text-card-foreground text-xl font-bold">My Cart</h1>
+            <div className="bg-primary/10 rounded-full px-3 py-1">
+              <span className="text-primary text-sm font-medium">
                 {items.length} item{items.length !== 1 ? 's' : ''}
               </span>
             </div>
@@ -120,10 +120,10 @@ export default function CartPage({ params }: CartPageProps) {
         <div className="space-y-4 p-4">
           {/* Stock validation warning */}
           {isValidating && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="border-primary/20 bg-primary/5 rounded-lg border p-4">
               <div className="flex items-center gap-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
-                <p className="text-sm font-medium text-blue-800">Checking stock availability...</p>
+                <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></div>
+                <p className="text-primary text-sm font-medium">Checking stock availability...</p>
               </div>
             </div>
           )}
