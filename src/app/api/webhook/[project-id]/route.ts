@@ -169,18 +169,17 @@ Click the button below to open our mobile shopping app:`,
 
 **For localhost testing:**
 1. Make sure your Next.js dev server is running on port 3000
-2. Use this URL to access the mini app directly:
-\`${miniAppUrl}\`
+2. Copy the Mini App URL above and open it in your browser
+3. Test the mini app functionality directly
 
 **For Telegram Mini App testing:**
-- The bot is configured to use: \`${miniAppUrl}\`
-- You can also click the button below to test the web app integration:`;
+- Click the button below to test the web app integration
+- The bot uses the URL shown above`;
 
     await ctx.reply(debugInfo, {
       reply_markup: {
         inline_keyboard: [
           [{ text: '🚀 Test Mini App', web_app: { url: miniAppUrl } }],
-          [{ text: '📋 Copy URL', callback_data: `copy_url:${miniAppUrl}` }],
         ],
       },
       parse_mode: 'Markdown',
@@ -190,27 +189,6 @@ Click the button below to open our mobile shopping app:`,
   // Handle callback queries from inline keyboards
   bot.on('callback_query:data', async (ctx) => {
     const data = ctx.callbackQuery.data;
-
-    // Handle copy URL callback
-    if (data.startsWith('copy_url:')) {
-      const url = data.replace('copy_url:', '');
-      await ctx.editMessageText(
-        `📋 **URL Copied!**
-
-Mini App URL:
-\`${url}\`
-
-You can copy this URL and paste it in your browser to access the mini app directly.
-
-**For development:**
-- Make sure your Next.js server is running on \`localhost:3000\`
-- Open the URL above in your browser
-- Test the mini app functionality`,
-        { parse_mode: 'Markdown' }
-      );
-      await ctx.answerCallbackQuery('URL ready to copy!');
-      return;
-    }
 
     switch (data) {
       case 'catalog':
