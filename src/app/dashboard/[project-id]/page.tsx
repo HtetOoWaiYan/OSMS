@@ -12,11 +12,11 @@ import { RefreshCw, DollarSign, ShoppingCart, Users, TrendingUp, TrendingDown } 
 import { PageHeader } from "@/components/dashboard/page-header";
 
 interface AnalyticsPageProps {
-  params: { "project-id": string };
+  params: Promise<{ "project-id": string }>;
 }
 
 export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
-  const projectId = params["project-id"];
+  const { "project-id": projectId } = await params;
   const {
     revenueAndOrders,
     orderStatusDistribution,
