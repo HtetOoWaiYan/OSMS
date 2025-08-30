@@ -168,51 +168,25 @@ Click the button below to open our mobile shopping app:`,
     const localhost = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const localhostUrlWithParams = `${localhost}/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}`;
     
-    const debugInfo = `🔧 **Debug Information**
+    // Simplified debug info without complex markdown formatting that causes parsing errors
+    const debugInfo = `🔧 Debug Information
 
-**Project ID:** \`${projectId}\`
-**Project Name:** ${projectName}
-**User ID:** \`${user.id}\`
-**Username:** ${user.username ? `@${user.username}` : 'Not set'}
-**First Name:** ${user.first_name || 'Not set'}
+Project: ${projectName}
+Project ID: ${projectId}
+User ID: ${user.id}
+Username: ${user.username ? '@' + user.username : 'Not set'}
+First Name: ${user.first_name || 'Not set'}
 
-**🌐 URLs:**
-**Localhost with Params:** \`${localhostUrlWithParams}\`
-
-**🔑 Mock initData for localhost:**
-\`\`\`
-${mockInitData.raw}
-\`\`\`
-
-**📱 Launch Parameters:**
-- **tgWebAppData:** Mock Telegram user data
-- **tgWebAppVersion:** 7.0
-- **tgWebAppPlatform:** web
-- **tgWebAppStartParam:** debug_mode
-- **tgWebAppThemeParams:** Default theme
-
-**🚀 Testing Instructions:**
-1. **For Telegram Mini App:** Click "Test Mini App" button below
-2. **For localhost development:** 
-   - Make sure Next.js dev server is running on port 3000
-   - Click "Open Localhost with Mock Data" button
-   - Or copy the localhost URL above and paste in browser
-
-**💡 Mock User Data:**
-\`\`\`json
-${JSON.stringify(mockInitData.userData, null, 2)}
-\`\`\`
-
-**⚠️ Note:** The mock initData includes proper hash validation for development. This simulates a real Telegram Mini App environment.`;
+🚀 Use the buttons below to test:`;
 
     await ctx.reply(debugInfo, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '�🖥️ Open Localhost with Mock Data', url: localhostUrlWithParams }],
-          [{ text: '📋 Copy Mock initData', callback_data: `copy_initdata_${user.id}` }],
+          [{ text: '🖥️ Open Localhost with Mock Data', url: localhostUrlWithParams }],
+          [{ text: '📋 Show Mock Data', callback_data: `show_mock_data_${user.id}` }],
+          [{ text: '📱 Show Launch Params', callback_data: `show_launch_params_${user.id}` }],
         ],
       },
-      parse_mode: 'Markdown',
     });
   });
 
@@ -228,25 +202,89 @@ ${JSON.stringify(mockInitData.userData, null, 2)}
         const mockInitData = generateMockInitData(user);
         
         await ctx.editMessageText(
-          `📋 **Mock initData Copied**
-
-Here's your mock initData for localhost development:
+          `📋 Mock initData
 
 \`\`\`
 ${mockInitData.raw}
 \`\`\`
 
-**How to use:**
-1. Copy the initData above
-2. Open your localhost URL: \`http://localhost:3000/app/${projectId}?initData=<paste-here>\`
-3. Replace \`<paste-here>\` with the URL-encoded initData
+Copy the initData above and use with your localhost URL:
+\`http://localhost:3000/app/${projectId}?initData=<paste-here>\`
 
-**Or use this direct URL:**
-\`http://localhost:3000/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}\`
-
-This will simulate a real Telegram Mini App environment with your user data.`,
+Or use this direct URL:
+\`http://localhost:3000/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}\``,
           {
-            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔙 Back to Debug', callback_data: 'debug' }],
+              ],
+            },
+          },
+        );
+      } else {
+        await ctx.editMessageText('❌ Unauthorized action');
+      }
+      
+      await ctx.answerCallbackQuery();
+      return;
+    }
+
+    if (data.startsWith('show_mock_data_')) {
+      const userId = data.replace('show_mock_data_', '');
+      const user = ctx.from;
+      
+      if (user && user.id.toString() === userId) {
+        const mockInitData = generateMockInitData(user);
+        
+        await ctx.editMessageText(
+          `📋 Mock Data
+
+User Data:
+\`\`\`json
+${JSON.stringify(mockInitData.userData, null, 2)}
+\`\`\`
+
+Raw initData:
+\`\`\`
+${mockInitData.raw}
+\`\`\``,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔙 Back to Debug', callback_data: 'debug' }],
+              ],
+            },
+          },
+        );
+      } else {
+        await ctx.editMessageText('❌ Unauthorized action');
+      }
+      
+      await ctx.answerCallbackQuery();
+      return;
+    }
+
+    if (data.startsWith('show_launch_params_')) {
+      const userId = data.replace('show_launch_params_', '');
+      const user = ctx.from;
+      
+      if (user && user.id.toString() === userId) {
+        const mockInitData = generateMockInitData(user);
+        
+        await ctx.editMessageText(
+          `📱 Launch Parameters
+
+\`\`\`
+tgWebAppData=${encodeURIComponent(mockInitData.raw)}
+tgWebAppVersion=7.0
+tgWebAppPlatform=web
+tgWebAppStartParam=debug_mode
+tgWebAppThemeParams=Default theme
+\`\`\`
+
+Direct URL:
+\`http://localhost:3000/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}\``,
+          {
             reply_markup: {
               inline_keyboard: [
                 [{ text: '🔙 Back to Debug', callback_data: 'debug' }],
@@ -284,38 +322,28 @@ Available commands:
       case 'debug':
         const user = ctx.from;
         if (user) {
-          const miniAppUrl = generateMiniAppUrl(projectId);
           const mockInitData = generateMockInitData(user);
           const localhost = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
           const localhostUrlWithParams = `${localhost}/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}`;
           
-          const debugInfo = `🔧 **Debug Information**
+          const debugInfo = `🔧 Debug Information
 
-**Project ID:** \`${projectId}\`
-**Project Name:** ${projectName}
-**User ID:** \`${user.id}\`
-**Username:** ${user.username ? `@${user.username}` : 'Not set'}
-**First Name:** ${user.first_name || 'Not set'}
+Project: ${projectName}
+Project ID: ${projectId}
+User ID: ${user.id}
+Username: ${user.username ? '@' + user.username : 'Not set'}
+First Name: ${user.first_name || 'Not set'}
 
-**🌐 URLs:**
-**Mini App URL:** \`${miniAppUrl}\`
-**Localhost with Params:** \`${localhostUrlWithParams}\`
-
-**🚀 Testing Instructions:**
-1. **For Telegram Mini App:** Click "Test Mini App" button below
-2. **For localhost development:** Click "Open Localhost with Mock Data" button
-
-**💡 The localhost URL includes mock Telegram initData for proper testing.**`;
+🚀 Use the buttons below to test:`;
 
           await ctx.editMessageText(debugInfo, {
             reply_markup: {
               inline_keyboard: [
-                [{ text: '🚀 Test Mini App', web_app: { url: miniAppUrl } }],
                 [{ text: '🖥️ Open Localhost with Mock Data', url: localhostUrlWithParams }],
-                [{ text: '📋 Copy Mock initData', callback_data: `copy_initdata_${user.id}` }],
+                [{ text: '📋 Show Mock Data', callback_data: `show_mock_data_${user.id}` }],
+                [{ text: '📱 Show Launch Params', callback_data: `show_launch_params_${user.id}` }],
               ],
             },
-            parse_mode: 'Markdown',
           });
         }
         break;
