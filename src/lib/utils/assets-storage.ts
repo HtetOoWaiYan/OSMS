@@ -200,9 +200,7 @@ export async function deleteAssetFile(filePath: string): Promise<{
   try {
     const supabaseAdmin = await createServiceRoleClient();
 
-    const { error: deleteError } = await supabaseAdmin.storage
-      .from('assets')
-      .remove([filePath]);
+    const { error: deleteError } = await supabaseAdmin.storage.from('assets').remove([filePath]);
 
     if (deleteError) {
       console.error('Storage deletion error:', deleteError);
@@ -254,9 +252,7 @@ export async function deleteAllItemImages(
 
     // Delete all files
     const filePaths = files.map((file) => `item-images/${projectId}/${itemId}/${file.name}`);
-    const { error: deleteError } = await supabaseAdmin.storage
-      .from('assets')
-      .remove(filePaths);
+    const { error: deleteError } = await supabaseAdmin.storage.from('assets').remove(filePaths);
 
     if (deleteError) {
       console.error('Storage deletion error:', deleteError);
@@ -283,13 +279,13 @@ export function extractFilePathFromUrl(publicUrl: string): string | null {
   try {
     const url = new URL(publicUrl);
     const pathSegments = url.pathname.split('/');
-    
+
     // Find the 'assets' segment and get everything after it
-    const assetsIndex = pathSegments.findIndex(segment => segment === 'assets');
+    const assetsIndex = pathSegments.findIndex((segment) => segment === 'assets');
     if (assetsIndex === -1 || assetsIndex === pathSegments.length - 1) {
       return null;
     }
-    
+
     // Return the path within the assets bucket
     return pathSegments.slice(assetsIndex + 1).join('/');
   } catch (error) {
