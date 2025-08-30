@@ -103,27 +103,10 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
               <p className="text-muted-foreground text-xs font-medium">SKU: {item.sku}</p>
             )}
 
-            {/* Price and Quantity Row - Figma style layout */}
-            <div className="flex items-center justify-between">
-              {/* Price Section */}
-              <div className="space-y-1">
-                <p className="text-card-foreground text-lg font-bold">{formatPrice(totalPrice)}</p>
-                <p className="text-muted-foreground text-xs">{formatPrice(item.price)} each</p>
-              </div>
-
-              {/* Quantity Section */}
-              <div className="flex flex-col items-end gap-1">
-                <QuantitySelector
-                  value={item.quantity}
-                  onChange={handleQuantityChange}
-                  min={1}
-                  max={item.maxStock}
-                  disabled={disabled}
-                />
-                <p className="text-muted-foreground text-xs font-medium">
-                  {item.maxStock} available
-                </p>
-              </div>
+            {/* Price Section */}
+            <div className="space-y-1">
+              <p className="text-card-foreground text-lg font-bold">{formatPrice(totalPrice)}</p>
+              <p className="text-muted-foreground text-xs">{formatPrice(item.price)} each</p>
             </div>
 
             {/* Stock Warning */}
@@ -134,6 +117,19 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
                 </p>
               </div>
             )}
+          </div>
+        </div>
+        <div className="mt-4 flex items-center justify-between border-t pt-4">
+          <p className="text-muted-foreground text-sm font-medium">Quantity</p>
+          <div className="flex flex-col items-end gap-1">
+            <QuantitySelector
+              value={item.quantity}
+              onChange={handleQuantityChange}
+              min={1}
+              max={item.maxStock}
+              disabled={disabled}
+            />
+            <p className="text-muted-foreground text-xs font-medium">{item.maxStock} available</p>
           </div>
         </div>
       </CardContent>
