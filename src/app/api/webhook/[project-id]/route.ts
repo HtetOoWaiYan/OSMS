@@ -113,6 +113,7 @@ Available commands:
 /launch - Open the mini app
 /catalog - Browse our product catalog
 /orders - View your order history
+/debug - Show debug info and localhost URL
 /help - Show this help message
 
 🚀 Launch Mini App button - Opens our mobile shopping app
@@ -152,9 +153,64 @@ Click the button below to open our mobile shopping app:`,
     );
   });
 
+  // Handle /debug command for development
+  bot.command('debug', async (ctx) => {
+    const miniAppUrl = generateMiniAppUrl(projectId);
+    const user = ctx.from;
+    
+    const debugInfo = `🔧 **Debug Information**
+
+**Project ID:** \`${projectId}\`
+**Project Name:** ${projectName}
+**Mini App URL:** \`${miniAppUrl}\`
+**User ID:** \`${user?.id}\`
+**Username:** ${user?.username ? `@${user.username}` : 'Not set'}
+**First Name:** ${user?.first_name || 'Not set'}
+
+**For localhost testing:**
+1. Make sure your Next.js dev server is running on port 3000
+2. Use this URL to access the mini app directly:
+\`${miniAppUrl}\`
+
+**For Telegram Mini App testing:**
+- The bot is configured to use: \`${miniAppUrl}\`
+- You can also click the button below to test the web app integration:`;
+
+    await ctx.reply(debugInfo, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🚀 Test Mini App', web_app: { url: miniAppUrl } }],
+          [{ text: '📋 Copy URL', callback_data: `copy_url:${miniAppUrl}` }],
+        ],
+      },
+      parse_mode: 'Markdown',
+    });
+  });
+
   // Handle callback queries from inline keyboards
   bot.on('callback_query:data', async (ctx) => {
     const data = ctx.callbackQuery.data;
+
+    // Handle copy URL callback
+    if (data.startsWith('copy_url:')) {
+      const url = data.replace('copy_url:', '');
+      await ctx.editMessageText(
+        `📋 **URL Copied!**
+
+Mini App URL:
+\`${url}\`
+
+You can copy this URL and paste it in your browser to access the mini app directly.
+
+**For development:**
+- Make sure your Next.js server is running on \`localhost:3000\`
+- Open the URL above in your browser
+- Test the mini app functionality`,
+        { parse_mode: 'Markdown' }
+      );
+      await ctx.answerCallbackQuery('URL ready to copy!');
+      return;
+    }
 
     switch (data) {
       case 'catalog':
@@ -171,6 +227,7 @@ Available commands:
 /launch - Open the mini app
 /catalog - Browse our product catalog
 /orders - View your order history
+/debug - Show debug info and localhost URL
 /help - Show this help message`.trim();
         await ctx.editMessageText(helpMessage);
         break;
