@@ -2,7 +2,6 @@
 
 import { TelegramProvider } from '@/components/telegram-provider';
 import { MiniAppHeader } from './mini-app-header';
-import { MiniAppBottomNav } from './mini-app-bottom-nav';
 
 interface MiniAppLayoutProps {
   children: React.ReactNode;
@@ -11,20 +10,13 @@ interface MiniAppLayoutProps {
   showBottomNav?: boolean;
 }
 
-export function MiniAppLayout({
-  children,
-  projectId,
-  showHeader = true,
-  showBottomNav = false,
-}: MiniAppLayoutProps) {
+export function MiniAppLayout({ children, projectId, showHeader = true }: MiniAppLayoutProps) {
   return (
     <TelegramProvider projectId={projectId}>
       <div className="bg-background flex min-h-screen flex-col">
         {showHeader && <MiniAppHeader projectId={projectId} />}
 
         <main className="flex-1">{children}</main>
-
-        {showBottomNav && <MiniAppBottomNav projectId={projectId} />}
       </div>
     </TelegramProvider>
   );

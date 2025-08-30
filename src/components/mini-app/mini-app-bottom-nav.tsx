@@ -1,3 +1,4 @@
+/* this component is unused right now */
 'use client';
 
 import { Home, ShoppingCart, Package } from 'lucide-react';
