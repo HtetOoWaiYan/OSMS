@@ -17,6 +17,6 @@ export const config = {
      * - app (Telegram mini app routes - no auth needed)
      * Feel free to modify this pattern to include more paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/webhook|app|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/webhook|app|api/revalidate|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
