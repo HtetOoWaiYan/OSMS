@@ -278,6 +278,42 @@ export type Database = {
           },
         ];
       };
+      health_checks: {
+        Row: {
+          checked_at: string | null;
+          component: Database['public']['Enums']['health_check_component_enum'];
+          created_at: string | null;
+          details: Json | null;
+          id: string;
+          message: string | null;
+          response_time_ms: number | null;
+          status: Database['public']['Enums']['health_check_status_enum'];
+          updated_at: string | null;
+        };
+        Insert: {
+          checked_at?: string | null;
+          component: Database['public']['Enums']['health_check_component_enum'];
+          created_at?: string | null;
+          details?: Json | null;
+          id?: string;
+          message?: string | null;
+          response_time_ms?: number | null;
+          status?: Database['public']['Enums']['health_check_status_enum'];
+          updated_at?: string | null;
+        };
+        Update: {
+          checked_at?: string | null;
+          component?: Database['public']['Enums']['health_check_component_enum'];
+          created_at?: string | null;
+          details?: Json | null;
+          id?: string;
+          message?: string | null;
+          response_time_ms?: number | null;
+          status?: Database['public']['Enums']['health_check_status_enum'];
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       invoices: {
         Row: {
           created_at: string | null;
@@ -1258,8 +1294,25 @@ export type Database = {
         Args: { '': unknown };
         Returns: unknown;
       };
+      record_health_check: {
+        Args: {
+          p_component: Database['public']['Enums']['health_check_component_enum'];
+          p_details?: Json;
+          p_message?: string;
+          p_response_time_ms?: number;
+          p_status: Database['public']['Enums']['health_check_status_enum'];
+        };
+        Returns: string;
+      };
     };
     Enums: {
+      health_check_component_enum:
+        | 'database'
+        | 'api'
+        | 'storage'
+        | 'telegram_bot'
+        | 'external_service';
+      health_check_status_enum: 'healthy' | 'warning' | 'critical' | 'unknown';
       invoice_status_enum: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
       message_direction_enum: 'inbound' | 'outbound';
       message_type_enum: 'text' | 'image' | 'document' | 'location' | 'contact';
@@ -1407,6 +1460,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      health_check_component_enum: [
+        'database',
+        'api',
+        'storage',
+        'telegram_bot',
+        'external_service',
+      ],
+      health_check_status_enum: ['healthy', 'warning', 'critical', 'unknown'],
       invoice_status_enum: ['draft', 'sent', 'paid', 'overdue', 'cancelled'],
       message_direction_enum: ['inbound', 'outbound'],
       message_type_enum: ['text', 'image', 'document', 'location', 'contact'],

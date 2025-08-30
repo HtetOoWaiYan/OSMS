@@ -27,8 +27,13 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
     moneyBreakdown,
   } = await getAnalyticsData(projectId);
 
-  const overviewData = revenueAndOrders.reduce((acc, cur) => {
-    const date = new Date(cur.created_at).toLocaleDateString("en-US", {
+  const filteredPopularItems = popularItems.filter(
+    (item): item is { name: string; total_sold: number } =>
+      item.name !== null && item.total_sold !== null
+  );
+
+  const overviewData = revenueAndOrders.filter(cur => cur.created_at).reduce((acc, cur) => {
+    const date = new Date(cur.created_at!).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
     });
@@ -87,7 +92,7 @@ export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
         <MoneyBreakdownChart data={moneyBreakdown} />
         <PaymentMethodChart data={revenueByPaymentMethod} />
         <OrderStatusChart data={orderStatusDistribution} />
-        <PopularItemsChart data={popularItems} />
+        <PopularItemsChart data={filteredPopularItems} />
         <LowStockItemsList data={lowStockItems} />
       </div>
     </div>
