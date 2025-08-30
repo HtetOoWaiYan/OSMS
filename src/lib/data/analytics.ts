@@ -88,8 +88,8 @@ export const getAnalyticsData = async (projectId: string) => {
   // Manual processing
   const revenueAndOrders = orders.map(o => ({ created_at: o.created_at, total_amount: o.total_amount }));
 
-  const orderStatusDistribution = orders.reduce((acc, order) => {
-    const status = order.status;
+  const orderStatusDistribution = orders.filter(order => order.status).reduce((acc, order) => {
+    const status = order.status!;
     const existing = acc.find(item => item.status === status);
     if (existing) {
       existing.count++;
@@ -115,7 +115,22 @@ export const getAnalyticsData = async (projectId: string) => {
   const totalRevenue = orders.reduce((sum, o) => sum + o.total_amount, 0);
 
   const totalCapital = orderItems.reduce((acc, orderItem) => {
-    const price = itemPrices.find(p => p.item_id === orderItem.item_id && new Date(p.effective_from) <= new Date(orderItem.created_at) && (!p.effective_until || new Date(p.effective_until) > new Date(orderItem.created_at)));
+    if (!orderItem.created_at) {
+      return acc;
+    }
+    const orderItemDate = new Date(orderItem.created_at);
+    const price = itemPrices.find(p => {
+      if (!p.effective_from) {
+        return false;
+      }
+      const effectiveFrom = new Date(p.effective_from);
+      const effectiveUntil = p.effective_until ? new Date(p.effective_until) : null;
+      
+      return p.item_id === orderItem.item_id && 
+             effectiveFrom <= orderItemDate && 
+             (!effectiveUntil || effectiveUntil > orderItemDate);
+    });
+    
     return acc + (price ? price.base_price * orderItem.quantity : 0);
   }, 0);
 
