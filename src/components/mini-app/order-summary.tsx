@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CartItem } from '@/hooks/use-cart-store';
 import { Package } from 'lucide-react';
-import Image from 'next/image';
+import { ImagePlaceholder } from './image-placeholder';
 
 interface OrderSummaryProps {
   items: CartItem[];
@@ -37,19 +37,13 @@ export function OrderSummary({ items }: OrderSummaryProps) {
             <div key={item.id} className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
               {/* Item Image */}
               <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border bg-white">
-                {item.imageUrl ? (
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.name}
-                    width={56}
-                    height={56}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-gray-400">
-                    <Package className="h-5 w-5" />
-                  </div>
-                )}
+                <ImagePlaceholder
+                  src={item.imageUrl || ''}
+                  alt={item.name}
+                  width={56}
+                  height={56}
+                  className="h-full w-full object-cover"
+                />
               </div>
 
               {/* Item Details */}

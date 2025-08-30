@@ -1,8 +1,8 @@
-import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingBag } from 'lucide-react';
+import { ImagePlaceholder } from './image-placeholder';
 import type { Tables } from '@/lib/supabase/database.types';
 
 interface InvoiceDetailsProps {
@@ -71,17 +71,15 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
             const itemData = getItemSnapshot(item.item_snapshot);
             return (
               <div key={item.id} className="flex items-center gap-4 rounded-lg bg-gray-50 p-3">
-                {itemData.image_url && (
-                  <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-white">
-                    <Image
-                      src={itemData.image_url}
-                      alt={itemData.name}
-                      width={48}
-                      height={48}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                )}
+                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-white">
+                  <ImagePlaceholder
+                    src={itemData.image_url || ''}
+                    alt={itemData.name}
+                    width={48}
+                    height={48}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-gray-900">{itemData.name}</p>
                   <p className="text-xs text-gray-500">SKU: {itemData.sku}</p>

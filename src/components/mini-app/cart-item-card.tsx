@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { QuantitySelector } from './quantity-selector';
 import { CartItem, useCartStore } from '@/hooks/use-cart-store';
 import { Trash2, Heart } from 'lucide-react';
-import Image from 'next/image';
+import { ImagePlaceholder } from '@/components/mini-app/image-placeholder';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -52,19 +52,14 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
         <div className="flex gap-4">
           {/* Item Image */}
           <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
-            {item.imageUrl ? (
-              <Image
-                src={item.imageUrl}
-                alt={item.name}
-                width={80}
-                height={80}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-gray-400">
-                <span className="text-xs font-medium">No Image</span>
-              </div>
-            )}
+            <ImagePlaceholder
+              src={item.imageUrl}
+              alt={item.name}
+              width={80}
+              height={80}
+              className="h-full w-full object-cover"
+              placeholder="product"
+            />
           </div>
 
           {/* Item Details */}

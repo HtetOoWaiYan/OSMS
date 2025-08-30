@@ -1,11 +1,11 @@
 'use client';
 
-import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { CalendarDays, Receipt, Eye } from 'lucide-react';
+import { ImagePlaceholder } from '@/components/mini-app/image-placeholder';
 import { useRouter } from 'next/navigation';
 
 interface OrderCardProps {
@@ -112,17 +112,15 @@ export function OrderCard({ order, projectId }: OrderCardProps) {
         <div className="mb-4">
           {firstItem && (
             <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
-              {firstItem.item_snapshot.image_url && (
-                <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-white">
-                  <Image
-                    src={firstItem.item_snapshot.image_url}
-                    alt={firstItem.item_snapshot.name}
-                    width={48}
-                    height={48}
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-              )}
+              <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-white">
+                <ImagePlaceholder
+                  src={firstItem.item_snapshot.image_url || ''}
+                  alt={firstItem.item_snapshot.name}
+                  width={48}
+                  height={48}
+                  className="h-full w-full object-cover"
+                />
+              </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-gray-900">{firstItem.item_snapshot.name}</p>
                 <p className="text-sm text-gray-600">Qty: {firstItem.quantity}</p>

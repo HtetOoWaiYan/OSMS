@@ -3,10 +3,10 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, ShoppingCart, Star } from 'lucide-react';
+import { Plus, Star } from 'lucide-react';
 import { useCartStore } from '@/hooks/use-cart-store';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { ImagePlaceholder } from '@/components/mini-app/image-placeholder';
 import { toast } from 'sonner';
 import type { Tables } from '@/lib/supabase/database.types';
 
@@ -79,24 +79,14 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
       <CardContent className="p-0">
         {/* Image */}
         <div className={`relative aspect-square overflow-hidden bg-gray-100`}>
-          {item.first_image_url ? (
-            <Image
-              src={item.first_image_url}
-              alt={item.name}
-              fill
-              className="rounded-t-lg object-cover"
-              sizes="(max-width: 768px) 50vw, 25vw"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-              <div className="text-center text-gray-400">
-                <div className="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-                  <ShoppingCart className="h-4 w-4" />
-                </div>
-                <p className="text-xs font-medium">No Image</p>
-              </div>
-            </div>
-          )}
+          <ImagePlaceholder
+            src={item.first_image_url}
+            alt={item.name}
+            fill
+            className="rounded-t-lg object-cover"
+            sizes="(max-width: 768px) 50vw, 25vw"
+            placeholder="product"
+          />
 
           {/* Discount Badge - Figma style */}
           {hasDiscount && !isOutOfStock && (
