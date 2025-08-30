@@ -11,8 +11,12 @@ import { UserCheck, Mail } from 'lucide-react';
 import { getProjectUsers } from '@/lib/data/users';
 import { UserTableActions } from './user-table-actions';
 
-export async function UsersTable() {
-  const result = await getProjectUsers();
+interface UsersTableProps {
+  projectId: string;
+}
+
+export async function UsersTable({ projectId }: UsersTableProps) {
+  const result = await getProjectUsers(projectId);
 
   if (!result.success || !result.data) {
     return (
@@ -77,7 +81,7 @@ export async function UsersTable() {
                 {new Date(user.joinedAt).toLocaleDateString()}
               </TableCell>
               <TableCell>
-                <UserTableActions user={user} />
+                <UserTableActions user={user} projectId={projectId} />
               </TableCell>
             </TableRow>
           ))}

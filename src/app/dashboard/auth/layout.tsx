@@ -5,9 +5,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const supabase = await createClient();
 
   // Check authentication
-  const { data, error } = await supabase.auth.getClaims();
-  if (error || !data?.claims) {
-    redirect('/dashboard/auth/login');
+  const { data } = await supabase.auth.getClaims();
+  if (data?.claims) {
+    redirect('/dashboard');
   }
 
   return <>{children}</>;

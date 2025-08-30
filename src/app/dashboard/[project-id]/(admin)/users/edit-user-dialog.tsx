@@ -38,9 +38,10 @@ import type { ProjectUser } from '@/lib/data/users';
 interface EditUserDialogProps {
   children: React.ReactNode;
   user: ProjectUser;
+  projectId: string;
 }
 
-export function EditUserDialog({ children, user }: EditUserDialogProps) {
+export function EditUserDialog({ children, user, projectId }: EditUserDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -57,7 +58,7 @@ export function EditUserDialog({ children, user }: EditUserDialogProps) {
     try {
       setIsLoading(true);
 
-      const result = await updateUserRoleAction(data);
+      const result = await updateUserRoleAction(data, projectId);
 
       if (result.success) {
         toast.success('User role updated successfully');

@@ -7,7 +7,13 @@ import { InviteUserDialog } from './invite-user-dialog';
 // Force dynamic rendering since we need to check user role
 export const dynamic = 'force-dynamic';
 
-export default function UsersPage() {
+interface UsersPageProps {
+  params: Promise<{ 'project-id': string }>;
+}
+
+export default async function UsersPage({ params }: UsersPageProps) {
+  const { 'project-id': projectId } = await params;
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
@@ -15,7 +21,7 @@ export default function UsersPage() {
           <h1 className="text-2xl font-bold tracking-tight">User Management</h1>
           <p className="text-muted-foreground">Manage users and invitations for your project</p>
         </div>
-        <InviteUserDialog>
+        <InviteUserDialog projectId={projectId}>
           <Button>
             <UserPlus className="mr-2 h-4 w-4" />
             Invite User
@@ -24,7 +30,7 @@ export default function UsersPage() {
       </div>
 
       <Suspense fallback={<div>Loading users...</div>}>
-        <UsersTable />
+        <UsersTable projectId={projectId} />
       </Suspense>
     </div>
   );

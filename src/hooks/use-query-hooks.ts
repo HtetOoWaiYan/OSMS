@@ -19,11 +19,11 @@ import type { InviteUserData } from '@/lib/validations/users';
  * Example: Client-side users fetching (USE ONLY WHEN NECESSARY)
  * Prefer server-side fetching in server components instead
  */
-export function useProjectUsers() {
+export function useProjectUsers(projectId: string) {
   return useQuery({
-    queryKey: ['project-users'],
+    queryKey: ['project-users', projectId],
     queryFn: async () => {
-      const result = await getProjectUsersAction();
+      const result = await getProjectUsersAction(projectId);
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch users');
       }
@@ -36,12 +36,12 @@ export function useProjectUsers() {
 /**
  * Example: Client-side user invitation with optimistic updates
  */
-export function useInviteUser() {
+export function useInviteUser(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: InviteUserData) => {
-      const result = await inviteUserAction(data);
+      const result = await inviteUserAction(data, projectId);
       if (!result.success) {
         throw new Error(result.error || 'Failed to invite user');
       }
@@ -49,7 +49,7 @@ export function useInviteUser() {
     },
     onSuccess: () => {
       // Invalidate and refetch users list
-      queryClient.invalidateQueries({ queryKey: ['project-users'] });
+      queryClient.invalidateQueries({ queryKey: ['project-users', projectId] });
     },
   });
 }

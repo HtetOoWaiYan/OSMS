@@ -37,9 +37,10 @@ import { toast } from 'sonner';
 
 interface InviteUserDialogProps {
   children: React.ReactNode;
+  projectId: string;
 }
 
-export function InviteUserDialog({ children }: InviteUserDialogProps) {
+export function InviteUserDialog({ children, projectId }: InviteUserDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -56,7 +57,7 @@ export function InviteUserDialog({ children }: InviteUserDialogProps) {
     try {
       setIsLoading(true);
 
-      const result = await inviteUserAction(data);
+      const result = await inviteUserAction(data, projectId);
 
       if (result.success) {
         const message = result.data?.isReactivation

@@ -27,9 +27,10 @@ import type { ProjectUser } from '@/lib/data/users';
 
 interface UserTableActionsProps {
   user: ProjectUser;
+  projectId: string;
 }
 
-export function UserTableActions({ user }: UserTableActionsProps) {
+export function UserTableActions({ user, projectId }: UserTableActionsProps) {
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -37,10 +38,13 @@ export function UserTableActions({ user }: UserTableActionsProps) {
   const handleResendInvitation = async () => {
     try {
       setIsLoading(true);
-      const result = await resendInvitationAction({
-        userId: user.id,
-        email: user.email,
-      });
+      const result = await resendInvitationAction(
+        {
+          userId: user.id,
+          email: user.email,
+        },
+        projectId,
+      );
 
       if (result.success) {
         toast.success('Invitation resent successfully');
@@ -58,9 +62,12 @@ export function UserTableActions({ user }: UserTableActionsProps) {
   const handleRemoveUser = async () => {
     try {
       setIsLoading(true);
-      const result = await removeUserAction({
-        userId: user.id,
-      });
+      const result = await removeUserAction(
+        {
+          userId: user.id,
+        },
+        projectId,
+      );
 
       if (result.success) {
         toast.success('User removed successfully');
@@ -98,7 +105,7 @@ export function UserTableActions({ user }: UserTableActionsProps) {
           )}
 
           {canEdit && (
-            <EditUserDialog user={user}>
+            <EditUserDialog user={user} projectId={projectId}>
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit role

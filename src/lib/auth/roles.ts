@@ -1,6 +1,6 @@
 'server-only';
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
 export type UserRole = 'admin' | 'agent';
@@ -15,7 +15,7 @@ export interface UserRoleData {
 /**
  * Get the current user's role in their project
  */
-export async function getUserRole(): Promise<UserRoleData | null> {
+export async function getUserRole(projectId: string): Promise<UserRoleData | null> {
   try {
     const supabase = await createClient();
 
@@ -28,10 +28,13 @@ export async function getUserRole(): Promise<UserRoleData | null> {
       return null;
     }
 
+    const supabaseAdmin = await createServiceRoleClient();
+
     // Get user's role in their project
-    const { data: userRole, error: roleError } = await supabase
+    const { data: userRole, error: roleError } = await supabaseAdmin
       .from('user_roles')
       .select('project_id, role, is_active')
+      .eq('project_id', projectId)
       .eq('user_id', user.id)
       .eq('is_active', true)
       .single();
@@ -55,8 +58,8 @@ export async function getUserRole(): Promise<UserRoleData | null> {
 /**
  * Check if current user has the required role
  */
-export async function hasRole(requiredRole: UserRole): Promise<boolean> {
-  const userRole = await getUserRole();
+export async function hasRole(requiredRole: UserRole, projectId: string): Promise<boolean> {
+  const userRole = await getUserRole(projectId);
   if (!userRole) return false;
 
   // Admin has access to everything
@@ -69,15 +72,15 @@ export async function hasRole(requiredRole: UserRole): Promise<boolean> {
 /**
  * Check if current user is an admin
  */
-export async function isAdmin(): Promise<boolean> {
-  return await hasRole('admin');
+export async function isAdmin(projectId: string): Promise<boolean> {
+  return await hasRole('admin', projectId);
 }
 
 /**
  * Require admin role or redirect to unauthorized page
  */
-export async function requireAdmin(): Promise<UserRoleData> {
-  const userRole = await getUserRole();
+export async function requireAdmin(projectId: string): Promise<UserRoleData> {
+  const userRole = await getUserRole(projectId);
 
   if (!userRole) {
     redirect('/dashboard/auth/login');
@@ -93,8 +96,8 @@ export async function requireAdmin(): Promise<UserRoleData> {
 /**
  * Require any valid role or redirect to login
  */
-export async function requireAuth(): Promise<UserRoleData> {
-  const userRole = await getUserRole();
+export async function requireAuth(projectId: string): Promise<UserRoleData> {
+  const userRole = await getUserRole(projectId);
 
   if (!userRole) {
     redirect('/dashboard/auth/login');

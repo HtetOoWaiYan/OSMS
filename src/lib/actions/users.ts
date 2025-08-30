@@ -19,13 +19,13 @@ import {
   resendUserInvitation,
 } from '@/lib/data/users';
 
-export async function inviteUserAction(data: InviteUserData) {
+export async function inviteUserAction(data: InviteUserData, projectId: string) {
   try {
     // Validate the input data
     const validatedData = inviteUserSchema.parse(data);
 
     // Call the data layer to invite the user
-    const result = await inviteUserToProject(validatedData);
+    const result = await inviteUserToProject({ ...validatedData, projectId });
 
     if (result.success) {
       // Revalidate the users page to show the new invitation
@@ -42,9 +42,9 @@ export async function inviteUserAction(data: InviteUserData) {
   }
 }
 
-export async function getProjectUsersAction() {
+export async function getProjectUsersAction(projectId: string) {
   try {
-    const result = await getProjectUsers();
+    const result = await getProjectUsers(projectId);
 
     return result;
   } catch (error) {
@@ -56,13 +56,13 @@ export async function getProjectUsersAction() {
   }
 }
 
-export async function updateUserRoleAction(data: UpdateUserRoleData) {
+export async function updateUserRoleAction(data: UpdateUserRoleData, projectId: string) {
   try {
     // Validate the input data
     const validatedData = updateUserRoleSchema.parse(data);
 
     // Call the data layer to update user role
-    const result = await updateUserRole(validatedData);
+    const result = await updateUserRole({ ...validatedData, projectId });
 
     if (result.success) {
       // Revalidate the users page to show the updated role
@@ -79,13 +79,13 @@ export async function updateUserRoleAction(data: UpdateUserRoleData) {
   }
 }
 
-export async function removeUserAction(data: RemoveUserData) {
+export async function removeUserAction(data: RemoveUserData, projectId: string) {
   try {
     // Validate the input data
     const validatedData = removeUserSchema.parse(data);
 
     // Call the data layer to remove user
-    const result = await removeUserFromProject(validatedData);
+    const result = await removeUserFromProject({ ...validatedData, projectId });
 
     if (result.success) {
       // Revalidate the users page to show the user removed
@@ -102,13 +102,13 @@ export async function removeUserAction(data: RemoveUserData) {
   }
 }
 
-export async function resendInvitationAction(data: ResendInvitationData) {
+export async function resendInvitationAction(data: ResendInvitationData, projectId: string) {
   try {
     // Validate the input data
     const validatedData = resendInvitationSchema.parse(data);
 
     // Call the data layer to resend invitation
-    const result = await resendUserInvitation(validatedData);
+    const result = await resendUserInvitation({ ...validatedData, projectId });
 
     if (result.success) {
       // Revalidate the users page to show the invitation sent

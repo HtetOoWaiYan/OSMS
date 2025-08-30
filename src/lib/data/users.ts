@@ -21,7 +21,7 @@ export interface ProjectUser {
 /**
  * Get all users for the current project
  */
-export async function getProjectUsers(): Promise<{
+export async function getProjectUsers(projectId: string): Promise<{
   success: boolean;
   error?: string;
   data?: ProjectUser[];
@@ -44,6 +44,7 @@ export async function getProjectUsers(): Promise<{
       .from('user_roles')
       .select('project_id, role')
       .eq('user_id', user.id)
+      .eq('project_id', projectId)
       .eq('is_active', true)
       .single();
 
@@ -119,7 +120,7 @@ export async function getProjectUsers(): Promise<{
 /**
  * Invite a new user to the current project
  */
-export async function inviteUserToProject(data: InviteUserData): Promise<{
+export async function inviteUserToProject(data: InviteUserData & { projectId: string }): Promise<{
   success: boolean;
   error?: string;
   data?: { userId: string; email: string; isReactivation?: boolean; isNewUser?: boolean };
@@ -142,6 +143,7 @@ export async function inviteUserToProject(data: InviteUserData): Promise<{
       .from('user_roles')
       .select('project_id, role')
       .eq('user_id', user.id)
+      .eq('project_id', data.projectId)
       .eq('is_active', true)
       .single();
 
@@ -280,7 +282,7 @@ export async function inviteUserToProject(data: InviteUserData): Promise<{
 /**
  * Update a user's role in the current project
  */
-export async function updateUserRole(data: UpdateUserRoleData): Promise<{
+export async function updateUserRole(data: UpdateUserRoleData & { projectId: string }): Promise<{
   success: boolean;
   error?: string;
   data?: { userId: string; role: string };
@@ -303,6 +305,7 @@ export async function updateUserRole(data: UpdateUserRoleData): Promise<{
       .from('user_roles')
       .select('project_id, role')
       .eq('user_id', user.id)
+      .eq('project_id', data.projectId)
       .eq('is_active', true)
       .single();
 
@@ -364,7 +367,7 @@ export async function updateUserRole(data: UpdateUserRoleData): Promise<{
 /**
  * Remove a user from the current project
  */
-export async function removeUserFromProject(data: RemoveUserData): Promise<{
+export async function removeUserFromProject(data: RemoveUserData & { projectId: string }): Promise<{
   success: boolean;
   error?: string;
   data?: { userId: string };
@@ -387,6 +390,7 @@ export async function removeUserFromProject(data: RemoveUserData): Promise<{
       .from('user_roles')
       .select('project_id, role')
       .eq('user_id', user.id)
+      .eq('project_id', data.projectId)
       .eq('is_active', true)
       .single();
 
@@ -446,7 +450,7 @@ export async function removeUserFromProject(data: RemoveUserData): Promise<{
 /**
  * Resend invitation to a user
  */
-export async function resendUserInvitation(data: ResendInvitationData): Promise<{
+export async function resendUserInvitation(data: ResendInvitationData & { projectId: string }): Promise<{
   success: boolean;
   error?: string;
   data?: { userId: string; email: string };
@@ -469,6 +473,7 @@ export async function resendUserInvitation(data: ResendInvitationData): Promise<
       .from('user_roles')
       .select('project_id, role')
       .eq('user_id', user.id)
+      .eq('project_id', data.projectId)
       .eq('is_active', true)
       .single();
 
