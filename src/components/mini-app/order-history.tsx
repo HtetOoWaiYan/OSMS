@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -193,72 +193,68 @@ export function OrderHistory({ projectId, statusFilter, page }: OrderHistoryProp
 
   return (
     <div className="space-y-4">
-      {/* Filter Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filter Orders
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select value={filter} onValueChange={handleFilterChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Orders</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="confirmed">Confirmed</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="delivering">Delivering</SelectItem>
-              <SelectItem value="delivered">Delivered</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
+      {/* Filter Section - Figma style */}
+      <div className="rounded-lg border-0 bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center gap-2">
+          <Filter className="h-5 w-5 text-purple-600" />
+          <span className="font-semibold text-gray-900">Filter Orders</span>
+        </div>
+        <Select value={filter} onValueChange={handleFilterChange}>
+          <SelectTrigger className="h-11">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Orders</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="confirmed">Confirmed</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="delivering">Delivering</SelectItem>
+            <SelectItem value="delivered">Delivered</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Orders List */}
       {orders.length === 0 ? (
         <EmptyOrders filter={filter} />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {orders.map((order) => (
             <OrderCard key={order.id} order={order} projectId={projectId} />
           ))}
         </div>
       )}
 
-      {/* Pagination */}
+      {/* Pagination - Figma style */}
       {totalPages > 1 && (
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
+        <div className="rounded-lg border-0 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="h-10"
+            >
+              Previous
+            </Button>
 
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm">
-                  Page {currentPage} of {totalPages}
-                </span>
-              </div>
-
-              <Button
-                variant="outline"
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
             </div>
-          </CardContent>
-        </Card>
+
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="h-10"
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

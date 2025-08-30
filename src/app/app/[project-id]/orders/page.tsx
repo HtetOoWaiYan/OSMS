@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { MiniAppLayout } from '@/components/mini-app/mini-app-layout';
 import { OrderHistory } from '@/components/mini-app/order-history';
 import { OrdersLoading } from '@/components/mini-app/orders-loading';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface OrdersPageProps {
   params: Promise<{ 'project-id': string }>;
@@ -19,15 +21,29 @@ export default async function OrdersPage({ params, searchParams }: OrdersPagePro
     typeof searchParamsResolved.page === 'string' ? parseInt(searchParamsResolved.page) : 1;
 
   return (
-    <MiniAppLayout projectId={projectId}>
-      <div className="container mx-auto max-w-md px-4 py-6">
-        <div className="space-y-6">
-          {/* Page Header */}
-          <div className="text-center">
-            <h1 className="text-2xl font-bold">My Orders</h1>
-            <p className="text-muted-foreground">Track and view your order history</p>
+    <MiniAppLayout projectId={projectId} showBottomNav={false}>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header - Figma style */}
+        <div className="border-b border-gray-200 bg-white">
+          <div className="px-4 py-4">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => window.history.back()}
+                className="h-9 w-9 flex-shrink-0"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex-1">
+                <h1 className="text-lg font-semibold text-gray-900">Orders</h1>
+              </div>
+            </div>
           </div>
+        </div>
 
+        {/* Content */}
+        <div className="p-4">
           {/* Order History with Suspense */}
           <Suspense fallback={<OrdersLoading />}>
             <OrderHistory projectId={projectId} statusFilter={status} page={page} />

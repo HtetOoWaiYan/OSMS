@@ -58,129 +58,126 @@ export function CustomerInfo({ order }: CustomerInfoProps) {
   return (
     <div className="space-y-4">
       {/* Customer Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <User className="h-5 w-5" />
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+            <User className="h-5 w-5 text-blue-600" />
             Customer Information
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Name</span>
-            <span className="font-medium">{getCustomerName()}</span>
+        <CardContent className="space-y-4">
+          <div className="space-y-3 rounded-lg bg-gray-50 p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Name</span>
+              <span className="font-medium text-gray-900">{getCustomerName()}</span>
+            </div>
+
+            {/* Get primary phone from customer or shipping address */}
+            {(order.customers?.phone ||
+              (typeof shippingData.phone === 'string' ? shippingData.phone : undefined)) && (
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1 text-sm text-gray-600">
+                  <Phone className="h-4 w-4" />
+                  Phone
+                </span>
+                <span className="font-medium text-gray-900">
+                  {String(order.customers?.phone || shippingData.phone || '')}
+                </span>
+              </div>
+            )}
+
+            {order.customers?.telegram_username && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Telegram</span>
+                <span className="font-medium text-gray-900">
+                  @{order.customers.telegram_username}
+                </span>
+              </div>
+            )}
           </div>
-
-          {/* Get primary phone from customer or shipping address */}
-          {(order.customers?.phone ||
-            (typeof shippingData.phone === 'string' ? shippingData.phone : undefined)) && (
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1 text-gray-600">
-                <Phone className="h-4 w-4" />
-                Phone
-              </span>
-              <span className="font-medium">
-                {String(order.customers?.phone || shippingData.phone || '')}
-              </span>
-            </div>
-          )}
-
-          {order.customer_phone_secondary && (
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Secondary Phone</span>
-              <span className="font-medium">{order.customer_phone_secondary}</span>
-            </div>
-          )}
-
-          {order.customers?.telegram_username && (
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Telegram</span>
-              <span className="font-medium">@{order.customers.telegram_username}</span>
-            </div>
-          )}
         </CardContent>
       </Card>
 
       {/* Delivery Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <MapPin className="h-5 w-5" />
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+            <MapPin className="h-5 w-5 text-green-600" />
             Delivery Information
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Extract delivery address from shipping_address JSON */}
-          {shippingData && Object.keys(shippingData).length > 0 && (
-            <div>
-              <span className="text-sm text-gray-600">Address</span>
-              <p className="mt-1 font-medium">
-                {typeof shippingData.address === 'string'
-                  ? shippingData.address
-                  : 'Address not available'}
-              </p>
-            </div>
-          )}
+        <CardContent className="space-y-4">
+          <div className="space-y-3 rounded-lg border border-green-200 bg-green-50 p-3">
+            {/* Extract delivery address from shipping_address JSON */}
+            {shippingData && Object.keys(shippingData).length > 0 && (
+              <div>
+                <span className="text-sm font-medium text-green-700">Delivery Address</span>
+                <p className="mt-1 text-sm text-green-800">
+                  {typeof shippingData.address === 'string'
+                    ? shippingData.address
+                    : 'Address not available'}
+                </p>
+              </div>
+            )}
 
-          {order.delivery_city && (
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">City</span>
-              <Badge variant="outline">{order.delivery_city}</Badge>
-            </div>
-          )}
+            {order.delivery_city && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-green-700">City</span>
+                <Badge variant="outline" className="border-green-300 text-green-700">
+                  {order.delivery_city}
+                </Badge>
+              </div>
+            )}
 
-          {order.delivery_notes && (
-            <div>
-              <span className="text-sm text-gray-600">Delivery Instructions</span>
-              <p className="mt-1 text-sm text-gray-700">{order.delivery_notes}</p>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Delivery Method</span>
-            <Badge variant="outline" className="capitalize">
-              Standard
-            </Badge>
+            {order.delivery_notes && (
+              <div>
+                <span className="text-sm font-medium text-green-700">Special Instructions</span>
+                <p className="mt-1 text-sm text-green-800">{order.delivery_notes}</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {/* Order Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Calendar className="h-5 w-5" />
-            Order Timeline
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+            <Calendar className="h-5 w-5 text-purple-600" />
+            Order Details
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Order Placed</span>
-            <span className="text-sm">{formatDate(order.created_at)}</span>
-          </div>
-
-          {order.updated_at !== order.created_at && (
+        <CardContent className="space-y-4">
+          <div className="space-y-3 rounded-lg border border-purple-200 bg-purple-50 p-3">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Last Updated</span>
-              <span className="text-sm">{formatDate(order.updated_at)}</span>
+              <span className="text-sm text-purple-700">Order Placed</span>
+              <span className="text-sm font-medium text-purple-800">
+                {formatDate(order.created_at)}
+              </span>
             </div>
-          )}
 
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Order ID</span>
-            <Badge variant="outline" className="font-mono text-xs">
-              {order.id.slice(-8).toUpperCase()}
-            </Badge>
-          </div>
-
-          {order.payment_reference && (
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Payment Reference</span>
-              <Badge variant="outline" className="font-mono text-xs">
-                {order.payment_reference}
+              <span className="text-sm text-purple-700">Order ID</span>
+              <Badge
+                variant="outline"
+                className="border-purple-300 font-mono text-xs text-purple-700"
+              >
+                {order.id.slice(-8).toUpperCase()}
               </Badge>
             </div>
-          )}
+
+            {order.payment_reference && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-purple-700">Payment Reference</span>
+                <Badge
+                  variant="outline"
+                  className="border-purple-300 font-mono text-xs text-purple-700"
+                >
+                  {order.payment_reference}
+                </Badge>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

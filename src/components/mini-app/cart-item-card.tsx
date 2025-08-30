@@ -4,9 +4,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { QuantitySelector } from './quantity-selector';
 import { CartItem, useCartStore } from '@/hooks/use-cart-store';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Heart } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 interface CartItemCardProps {
   item: CartItem;
@@ -16,6 +17,7 @@ interface CartItemCardProps {
 
 export function CartItemCard({ item, onValidateStock, disabled = false }: CartItemCardProps) {
   const { updateQuantity, removeItem } = useCartStore();
+  const [isFavorited, setIsFavorited] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-MM', {
@@ -34,6 +36,11 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
   const handleRemove = () => {
     removeItem(item.id);
     toast.success(`${item.name} removed from cart`);
+  };
+
+  const handleToggleFavorite = () => {
+    setIsFavorited(!isFavorited);
+    toast.success(isFavorited ? 'Removed from favorites' : 'Added to favorites');
   };
 
   const totalPrice = item.price * item.quantity;
@@ -62,31 +69,49 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
 
           {/* Item Details */}
           <div className="min-w-0 flex-1 space-y-3">
-            {/* Name and Remove Button */}
+            {/* Name and Action Buttons - Figma style */}
             <div className="flex items-start justify-between gap-2">
               <h3 className="line-clamp-2 text-sm leading-tight font-semibold text-gray-900">
                 {item.name}
               </h3>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleRemove}
-                disabled={disabled}
-                className="h-8 w-8 flex-shrink-0 text-gray-400 hover:bg-red-50 hover:text-red-600"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex gap-1">
+                {/* Heart/Favorite Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleToggleFavorite}
+                  disabled={disabled}
+                  className={`h-8 w-8 flex-shrink-0 ${
+                    isFavorited
+                      ? 'text-red-500 hover:text-red-600'
+                      : 'text-gray-400 hover:text-red-500'
+                  }`}
+                >
+                  <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+                </Button>
+
+                {/* Delete Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleRemove}
+                  disabled={disabled}
+                  className="h-8 w-8 flex-shrink-0 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             {/* SKU */}
             {item.sku && <p className="text-xs font-medium text-gray-500">SKU: {item.sku}</p>}
 
-            {/* Price and Quantity Row */}
-            <div className="flex items-end justify-between">
+            {/* Price and Quantity Row - Figma style layout */}
+            <div className="flex items-center justify-between">
               {/* Price Section */}
               <div className="space-y-1">
-                <p className="text-xs text-gray-500">{formatPrice(item.price)} each</p>
                 <p className="text-lg font-bold text-gray-900">{formatPrice(totalPrice)}</p>
+                <p className="text-xs text-gray-500">{formatPrice(item.price)} each</p>
               </div>
 
               {/* Quantity Section */}

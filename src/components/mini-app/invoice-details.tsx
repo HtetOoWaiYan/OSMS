@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { ShoppingBag } from 'lucide-react';
 import type { Tables } from '@/lib/supabase/database.types';
 
 interface InvoiceDetailsProps {
@@ -58,17 +59,20 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
   return (
     <div className="space-y-4">
       {/* Order Items */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Order Items</CardTitle>
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg text-gray-900">
+            <ShoppingBag className="h-5 w-5 text-purple-600" />
+            Order Items
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {order.order_items.map((item) => {
             const itemData = getItemSnapshot(item.item_snapshot);
             return (
-              <div key={item.id} className="flex items-center space-x-3">
+              <div key={item.id} className="flex items-center gap-4 rounded-lg bg-gray-50 p-3">
                 {itemData.image_url && (
-                  <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                  <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-white">
                     <Image
                       src={itemData.image_url}
                       alt={itemData.name}
@@ -79,16 +83,15 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-gray-900">{itemData.name}</p>
+                  <p className="truncate font-medium text-gray-900">{itemData.name}</p>
                   <p className="text-xs text-gray-500">SKU: {itemData.sku}</p>
+                  <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium">
-                    {item.quantity} × {formatCurrency(item.unit_price)}
-                  </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-semibold text-gray-900">
                     {formatCurrency(item.quantity * item.unit_price)}
                   </p>
+                  <p className="text-xs text-gray-500">{formatCurrency(item.unit_price)} each</p>
                 </div>
               </div>
             );
@@ -97,66 +100,76 @@ export function InvoiceDetails({ order }: InvoiceDetailsProps) {
       </Card>
 
       {/* Pricing Breakdown */}
-      <Card>
+      <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Order Summary</CardTitle>
+          <CardTitle className="text-lg text-gray-900">Order Summary</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Subtotal</span>
-            <span>{formatCurrency(subtotal)}</span>
+        <CardContent className="space-y-4">
+          {/* Pricing breakdown */}
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Subtotal</span>
+              <span className="font-medium">{formatCurrency(subtotal)}</span>
+            </div>
+
+            {order.shipping_cost && order.shipping_cost > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Delivery Fee</span>
+                <span className="font-medium">{formatCurrency(order.shipping_cost)}</span>
+              </div>
+            )}
+
+            {order.discount_amount && order.discount_amount > 0 && (
+              <div className="flex items-center justify-between text-green-600">
+                <span>Discount</span>
+                <span className="font-medium">-{formatCurrency(order.discount_amount)}</span>
+              </div>
+            )}
+
+            <Separator />
+
+            <div className="flex items-center justify-between text-lg font-bold">
+              <span>Total</span>
+              <span className="text-purple-600">{formatCurrency(order.total_amount)}</span>
+            </div>
           </div>
-
-          {order.shipping_cost && order.shipping_cost > 0 && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Delivery Fee</span>
-              <span>{formatCurrency(order.shipping_cost)}</span>
-            </div>
-          )}
-
-          {order.discount_amount && order.discount_amount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>Discount</span>
-              <span>-{formatCurrency(order.discount_amount)}</span>
-            </div>
-          )}
 
           <Separator />
 
-          <div className="flex justify-between text-lg font-bold">
-            <span>Total</span>
-            <span>{formatCurrency(order.total_amount)}</span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600">Payment Method</span>
-            <Badge variant="outline" className="capitalize">
-              {order.payment_method?.replace('_', ' ') || 'COD'}
-            </Badge>
-          </div>
-
-          {order.payment_status && (
+          {/* Payment info */}
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Payment Status</span>
-              <Badge
-                variant={order.payment_status === 'paid' ? 'default' : 'secondary'}
-                className="capitalize"
-              >
-                {order.payment_status}
+              <span className="text-sm text-gray-600">Payment Method</span>
+              <Badge variant="outline" className="capitalize">
+                {order.payment_method?.replace('_', ' ') || 'COD'}
               </Badge>
             </div>
-          )}
+
+            {order.payment_status && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Payment Status</span>
+                <Badge
+                  variant={order.payment_status === 'paid' ? 'default' : 'secondary'}
+                  className="capitalize"
+                >
+                  {order.payment_status}
+                </Badge>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
       {/* Notes */}
       {order.notes && (
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">Order Notes</CardTitle>
+            <CardTitle className="text-lg text-gray-900">Order Notes</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-wrap text-gray-700">{order.notes}</p>
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-sm whitespace-pre-wrap text-amber-800">{order.notes}</p>
+            </div>
           </CardContent>
         </Card>
       )}

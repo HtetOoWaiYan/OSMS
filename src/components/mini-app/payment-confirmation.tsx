@@ -4,13 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-import { CheckCircle2, Copy, CreditCard, QrCode, Phone, Loader2 } from 'lucide-react';
+import { CheckCircle2, Upload, Loader2, ArrowLeft, Banknote } from 'lucide-react';
 import { toast } from 'sonner';
 import { markOrderAsPaidAction } from '@/lib/actions/mini-app';
-import Image from 'next/image';
 
 interface Order {
   id: string;
@@ -31,27 +30,11 @@ interface PaymentConfirmationProps {
   paymentMethodConfig?: PaymentMethodConfig;
 }
 
-export function PaymentConfirmation({ order, paymentMethodConfig }: PaymentConfirmationProps) {
+export function PaymentConfirmation({ order }: PaymentConfirmationProps) {
   const router = useRouter();
-  const [paymentReference, setPaymentReference] = useState('');
+  const [selectedMethod, setSelectedMethod] = useState<'cod' | 'bank'>('cod');
+  const [bankSlipFile, setBankSlipFile] = useState<File | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-MM', {
-      style: 'currency',
-      currency: 'MMK',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const getPaymentMethodName = (method: string) => {
-    const names: Record<string, string> = {
-      kbz_pay: 'KBZ Pay',
-      cb_pay: 'CB Pay',
-      aya_pay: 'AYA Pay',
-    };
-    return names[method] || method;
-  };
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -62,23 +45,31 @@ export function PaymentConfirmation({ order, paymentMethodConfig }: PaymentConfi
     }
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setBankSlipFile(file);
+      toast.success('Bank slip image selected');
+    }
+  };
+
   const handleMarkAsPaid = async () => {
     setIsConfirming(true);
 
     try {
       const result = await markOrderAsPaidAction({
         orderId: order.id,
-        paymentReference: paymentReference.trim() || undefined,
+        paymentReference: undefined,
       });
 
       if (result.success) {
-        toast.success('Payment confirmed successfully!');
+        toast.success('Order confirmed successfully!');
         router.push(`/app/${order.project_id}/invoice/${order.id}`);
       } else {
-        toast.error(result.error || 'Failed to confirm payment');
+        toast.error(result.error || 'Failed to confirm order');
       }
     } catch {
-      console.error('Payment confirmation error');
+      console.error('Order confirmation error');
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsConfirming(false);
@@ -86,156 +77,199 @@ export function PaymentConfirmation({ order, paymentMethodConfig }: PaymentConfi
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <Card>
-        <CardContent className="pt-6 text-center">
-          <QrCode className="mx-auto mb-4 h-16 w-16 text-blue-500" />
-          <h1 className="mb-2 text-2xl font-bold">Complete Payment</h1>
-          <p className="text-muted-foreground mb-4">
-            Please complete your payment using {getPaymentMethodName(order.payment_method)}
-          </p>
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <p className="font-medium text-blue-800">Order #{order.order_number}</p>
-            <p className="text-2xl font-bold text-blue-600">{formatPrice(order.total_amount)}</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header - Figma style */}
+      <div className="border-b border-gray-200 bg-white px-4 py-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            className="h-9 w-9 flex-shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-lg font-semibold text-gray-900">Payment Method</h1>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Payment Instructions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Payment Instructions
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* QR Code */}
-          {paymentMethodConfig?.qr_code_url && (
-            <div className="text-center">
-              <Label className="text-base font-semibold">
-                Scan QR Code with {getPaymentMethodName(order.payment_method)}
-              </Label>
-              <div className="mt-3 flex justify-center">
-                <div className="border-muted-foreground/25 rounded-lg border-2 border-dashed p-4">
-                  <Image
-                    src={paymentMethodConfig.qr_code_url}
-                    alt={`${getPaymentMethodName(order.payment_method)} QR Code`}
-                    width={200}
-                    height={200}
-                    className="h-48 w-48 object-contain"
-                  />
+      <div className="space-y-6 p-4">
+        {/* Payment Method Selection - Figma style */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-6">
+            <RadioGroup
+              value={selectedMethod}
+              onValueChange={(value) => setSelectedMethod(value as 'cod' | 'bank')}
+              className="space-y-4"
+            >
+              {/* Cash on Delivery Option */}
+              <div className="flex items-center space-x-3 rounded-lg border-2 p-4 hover:bg-gray-50 data-[state=checked]:border-green-500 data-[state=checked]:bg-green-50">
+                <RadioGroupItem value="cod" id="cod" />
+                <div className="flex-1">
+                  <Label htmlFor="cod" className="cursor-pointer">
+                    <div className="font-semibold text-gray-900">Cash on Delivery</div>
+                    <div className="mt-1 text-sm text-gray-600">
+                      🚚 ရန်ကုန်, မန်းလေး မြို့တွင်း ၂ ရက်- ၄ရက် အတွင်း
+                      အိမ်တိုင်ရာရောက်ဝန်ဆောင်မှုရှိပြီး (ပစ္စည်းပို့ငွေရှင်းပါ)
+                    </div>
+                  </Label>
                 </div>
               </div>
-            </div>
-          )}
 
-          <Separator />
-
-          {/* Manual Payment Details */}
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">Or send manually to:</Label>
-
-            {paymentMethodConfig?.phone_number && (
-              <div className="bg-muted flex items-center justify-between rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  <span className="font-mono">{paymentMethodConfig.phone_number}</span>
+              {/* Bank Transfer Option */}
+              <div className="flex items-center space-x-3 rounded-lg border-2 p-4 hover:bg-gray-50 data-[state=checked]:border-blue-500 data-[state=checked]:bg-blue-50">
+                <RadioGroupItem value="bank" id="bank" />
+                <div className="flex-1">
+                  <Label htmlFor="bank" className="cursor-pointer">
+                    <div className="font-semibold text-gray-900">Bank Transfer</div>
+                    <div className="mt-1 flex items-center gap-2 text-sm text-gray-600">
+                      <Banknote className="h-4 w-4" />
+                      ဘဏ်မှ တိုက်ရိုက်ငွေလွှဲရန်
+                    </div>
+                  </Label>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(paymentMethodConfig.phone_number!, 'Phone number')}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
               </div>
-            )}
+            </RadioGroup>
+          </CardContent>
+        </Card>
 
-            <div className="bg-muted flex items-center justify-between rounded-lg p-3">
-              <div>
-                <span className="text-muted-foreground text-sm">Amount:</span>
-                <p className="font-mono font-bold">{formatPrice(order.total_amount)}</p>
+        {/* Instructions Text - Figma style */}
+        <div className="px-2">
+          <p className="text-sm text-gray-700">အောက်ပါ ဘဏ်အကောင့်ငွေသွင်း ပေးချေနိုင်ပါသည်။</p>
+        </div>
+
+        {/* Bank Account Information - Figma style */}
+        {selectedMethod === 'bank' && (
+          <Card className="border border-gray-300">
+            <CardContent className="space-y-6 p-6">
+              {/* KBZ Pay */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="text-lg font-semibold">ငွေပေးချေမှုလမ်းညွှန်ချက် - KBZ Pay</div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-orange-500">
+                    <span className="text-xs font-bold text-white">KBZ</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-sm text-gray-600">Account Name (အေကာင့်နာမည်)</Label>
+                    <div className="text-lg font-bold">Aura Shop</div>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                    <div>
+                      <Label className="text-sm text-gray-600">
+                        Account or Phone Number (အေကာင့်/ဖုန်းနံပါတ်)
+                      </Label>
+                      <div className="font-mono text-lg font-bold">091112233344</div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard('091112233344', 'Phone number')}
+                      className="border-purple-600 text-purple-600"
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => copyToClipboard(order.total_amount.toString(), 'Amount')}
+
+              <Separator />
+
+              {/* AYA Pay */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="text-lg font-semibold">ငွေပေးချေမှုလမ်းညွှန်ချက် - AYA Pay</div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-blue-600">
+                    <span className="text-xs font-bold text-white">AYA</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-sm text-gray-600">Account Name (အေကာင့်နာမည်)</Label>
+                    <div className="text-lg font-bold">Aura Shop</div>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
+                    <div>
+                      <Label className="text-sm text-gray-600">
+                        Account or Phone Number (အေကာင့်/ဖုန်းနံပါတ်)
+                      </Label>
+                      <div className="font-mono text-lg font-bold">091112233344</div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard('091112233344', 'Phone number')}
+                      className="border-purple-600 text-purple-600"
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Bank Slip Upload - Figma style */}
+        {selectedMethod === 'bank' && (
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg">Add Bank Slip Image</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div
+                className="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center hover:border-gray-400"
+                onClick={() => document.getElementById('file-upload')?.click()}
               >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+                {bankSlipFile ? (
+                  <div className="space-y-2">
+                    <CheckCircle2 className="mx-auto h-8 w-8 text-green-600" />
+                    <p className="text-sm text-gray-600">File selected: {bankSlipFile.name}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                    <p className="text-sm text-gray-600">Click to upload bank slip image</p>
+                  </div>
+                )}
+              </div>
+              <input
+                id="file-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Payment Steps */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <h3 className="mb-2 font-semibold text-blue-900">Payment Steps:</h3>
-            <ol className="list-inside list-decimal space-y-1 text-sm text-blue-800">
-              <li>Open your {getPaymentMethodName(order.payment_method)} app</li>
-              <li>Scan the QR code above or send to the phone number</li>
-              <li>Send exactly {formatPrice(order.total_amount)}</li>
-              <li>Take a screenshot or note the transaction ID</li>
-              <li>Click &quot;Mark as Paid&quot; below to confirm</li>
-            </ol>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Payment Confirmation */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Confirm Payment</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="paymentReference">Transaction ID or Reference (Optional)</Label>
-            <Input
-              id="paymentReference"
-              placeholder="Enter transaction ID from your payment app"
-              value={paymentReference}
-              onChange={(e) => setPaymentReference(e.target.value)}
-            />
-            <p className="text-muted-foreground mt-1 text-xs">
-              This helps us verify your payment faster
-            </p>
-          </div>
-
-          <Button onClick={handleMarkAsPaid} disabled={isConfirming} className="w-full" size="lg">
+        {/* Save/Confirm Button - Figma style */}
+        <div className="pt-4">
+          <Button
+            onClick={handleMarkAsPaid}
+            disabled={isConfirming}
+            className="h-12 w-full bg-purple-600 font-semibold shadow-sm hover:bg-purple-700"
+            size="lg"
+          >
             {isConfirming ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Confirming Payment...
+                Saving...
               </>
             ) : (
-              <>
-                <CheckCircle2 className="mr-2 h-4 w-4" />
-                Mark as Paid & Confirm Order
-              </>
+              'Save'
             )}
           </Button>
-
-          <p className="text-muted-foreground text-center text-xs">
-            By clicking &quot;Mark as Paid&quot;, you confirm that you have completed the payment.
-            Your order will be processed after verification.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Important Notice */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-            <h3 className="mb-2 font-semibold text-yellow-900">Important</h3>
-            <ul className="space-y-1 text-sm text-yellow-800">
-              <li>• Only mark as paid after completing the payment</li>
-              <li>• Keep your transaction receipt for verification</li>
-              <li>• Contact support if you encounter any issues</li>
-              <li>• Your order will be processed after payment verification</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

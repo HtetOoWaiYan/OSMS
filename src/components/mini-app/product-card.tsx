@@ -98,22 +98,26 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
             </div>
           )}
 
-          {/* Badges */}
-          <div className="absolute top-1 left-1 flex flex-col gap-1">
+          {/* Discount Badge - Figma style */}
+          {hasDiscount && !isOutOfStock && (
+            <div className="absolute top-2 left-2">
+              <div className="rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white shadow-sm">
+                -{item.current_price?.discount_percentage}%
+              </div>
+            </div>
+          )}
+
+          {/* Status Badges */}
+          <div className="absolute top-2 right-2 flex flex-col gap-1">
             {item.is_featured && (
-              <Badge variant="default" className="h-4 bg-yellow-500 px-1 py-0 text-xs text-white">
-                <Star className="mr-0.5 h-2 w-2" />
-                <span className="text-xs">Featured</span>
+              <Badge variant="default" className="h-5 bg-yellow-500 px-2 py-0 text-xs text-white">
+                <Star className="mr-1 h-3 w-3 fill-current" />
+                Featured
               </Badge>
             )}
             {isOutOfStock && (
-              <Badge variant="destructive" className="h-4 px-1 py-0 text-xs">
-                Out
-              </Badge>
-            )}
-            {hasDiscount && !isOutOfStock && (
-              <Badge variant="secondary" className="h-4 bg-green-500 px-1 py-0 text-xs text-white">
-                {item.current_price?.discount_percentage}% OFF
+              <Badge variant="destructive" className="h-5 px-2 py-0 text-xs">
+                Out of Stock
               </Badge>
             )}
           </div>
@@ -142,11 +146,11 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
           {/* Name */}
           <h3 className="line-clamp-2 text-sm leading-tight font-semibold">{item.name}</h3>
 
-          {/* Price */}
-          <div className="flex items-center gap-1">
-            <span className="text-primary text-sm font-bold">{formatPrice(currentPrice)}</span>
+          {/* Price - Figma style */}
+          <div className="flex items-baseline gap-1">
+            <span className="text-lg font-bold text-gray-900">{formatPrice(currentPrice)}</span>
             {hasDiscount && (
-              <span className="text-muted-foreground text-xs line-through">
+              <span className="text-sm text-gray-500 line-through">
                 {formatPrice(originalPrice!)}
               </span>
             )}

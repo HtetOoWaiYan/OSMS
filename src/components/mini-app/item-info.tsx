@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Star, Package, Tag } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Star, Package, Tag, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Tables } from '@/lib/supabase/database.types';
 
 // MiniAppItem type to match the data structure
@@ -20,6 +22,7 @@ interface ItemInfoProps {
 }
 
 export function ItemInfo({ item }: ItemInfoProps) {
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const currentPrice = item.current_price?.selling_price || 0;
   const originalPrice = item.current_price?.base_price;
   const hasDiscount = originalPrice && originalPrice > currentPrice;
@@ -31,6 +34,11 @@ export function ItemInfo({ item }: ItemInfoProps) {
       currency: 'MMK',
       minimumFractionDigits: 0,
     }).format(price);
+  };
+
+  const truncateDescription = (text: string, maxLength: number = 150) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   return (
@@ -47,9 +55,9 @@ export function ItemInfo({ item }: ItemInfoProps) {
         </div>
       )}
 
-      {/* Name and Badges Section */}
+      {/* Name Section - Figma style */}
       <div className="space-y-3">
-        <h1 className="text-2xl leading-tight font-bold text-gray-900">{item.name}</h1>
+        <h1 className="text-xl leading-tight font-bold text-gray-900">{item.name}</h1>
 
         {/* Status Badges */}
         <div className="flex flex-wrap gap-2">
@@ -64,18 +72,20 @@ export function ItemInfo({ item }: ItemInfoProps) {
               Out of Stock
             </Badge>
           )}
-          {hasDiscount && !isOutOfStock && (
-            <Badge className="bg-gradient-to-r from-green-500 to-green-600 px-2.5 py-1 text-xs font-medium text-white shadow-sm">
-              {item.current_price?.discount_percentage}% OFF
-            </Badge>
-          )}
         </div>
       </div>
 
-      {/* Price Section */}
-      <div className="space-y-2 rounded-lg bg-gray-50 p-4">
+      {/* Price Section - Figma style */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          {hasDiscount && (
+            <div className="rounded bg-red-500 px-2 py-1 text-sm font-bold text-white">
+              -{item.current_price?.discount_percentage}%
+            </div>
+          )}
+        </div>
         <div className="flex items-baseline gap-3">
-          <span className="text-3xl font-bold text-gray-900">{formatPrice(currentPrice)}</span>
+          <span className="text-2xl font-bold text-gray-900">{formatPrice(currentPrice)}</span>
           {hasDiscount && (
             <span className="text-lg text-gray-500 line-through">
               {formatPrice(originalPrice!)}
@@ -114,12 +124,32 @@ export function ItemInfo({ item }: ItemInfoProps) {
         </p>
       )}
 
-      {/* Description */}
+      {/* Description with Show More - Figma style */}
       {item.description && (
         <div className="space-y-3">
           <h3 className="text-base font-semibold text-gray-900">Product Details</h3>
           <div className="rounded-lg border bg-white p-4">
-            <p className="text-sm leading-relaxed text-gray-700">{item.description}</p>
+            <p className="text-sm leading-relaxed text-gray-700">
+              {showFullDescription ? item.description : truncateDescription(item.description)}
+            </p>
+            {item.description.length > 150 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFullDescription(!showFullDescription)}
+                className="mt-2 h-auto p-0 text-sm text-blue-600 hover:text-blue-800"
+              >
+                {showFullDescription ? (
+                  <>
+                    Show less <ChevronUp className="ml-1 h-4 w-4" />
+                  </>
+                ) : (
+                  <>
+                    Show more <ChevronDown className="ml-1 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
       )}
