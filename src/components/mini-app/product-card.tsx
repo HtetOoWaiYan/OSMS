@@ -71,7 +71,7 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
 
   return (
     <Card
-      className={`cursor-pointer transition-all hover:shadow-md active:scale-95 ${
+      className={`cursor-pointer overflow-hidden py-0 transition-all hover:shadow-md active:scale-95 ${
         compact ? 'h-full' : ''
       } ${isOutOfStock ? 'opacity-60' : ''}`}
       onClick={handleCardClick}
@@ -83,7 +83,7 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
             src={item.first_image_url}
             alt={item.name}
             fill
-            className="rounded-t-lg object-cover"
+            className="h-full rounded-t-lg object-cover"
             sizes="(max-width: 768px) 50vw, 25vw"
             placeholder="product"
           />
@@ -137,17 +137,17 @@ export function ProductCard({ item, projectId, compact = false }: ProductCardPro
           <h3 className="line-clamp-2 text-sm leading-tight font-semibold">{item.name}</h3>
 
           {/* Price - Figma style */}
-          <div className="flex items-baseline gap-1">
+          <div className="flex flex-wrap items-baseline gap-1 break-all">
             <span className="text-lg font-bold text-gray-900">{formatPrice(currentPrice)}</span>
             {hasDiscount && (
               <span className="text-sm text-gray-500 line-through">
-                {formatPrice(originalPrice!)}
+                {originalPrice.toLocaleString()}
               </span>
             )}
           </div>
 
           {/* Stock info - compact */}
-          <p className="text-muted-foreground text-xs">
+          <p className="text-muted-foreground text-right text-sm">
             {isOutOfStock ? 'Out of stock' : `${item.stock_quantity} left`}
           </p>
         </div>

@@ -33,14 +33,14 @@ export function FeaturedProducts({ items, projectId }: FeaturedProductsProps) {
           <Star className="h-5 w-5 fill-current text-yellow-500" />
           <h2 className="text-lg font-bold text-gray-900">Featured Products</h2>
         </div>
-        <span className="text-xs font-medium text-gray-500">{items.length} items</span>
+        <span className="text-sm font-medium text-gray-500">{items.length} items</span>
       </div>
 
       {/* Horizontal scrolling featured items */}
       <div className="-mx-4 overflow-x-auto">
         <div className="flex gap-3 px-4 pb-2" style={{ width: 'max-content' }}>
           {items.slice(0, 8).map((item) => (
-            <div key={item.id} className="w-36 flex-shrink-0">
+            <div key={item.id} className="w-42 flex-shrink-0">
               <ProductCard item={item} projectId={projectId} compact />
             </div>
           ))}

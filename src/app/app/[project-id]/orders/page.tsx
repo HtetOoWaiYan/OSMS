@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { MiniAppLayout } from '@/components/mini-app/mini-app-layout';
 import { OrderHistory } from '@/components/mini-app/order-history';
 import { OrdersLoading } from '@/components/mini-app/orders-loading';
@@ -27,14 +28,11 @@ export default async function OrdersPage({ params, searchParams }: OrdersPagePro
         <div className="border-b border-gray-200 bg-white">
           <div className="px-4 py-4">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => window.history.back()}
-                className="h-9 w-9 flex-shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
+              <Link href={`/app/${projectId}`}>
+                <Button variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
               <div className="flex-1">
                 <h1 className="text-lg font-semibold text-gray-900">Orders</h1>
               </div>

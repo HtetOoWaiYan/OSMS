@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Grid3X3, ShoppingCart, Package } from 'lucide-react';
+import { Home, ShoppingCart, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter, usePathname } from 'next/navigation';
 import { useCartStore } from '@/hooks/use-cart-store';
@@ -22,12 +22,6 @@ export function MiniAppBottomNav({ projectId }: MiniAppBottomNavProps) {
       href: `/app/${projectId}`,
       icon: Home,
       current: pathname === `/app/${projectId}`,
-    },
-    {
-      name: 'Categories',
-      href: `/app/${projectId}/categories`,
-      icon: Grid3X3,
-      current: pathname.startsWith(`/app/${projectId}/categories`),
     },
     {
       name: 'Cart',
@@ -54,7 +48,7 @@ export function MiniAppBottomNav({ projectId }: MiniAppBottomNavProps) {
               <Button
                 key={item.name}
                 variant={item.current ? 'default' : 'ghost'}
-                size="sm"
+                size="lg"
                 className="relative h-auto flex-col gap-1 px-3 py-2"
                 onClick={() => router.push(item.href)}
               >

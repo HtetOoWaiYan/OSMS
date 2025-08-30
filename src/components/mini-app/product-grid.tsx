@@ -54,7 +54,7 @@ export function ProductGrid({
       <div className="flex items-center justify-between pt-4">
         <div>
           <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-          <p className="mt-0.5 text-xs text-gray-500">
+          <p className="mt-0.5 text-sm text-gray-500">
             {items.length} product{items.length !== 1 ? 's' : ''} found
           </p>
         </div>

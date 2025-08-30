@@ -48,10 +48,9 @@ export function ImagePlaceholder({
         className={`flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 ${className}`}
       >
         <div className="text-center text-gray-400">
-          <div className="mx-auto mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
+          <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
             <PlaceholderIcon className="h-4 w-4" />
           </div>
-          <p className="text-xs font-medium">No Image</p>
         </div>
       </div>
     );
