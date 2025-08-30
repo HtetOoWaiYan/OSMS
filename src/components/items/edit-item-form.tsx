@@ -51,7 +51,6 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
   const [item, setItem] = useState<ItemWithPrice | null>(null);
   const [existingImages, setExistingImages] = useState<Tables<'item_images'>[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
-  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
@@ -63,9 +62,9 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
   });
   const router = useRouter();
 
-  const handleImagesChange = (files: File[], removedIds: string[]) => {
+  const handleImagesChange = (files: File[]) => {
     setNewImageFiles(files);
-    setRemovedImageIds(removedIds);
+    // removedIds are handled via FormData hidden inputs in the ImageUpload component
   };
 
   // Load item data on component mount
@@ -99,8 +98,7 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
         } else {
           setError(itemResult.error || 'Failed to load item data');
         }
-      } catch (err) {
-        console.error('Error loading item:', err);
+      } catch {
         setError('An unexpected error occurred while loading item data');
       } finally {
         setIsLoading(false);
@@ -126,6 +124,9 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
       formData.append('itemId', itemId);
       formData.append('projectId', projectId);
 
+      // Get removed image IDs from form data (provided by ImageUpload component)
+      const removedImageIdsFromForm = formData.getAll('removedImageIds') as string[];
+
       // Update the item first
       const result = await updateItemActionSimple(formData);
 
@@ -133,15 +134,19 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
         let imageOperationsSuccessful = true;
         const imageOperationMessages: string[] = [];
 
-        // Handle image deletions
-        if (removedImageIds.length > 0) {
+        // Handle image deletions using FormData
+        if (removedImageIdsFromForm.length > 0) {
           const deleteErrors: string[] = [];
-          for (const imageId of removedImageIds) {
+          const successfulDeletions: string[] = [];
+
+          for (const imageId of removedImageIdsFromForm) {
             const deleteResult = await deleteItemImageAction(imageId, projectId);
+
             if (!deleteResult.success) {
-              console.error('Failed to delete image:', imageId, deleteResult.error);
-              deleteErrors.push(`Failed to delete image: ${deleteResult.error}`);
+              deleteErrors.push(`Image ${imageId}: ${deleteResult.error}`);
               imageOperationsSuccessful = false;
+            } else {
+              successfulDeletions.push(imageId);
             }
           }
 
@@ -149,9 +154,14 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
             const deleteMessage =
               deleteErrors.length === 1
                 ? `Image deletion failed: ${deleteErrors[0]}`
-                : `${deleteErrors.length} image deletions failed. Please try again later.`;
+                : `${deleteErrors.length} image deletions failed: ${deleteErrors.join(', ')}`;
             imageOperationMessages.push(deleteMessage);
             toast.error(deleteMessage);
+          }
+
+          if (successfulDeletions.length > 0) {
+            const successMessage = `${successfulDeletions.length} image${successfulDeletions.length !== 1 ? 's' : ''} deleted successfully`;
+            toast.success(successMessage);
           }
         }
 
@@ -163,8 +173,6 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
             newImageFiles,
           );
           if (!uploadResult.success) {
-            console.error('Failed to upload images:', uploadResult.error);
-
             // Show specific upload errors with better formatting
             const uploadErrors =
               uploadResult.results
@@ -198,6 +206,15 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
         }
 
         if (imageOperationsSuccessful) {
+          // Refresh existing images to reflect changes
+          const refreshResult = await getItemImagesAction(itemId);
+          if (refreshResult.success && refreshResult.data) {
+            setExistingImages(refreshResult.data);
+          }
+
+          // Clear form state
+          setNewImageFiles([]);
+
           toast.success('Item updated successfully');
         } else {
           toast.success('Item updated, but some image operations failed');
@@ -230,8 +247,6 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
         }
       }
     } catch (err) {
-      console.error('Form submission error:', err);
-
       // Handle specific error types
       if (err instanceof TypeError && err.message.includes('fetch')) {
         setError('Network error. Please check your internet connection and try again.');

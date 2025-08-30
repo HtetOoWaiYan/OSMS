@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { createItemImage, deleteItemImage, getItemImages } from '@/lib/data/items';
+import { uploadItemImage, deleteAssetFile, extractFilePathFromUrl, validateProjectAccess } from '@/lib/utils/assets-storage';
 import { revalidatePath } from 'next/cache';
 import type { Tables } from '@/lib/supabase/database.types';
 
@@ -30,61 +31,32 @@ export async function uploadItemImageAction(
 ): Promise<UploadImageResult> {
   try {
     const supabase = await createClient();
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      return { success: false, error: 'File must be an image' };
+    
+    // Validate project access
+    const accessCheck = await validateProjectAccess(projectId);
+    if (!accessCheck.success) {
+      return { success: false, error: accessCheck.error || 'Access denied' };
     }
 
-    // Validate file size (max 1MB)
-    const maxSize = 1 * 1024 * 1024; // 1MB
-    if (file.size > maxSize) {
-      const fileSizeInMB = (file.size / 1024 / 1024).toFixed(2);
+    // Check current image count
+    const existingImages = await getItemImages(itemId);
+    if (existingImages.success && existingImages.data && existingImages.data.length >= 5) {
       return {
         success: false,
-        error: `Image "${file.name}" is too large (${fileSizeInMB}MB). Maximum size allowed is 1MB.`,
+        error: 'Maximum of 5 images per item allowed.',
       };
     }
 
-    // Generate unique filename
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${itemId}/${Date.now()}-${Math.random()
-      .toString(36)
-      .substr(2, 9)}.${fileExt}`;
-    const filePath = `${projectId}/${fileName}`;
-
-    // Upload to Supabase Storage
-    const { error: uploadError } = await supabase.storage
-      .from('item-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (uploadError) {
-      console.error('Storage upload error:', uploadError);
-      if (uploadError.message?.includes('row-level security policy')) {
-        return {
-          success: false,
-          error: "You don't have permission to upload images to this project.",
-        };
-      } else if (uploadError.message?.includes('size')) {
-        return {
-          success: false,
-          error: 'Image file is too large. Please choose a smaller image.',
-        };
-      } else {
-        return {
-          success: false,
-          error: `Failed to upload image: ${uploadError.message}`,
-        };
-      }
+    // Upload to assets bucket
+    const uploadResult = await uploadItemImage(projectId, itemId, file);
+    if (!uploadResult.success) {
+      return {
+        success: false,
+        error: uploadResult.error,
+      };
     }
 
-    // Get public URL (bucket is public for product catalog)
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from('item-images').getPublicUrl(filePath);
+    const publicUrl = uploadResult.data!.publicUrl;
 
     // If this is set as primary, make sure no other images are primary
     if (isPrimary) {
@@ -123,12 +95,9 @@ export async function uploadItemImageAction(
         },
       };
     } else {
-      // Clean up uploaded file if database insert failed
-      await supabase.storage.from('item-images').remove([filePath]);
       return { success: false, error: 'Failed to save image record' };
     }
-  } catch (error) {
-    console.error('Upload image error:', error);
+  } catch {
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -139,12 +108,18 @@ export async function deleteItemImageAction(
   projectId: string,
 ): Promise<DeleteImageResult> {
   try {
+    // Validate project access
+    const accessCheck = await validateProjectAccess(projectId);
+    if (!accessCheck.success) {
+      return { success: false, error: accessCheck.error || 'Access denied' };
+    }
+
     const supabase = await createClient();
 
-    // Get image record first to get the storage path
+    // Get image record first to get the storage path and check if it's primary
     const { data: image } = await supabase
       .from('item_images')
-      .select('image_url')
+      .select('image_url, is_primary, item_id')
       .eq('id', imageId)
       .single();
 
@@ -152,10 +127,8 @@ export async function deleteItemImageAction(
       return { success: false, error: 'Image not found' };
     }
 
-    // Extract storage path from URL
-    const url = new URL(image.image_url);
-    const pathParts = url.pathname.split('/');
-    const storagePath = pathParts.slice(-2).join('/'); // Get last two parts: projectId/filename
+    // Extract file path from URL for the assets bucket
+    const filePath = extractFilePathFromUrl(image.image_url);
 
     // Delete from database first
     const deleteResult = await deleteItemImage(imageId);
@@ -163,20 +136,26 @@ export async function deleteItemImageAction(
       return { success: false, error: 'Failed to delete image record' };
     }
 
-    // Delete from storage
-    const { error: storageError } = await supabase.storage
-      .from('item-images')
-      .remove([`${projectId}/${storagePath.split('/')[1]}`]);
+    // Check if the deleted image was primary and promote another image if needed
+    if (image.is_primary) {
+      const promotionResult = await promotePrimaryImageAction(image.item_id);
+      
+      if (!promotionResult.success) {
+        // Primary image promotion failed, but we continue since the deletion succeeded
+      }
+    }
 
-    if (storageError) {
-      console.error('Storage deletion error:', storageError);
-      // Don't fail if storage deletion fails - the database record is already gone
+    // Delete from assets bucket storage if we have a valid path
+    if (filePath) {
+      const storageResult = await deleteAssetFile(filePath);
+      if (!storageResult.success) {
+        // Storage deletion failed, but the database record is already gone
+      }
     }
 
     revalidatePath(`/dashboard/${projectId}/items`);
     return { success: true };
-  } catch (error) {
-    console.error('Delete image error:', error);
+  } catch {
     return { success: false, error: 'An unexpected error occurred' };
   }
 }
@@ -199,7 +178,7 @@ export async function uploadMultipleItemImagesAction(
 
       // Stop if we encounter an error (optional - could continue uploading others)
       if (!result.success) {
-        console.error(`Failed to upload file ${file.name}:`, result.error);
+        // Upload failed, but we continue with other files
       }
     }
 
@@ -211,8 +190,7 @@ export async function uploadMultipleItemImagesAction(
       results,
       error: hasErrors ? `${results.length - successCount} uploads failed` : undefined,
     };
-  } catch (error) {
-    console.error('Bulk upload error:', error);
+  } catch {
     return {
       success: false,
       results: [],
@@ -224,4 +202,48 @@ export async function uploadMultipleItemImagesAction(
 // Get all images for an item (server action wrapper)
 export async function getItemImagesAction(itemId: string) {
   return await getItemImages(itemId);
+}
+
+/**
+ * Promote the next available image to primary for an item
+ * Used when the current primary image is deleted
+ */
+export async function promotePrimaryImageAction(
+  itemId: string,
+): Promise<{ success: boolean; promotedImageId?: string; error?: string }> {
+  try {
+    const remainingImages = await getItemImages(itemId);
+    
+    if (!remainingImages.success || !remainingImages.data || remainingImages.data.length === 0) {
+      return { success: true }; // No images left, nothing to promote
+    }
+
+    // Find the best candidate for primary (by display_order, then by created_at)
+    const nextPrimary = remainingImages.data
+      .sort((a, b) => {
+        const orderA = a.display_order || 999;
+        const orderB = b.display_order || 999;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime();
+      })[0];
+    
+    if (nextPrimary) {
+      const supabase = await createClient();
+      
+      const { error } = await supabase
+        .from('item_images')
+        .update({ is_primary: true })
+        .eq('id', nextPrimary.id);
+      
+      if (error) {
+        return { success: false, error: 'Failed to promote image to primary' };
+      }
+      
+      return { success: true, promotedImageId: nextPrimary.id };
+    }
+    
+    return { success: true };
+  } catch {
+    return { success: false, error: 'An unexpected error occurred' };
+  }
 }

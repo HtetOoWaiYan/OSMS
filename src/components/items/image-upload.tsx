@@ -3,7 +3,8 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { X, Upload, ImageIcon } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { X, Upload, ImageIcon, AlertTriangle, Info } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
@@ -120,10 +121,51 @@ export function ImageUpload({
   };
 
   const currentImageCount = imageFiles.length + existingImages.length - removedImageIds.length;
+  const isAtLimit = currentImageCount >= maxFiles;
+  const isNearLimit = currentImageCount >= maxFiles - 1 && currentImageCount < maxFiles;
+  const hasRemovedImages = removedImageIds.length > 0;
 
   return (
     <div className={className}>
       <Label className="text-sm font-medium">{label}</Label>
+
+      {/* Image Limit Warnings */}
+      {isAtLimit && (
+        <Alert className="mt-2 border-amber-200 bg-amber-50">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800">
+            Maximum limit reached ({currentImageCount}/{maxFiles} images). Remove existing images to
+            add new ones.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {isNearLimit && !isAtLimit && (
+        <Alert className="mt-2 border-blue-200 bg-blue-50">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            Almost at limit ({currentImageCount}/{maxFiles} images). You can add{' '}
+            {maxFiles - currentImageCount} more image{maxFiles - currentImageCount !== 1 ? 's' : ''}
+            .
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {hasRemovedImages && (
+        <Alert className="mt-2 border-orange-200 bg-orange-50">
+          <Info className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="text-orange-800">
+            {removedImageIds.length} image{removedImageIds.length !== 1 ? 's' : ''} marked for
+            deletion. Click &ldquo;Update Item&rdquo; to save changes.
+            {existingImages.some((img) => img.is_primary && removedImageIds.includes(img.id)) && (
+              <div className="mt-1 text-sm font-medium">
+                ⚠️ Primary image will be deleted. The next available image will automatically become
+                the new primary image.
+              </div>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="mt-2">
         {/* Upload Button */}
         {currentImageCount < maxFiles && (

@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { createProjectSchema, updateProjectSchema } from '@/lib/validations/projects';
 import { createProject, getUserProject, updateProject } from '@/lib/data/projects';
 import type { Json } from '@/lib/supabase/database.types';
@@ -122,6 +122,7 @@ export async function updateProjectPaymentMethodsAction(data: {
   paymentMethods: PaymentMethodsData;
 }) {
   try {
+    // Use regular client for authentication and permission checks
     const supabase = await createClient();
 
     // Check authentication
@@ -146,14 +147,18 @@ export async function updateProjectPaymentMethodsAction(data: {
       return { success: false, error: 'Permission denied' };
     }
 
+    // Use service role client for database operations to bypass RLS
+    const serviceRoleSupabase = createServiceRoleClient();
+
     // Update the project's payment methods
-    const { error: updateError } = await supabase
+    const { data: updateResult, error: updateError } = await serviceRoleSupabase
       .from('projects')
       .update({
         payment_methods: data.paymentMethods as unknown as Json,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', data.projectId);
+      .eq('id', data.projectId)
+      .select('id, payment_methods');
 
     if (updateError) {
       console.error('Update payment methods error:', updateError);
@@ -163,8 +168,15 @@ export async function updateProjectPaymentMethodsAction(data: {
     // Revalidate project data
     revalidateTag(`project-${data.projectId}`);
     revalidateTag('user-projects');
+    // Also revalidate the specific project settings page
+    revalidatePath(`/dashboard/${data.projectId}/settings`);
+    revalidatePath(`/dashboard/${data.projectId}`);
 
-    return { success: true };
+    return { 
+      success: true, 
+      data: updateResult ? updateResult[0] : null,
+      message: updateResult ? `Updated ${updateResult.length} rows` : 'Update completed'
+    };
   } catch (error) {
     console.error('Update payment methods error:', error);
     return {

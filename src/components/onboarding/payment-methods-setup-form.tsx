@@ -9,15 +9,9 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { updateProjectPaymentMethodsAction } from '@/lib/actions/projects';
-import {
-  Loader2,
-  CreditCard,
-  Smartphone,
-  Upload,
-  CheckCircle,
-  AlertCircle,
-  Info,
-} from 'lucide-react';
+import { uploadPaymentQRCodeAction } from '@/lib/actions/qr-codes';
+import { QRCodeUpload } from '../dashboard/qr-code-upload';
+import { Loader2, CreditCard, Smartphone, AlertCircle, Info } from 'lucide-react';
 
 interface PaymentMethodsSetupFormProps {
   projectId: string;
@@ -70,7 +64,7 @@ const paymentMethods: PaymentMethod[] = [
 export function PaymentMethodsSetupForm({ projectId }: PaymentMethodsSetupFormProps) {
   const [enabledMethods, setEnabledMethods] = useState<Set<string>>(new Set(['cod']));
   const [phoneNumbers, setPhoneNumbers] = useState<Record<string, string>>({});
-  const [qrCodes, setQrCodes] = useState<Record<string, File | null>>({});
+  const [qrCodeFiles, setQrCodeFiles] = useState<Record<string, File>>({});
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -87,10 +81,10 @@ export function PaymentMethodsSetupForm({ projectId }: PaymentMethodsSetupFormPr
         delete newPhones[methodId];
         setPhoneNumbers(newPhones);
       }
-      if (qrCodes[methodId]) {
-        const newQRs = { ...qrCodes };
-        delete newQRs[methodId];
-        setQrCodes(newQRs);
+      if (qrCodeFiles[methodId]) {
+        const newFiles = { ...qrCodeFiles };
+        delete newFiles[methodId];
+        setQrCodeFiles(newFiles);
       }
     }
     setEnabledMethods(newEnabled);
@@ -100,8 +94,16 @@ export function PaymentMethodsSetupForm({ projectId }: PaymentMethodsSetupFormPr
     setPhoneNumbers((prev) => ({ ...prev, [methodId]: phone }));
   };
 
-  const handleQRUpload = (methodId: string, file: File | null) => {
-    setQrCodes((prev) => ({ ...prev, [methodId]: file }));
+  const handleQRCodeChange = (methodId: string, file: File | null) => {
+    if (file) {
+      setQrCodeFiles((prev) => ({ ...prev, [methodId]: file }));
+    } else {
+      setQrCodeFiles((prev) => {
+        const updated = { ...prev };
+        delete updated[methodId];
+        return updated;
+      });
+    }
   };
 
   const handleSubmit = async () => {
@@ -114,7 +116,7 @@ export function PaymentMethodsSetupForm({ projectId }: PaymentMethodsSetupFormPr
           setError(`Phone number is required for ${method.name}`);
           return;
         }
-        if (method.requiresQR && !qrCodes[method.id]) {
+        if (method.requiresQR && !qrCodeFiles[method.id]) {
           setError(`QR code is required for ${method.name}`);
           return;
         }
@@ -132,6 +134,7 @@ export function PaymentMethodsSetupForm({ projectId }: PaymentMethodsSetupFormPr
             phone?: string;
             hasQR?: boolean;
             qrCodeFileName?: string;
+            qrCodeUrl?: string;
           }
         > = {};
 
@@ -148,11 +151,29 @@ export function PaymentMethodsSetupForm({ projectId }: PaymentMethodsSetupFormPr
             paymentMethodsData[methodId].phone = phoneNumbers[methodId];
           }
 
-          // TODO: Handle QR code upload to storage and store URL
-          if (method.requiresQR && qrCodes[methodId]) {
-            // For now, just mark that QR code is uploaded
-            paymentMethodsData[methodId].hasQR = true;
-            paymentMethodsData[methodId].qrCodeFileName = qrCodes[methodId]!.name;
+          // Upload QR codes and get URLs
+          if (method.requiresQR && qrCodeFiles[methodId]) {
+            try {
+              const qrUploadResult = await uploadPaymentQRCodeAction(
+                projectId,
+                methodId,
+                phoneNumbers[methodId],
+                qrCodeFiles[methodId],
+              );
+
+              if (qrUploadResult.success) {
+                paymentMethodsData[methodId].hasQR = true;
+                paymentMethodsData[methodId].qrCodeUrl = qrUploadResult.data?.qr_code_url;
+              } else {
+                throw new Error(qrUploadResult.error || 'QR code upload failed');
+              }
+            } catch (qrError) {
+              console.error('QR code upload error:', qrError);
+              setError(
+                `Failed to upload QR code for ${method.name}: ${qrError instanceof Error ? qrError.message : 'Unknown error'}`,
+              );
+              return;
+            }
           }
         }
 
@@ -244,44 +265,14 @@ export function PaymentMethodsSetupForm({ projectId }: PaymentMethodsSetupFormPr
 
                   {method.requiresQR && (
                     <div className="space-y-2">
-                      <Label htmlFor={`qr-${method.id}`}>QR Code *</Label>
-                      <div className="border-muted-foreground/25 rounded-lg border-2 border-dashed p-6">
-                        <div className="text-center">
-                          <input
-                            id={`qr-${method.id}`}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleQRUpload(method.id, e.target.files?.[0] || null)}
-                            className="hidden"
-                          />
-                          <label
-                            htmlFor={`qr-${method.id}`}
-                            className="flex cursor-pointer flex-col items-center gap-2"
-                          >
-                            {qrCodes[method.id] ? (
-                              <>
-                                <CheckCircle className="h-8 w-8 text-green-600" />
-                                <span className="text-sm font-medium text-green-700">
-                                  {qrCodes[method.id]!.name}
-                                </span>
-                                <span className="text-muted-foreground text-xs">
-                                  Click to change
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <Upload className="text-muted-foreground h-8 w-8" />
-                                <span className="text-sm font-medium">
-                                  Upload {method.name} QR Code
-                                </span>
-                                <span className="text-muted-foreground text-xs">
-                                  PNG, JPG up to 5MB
-                                </span>
-                              </>
-                            )}
-                          </label>
-                        </div>
-                      </div>
+                      <QRCodeUpload
+                        label="QR Code *"
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                        onQRCodeChange={(file, _shouldDelete) =>
+                          handleQRCodeChange(method.id, file)
+                        }
+                        maxSizeInMB={5}
+                      />
                     </div>
                   )}
                 </CardContent>

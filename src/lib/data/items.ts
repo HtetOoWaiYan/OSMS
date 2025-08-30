@@ -1195,7 +1195,7 @@ export async function createItemImage(imageData: {
   data?: Tables<'item_images'>;
 }> {
   try {
-    const supabase = await createClient();
+    const supabase = await createServiceRoleClient();
 
     const { data, error } = await supabase
       .from('item_images')
@@ -1284,7 +1284,7 @@ export async function deleteItemImage(imageId: string): Promise<{
   error?: string;
 }> {
   try {
-    const supabase = await createClient();
+    const supabase = await createServiceRoleClient();
 
     const { error } = await supabase.from('item_images').delete().eq('id', imageId);
 

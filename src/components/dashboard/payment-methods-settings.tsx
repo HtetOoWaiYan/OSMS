@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,11 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { updateProjectPaymentMethodsAction } from '@/lib/actions/projects';
+import { uploadPaymentQRCodeAction, getPaymentQRCodesAction } from '@/lib/actions/qr-codes';
+import { QRCodeUpload } from './qr-code-upload';
 import {
   Loader2,
   CreditCard,
   Smartphone,
-  Upload,
   CheckCircle,
   AlertCircle,
   Info,
@@ -31,9 +32,10 @@ interface PaymentMethodConfig {
   phone?: string;
   hasQR?: boolean;
   qrCodeFileName?: string;
+  qrCodeUrl?: string;
 }
 
-type PaymentMethodsData = Record<string, PaymentMethodConfig>;
+type PaymentMethodsData = Record<string, PaymentMethodConfig | boolean>;
 
 interface PaymentMethodsSettingsProps {
   project: Project;
@@ -97,26 +99,98 @@ export function PaymentMethodsSettings({ project }: PaymentMethodsSettingsProps)
     }
     return {} as PaymentMethodsData;
   })();
+
+  // Helper function to check if a method is enabled in project config
+  const isMethodEnabledInProject = useCallback(
+    (methodId: string): boolean => {
+      const methodConfig = currentPaymentMethods[methodId];
+      // Handle both boolean format: { "cod": true } and object format: { "cod": { enabled: true } }
+      if (typeof methodConfig === 'boolean') {
+        return methodConfig;
+      }
+      if (typeof methodConfig === 'object' && methodConfig !== null) {
+        return (methodConfig as PaymentMethodConfig).enabled === true;
+      }
+      return false;
+    },
+    [currentPaymentMethods],
+  );
+
   const [enabledMethods, setEnabledMethods] = useState<Set<string>>(
-    new Set(
-      Object.keys(currentPaymentMethods).filter((key) => currentPaymentMethods[key]?.enabled),
-    ),
+    new Set(Object.keys(currentPaymentMethods).filter((key) => isMethodEnabledInProject(key))),
   );
   const [phoneNumbers, setPhoneNumbers] = useState<Record<string, string>>(
     Object.keys(currentPaymentMethods).reduce(
       (acc, key) => {
-        if (currentPaymentMethods[key]?.phone) {
-          acc[key] = currentPaymentMethods[key].phone;
+        const methodConfig = currentPaymentMethods[key];
+        // Handle object format: { "kbz_pay": { phone: "123" } }
+        if (
+          typeof methodConfig === 'object' &&
+          methodConfig !== null &&
+          (methodConfig as PaymentMethodConfig).phone
+        ) {
+          acc[key] = (methodConfig as PaymentMethodConfig).phone!;
         }
         return acc;
       },
       {} as Record<string, string>,
     ),
   );
-  const [qrCodes, setQrCodes] = useState<Record<string, File | null>>({});
+  const [qrCodeChanges, setQrCodeChanges] = useState<
+    Record<
+      string,
+      {
+        file: File | null;
+        shouldDelete: boolean;
+      }
+    >
+  >({});
+  const [qrCodes, setQrCodes] = useState<Tables<'payment_qr_codes'>[]>([]);
+  const [isLoadingQrCodes, setIsLoadingQrCodes] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Fetch QR codes data function (reusable)
+  const fetchQrCodes = useCallback(async () => {
+    try {
+      const result = await getPaymentQRCodesAction(project.id);
+      if (result.success && result.data) {
+        setQrCodes(result.data);
+
+        // Initialize enabled methods based ONLY on project config
+        // DO NOT override with QR code state - QR codes are just additional data
+        const initialEnabledMethods = new Set(
+          Object.keys(currentPaymentMethods).filter((key) => isMethodEnabledInProject(key)),
+        );
+
+        // Set enabled methods based purely on project configuration
+        setEnabledMethods(initialEnabledMethods);
+
+        // Update phone numbers from QR codes
+        const phoneNumbersFromQr = result.data.reduce(
+          (acc, qr) => {
+            if (qr.phone_number) {
+              acc[qr.payment_method] = qr.phone_number;
+            }
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
+
+        setPhoneNumbers((prev) => ({ ...prev, ...phoneNumbersFromQr }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch QR codes:', err);
+    } finally {
+      setIsLoadingQrCodes(false);
+    }
+  }, [project.id, currentPaymentMethods, isMethodEnabledInProject]);
+
+  // Fetch QR codes data on component mount
+  useEffect(() => {
+    fetchQrCodes();
+  }, [fetchQrCodes]);
 
   const handleMethodToggle = (methodId: string, enabled: boolean) => {
     const newEnabled = new Set(enabledMethods);
@@ -130,10 +204,10 @@ export function PaymentMethodsSettings({ project }: PaymentMethodsSettingsProps)
         delete newPhones[methodId];
         setPhoneNumbers(newPhones);
       }
-      if (qrCodes[methodId]) {
-        const newQRs = { ...qrCodes };
+      if (qrCodeChanges[methodId]) {
+        const newQRs = { ...qrCodeChanges };
         delete newQRs[methodId];
-        setQrCodes(newQRs);
+        setQrCodeChanges(newQRs);
       }
     }
     setEnabledMethods(newEnabled);
@@ -143,8 +217,11 @@ export function PaymentMethodsSettings({ project }: PaymentMethodsSettingsProps)
     setPhoneNumbers((prev) => ({ ...prev, [methodId]: phone }));
   };
 
-  const handleQRUpload = (methodId: string, file: File | null) => {
-    setQrCodes((prev) => ({ ...prev, [methodId]: file }));
+  const handleQRCodeChange = (methodId: string, file: File | null, shouldDelete: boolean) => {
+    setQrCodeChanges((prev) => ({
+      ...prev,
+      [methodId]: { file, shouldDelete },
+    }));
   };
 
   const handleSave = async () => {
@@ -164,21 +241,34 @@ export function PaymentMethodsSettings({ project }: PaymentMethodsSettingsProps)
 
     startTransition(async () => {
       try {
-        // Prepare payment methods data
+        // Prepare payment methods data - include ALL existing methods
         const paymentMethodsData: PaymentMethodsData = {};
 
-        // Include all currently enabled methods from existing data
+        // Process all existing payment methods (both enabled and disabled)
         for (const [methodId, config] of Object.entries(currentPaymentMethods)) {
-          if (enabledMethods.has(methodId)) {
-            paymentMethodsData[methodId] = { ...config };
+          const isCurrentlyEnabled = enabledMethods.has(methodId);
+
+          // Convert boolean format to object format and update enabled status
+          if (typeof config === 'boolean') {
+            paymentMethodsData[methodId] = {
+              enabled: isCurrentlyEnabled,
+              name: paymentMethods.find((m) => m.id === methodId)?.name || methodId,
+            };
+          } else {
+            // Keep existing object config but update enabled status
+            paymentMethodsData[methodId] = {
+              ...config,
+              enabled: isCurrentlyEnabled,
+            };
           }
         }
 
-        // Add/update newly enabled methods
+        // Add/update newly enabled methods and handle phone numbers and QR codes
         for (const methodId of enabledMethods) {
           const method = paymentMethods.find((m) => m.id === methodId);
           if (!method) continue;
 
+          // Ensure the method exists in paymentMethodsData
           if (!paymentMethodsData[methodId]) {
             paymentMethodsData[methodId] = {
               enabled: true,
@@ -186,21 +276,59 @@ export function PaymentMethodsSettings({ project }: PaymentMethodsSettingsProps)
             };
           }
 
-          if (method.requiresPhone && phoneNumbers[methodId]) {
-            paymentMethodsData[methodId].phone = phoneNumbers[methodId];
+          // Ensure we have an object to work with
+          if (typeof paymentMethodsData[methodId] === 'boolean') {
+            paymentMethodsData[methodId] = {
+              enabled: true,
+              name: method.name,
+            };
           }
 
-          // TODO: Handle QR code upload to storage and store URL
-          if (method.requiresQR && qrCodes[methodId]) {
-            // For now, just mark that QR code is uploaded
-            paymentMethodsData[methodId].hasQR = true;
-            paymentMethodsData[methodId].qrCodeFileName = qrCodes[methodId]!.name;
+          // Update phone number if provided
+          if (method.requiresPhone && phoneNumbers[methodId]) {
+            (paymentMethodsData[methodId] as PaymentMethodConfig).phone = phoneNumbers[methodId];
+          }
+
+          // Handle QR code uploads and deletions
+          if (method.requiresQR) {
+            const qrChange = qrCodeChanges[methodId];
+            if (qrChange) {
+              if (qrChange.shouldDelete) {
+                // Mark for deletion (this would require a delete action)
+                (paymentMethodsData[methodId] as PaymentMethodConfig).hasQR = false;
+                delete (paymentMethodsData[methodId] as PaymentMethodConfig).qrCodeUrl;
+              } else if (qrChange.file) {
+                // Upload new QR code
+                try {
+                  const qrUploadResult = await uploadPaymentQRCodeAction(
+                    project.id,
+                    methodId,
+                    phoneNumbers[methodId],
+                    qrChange.file,
+                  );
+
+                  if (qrUploadResult.success) {
+                    (paymentMethodsData[methodId] as PaymentMethodConfig).hasQR = true;
+                    (paymentMethodsData[methodId] as PaymentMethodConfig).qrCodeUrl =
+                      qrUploadResult.data?.qr_code_url;
+                  } else {
+                    throw new Error(qrUploadResult.error || 'QR code upload failed');
+                  }
+                } catch (qrError) {
+                  console.error('QR code upload error:', qrError);
+                  setError(
+                    `Failed to upload QR code for ${method.name}: ${qrError instanceof Error ? qrError.message : 'Unknown error'}`,
+                  );
+                  return;
+                }
+              }
+            }
           }
         }
 
         const result = await updateProjectPaymentMethodsAction({
           projectId: project.id,
-          paymentMethods: paymentMethodsData,
+          paymentMethods: paymentMethodsData as Record<string, PaymentMethodConfig>,
         });
 
         if (!result.success) {
@@ -209,7 +337,17 @@ export function PaymentMethodsSettings({ project }: PaymentMethodsSettingsProps)
         }
 
         setSuccess('Payment methods updated successfully');
-        router.refresh();
+
+        // Clear QR code changes since they've been saved
+        setQrCodeChanges({});
+
+        // Refresh QR codes and component state
+        await fetchQrCodes();
+
+        // Add small delay to ensure database changes propagate
+        setTimeout(() => {
+          router.refresh();
+        }, 100);
       } catch (err) {
         setError('An unexpected error occurred');
         console.error('Payment settings update error:', err);
@@ -255,122 +393,106 @@ export function PaymentMethodsSettings({ project }: PaymentMethodsSettingsProps)
           </div>
         </div>
 
+        {/* Loading State */}
+        {isLoadingQrCodes && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+            <span className="text-muted-foreground">Loading payment methods...</span>
+          </div>
+        )}
+
         {/* Payment Methods */}
-        <div className="space-y-4">
-          {paymentMethods.map((method) => {
-            const isEnabled = enabledMethods.has(method.id);
-            const IconComponent = method.icon;
-            const currentConfig = currentPaymentMethods[method.id];
+        {!isLoadingQrCodes && (
+          <div className="space-y-4">
+            {paymentMethods.map((method) => {
+              const isEnabled = enabledMethods.has(method.id);
+              const IconComponent = method.icon;
+              const currentConfig = currentPaymentMethods[method.id];
 
-            return (
-              <Card
-                key={method.id}
-                className={isEnabled ? 'ring-primary ring-opacity-20 ring-2' : ''}
-              >
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-muted rounded-lg p-2">
-                        <IconComponent className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">{method.name}</CardTitle>
-                        <CardDescription>{method.description}</CardDescription>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={isEnabled}
-                      onCheckedChange={(checked) => handleMethodToggle(method.id, checked)}
-                      disabled={isPending}
-                    />
-                  </div>
-                </CardHeader>
+              // Get QR code data from separate table
+              const qrCodeData = qrCodes.find((qr) => qr.payment_method === method.id);
+              const mergedConfig = {
+                ...(typeof currentConfig === 'object' && currentConfig !== null
+                  ? currentConfig
+                  : {}),
+                qrCodeUrl:
+                  qrCodeData?.qr_code_url ||
+                  (typeof currentConfig === 'object' && currentConfig !== null
+                    ? (currentConfig as PaymentMethodConfig).qrCodeUrl
+                    : undefined),
+                phone:
+                  qrCodeData?.phone_number ||
+                  (typeof currentConfig === 'object' && currentConfig !== null
+                    ? (currentConfig as PaymentMethodConfig).phone
+                    : undefined),
+              };
 
-                {isEnabled && (method.requiresPhone || method.requiresQR) && (
-                  <CardContent className="space-y-4">
-                    {method.requiresPhone && (
-                      <div className="space-y-2">
-                        <Label htmlFor={`phone-${method.id}`}>Business Phone Number *</Label>
-                        <Input
-                          id={`phone-${method.id}`}
-                          type="tel"
-                          placeholder="09xxxxxxxxx"
-                          value={phoneNumbers[method.id] || currentConfig?.phone || ''}
-                          onChange={(e) => handlePhoneChange(method.id, e.target.value)}
-                          disabled={isPending}
-                        />
-                        <p className="text-muted-foreground text-sm">
-                          Customers will see this number for {method.name} payments
-                        </p>
-                      </div>
-                    )}
-
-                    {method.requiresQR && (
-                      <div className="space-y-2">
-                        <Label htmlFor={`qr-${method.id}`}>
-                          QR Code {currentConfig?.hasQR ? '(Current uploaded)' : '*'}
-                        </Label>
-                        <div className="border-muted-foreground/25 rounded-lg border-2 border-dashed p-6">
-                          <div className="text-center">
-                            <input
-                              id={`qr-${method.id}`}
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) =>
-                                handleQRUpload(method.id, e.target.files?.[0] || null)
-                              }
-                              className="hidden"
-                              disabled={isPending}
-                            />
-                            <label
-                              htmlFor={`qr-${method.id}`}
-                              className="flex cursor-pointer flex-col items-center gap-2"
-                            >
-                              {qrCodes[method.id] ? (
-                                <>
-                                  <CheckCircle className="h-8 w-8 text-green-600" />
-                                  <span className="text-sm font-medium text-green-700">
-                                    {qrCodes[method.id]!.name}
-                                  </span>
-                                  <span className="text-muted-foreground text-xs">
-                                    Click to change
-                                  </span>
-                                </>
-                              ) : currentConfig?.hasQR ? (
-                                <>
-                                  <CheckCircle className="h-8 w-8 text-blue-600" />
-                                  <span className="text-sm font-medium text-blue-700">
-                                    QR Code Already Uploaded
-                                  </span>
-                                  <span className="text-muted-foreground text-xs">
-                                    Click to upload new QR code
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <Upload className="text-muted-foreground h-8 w-8" />
-                                  <span className="text-sm font-medium">
-                                    Upload {method.name} QR Code
-                                  </span>
-                                  <span className="text-muted-foreground text-xs">
-                                    PNG, JPG up to 5MB
-                                  </span>
-                                </>
-                              )}
-                            </label>
-                          </div>
+              return (
+                <Card
+                  key={method.id}
+                  className={isEnabled ? 'ring-primary ring-opacity-20 ring-2' : ''}
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-muted rounded-lg p-2">
+                          <IconComponent className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{method.name}</CardTitle>
+                          <CardDescription>{method.description}</CardDescription>
                         </div>
                       </div>
-                    )}
-                  </CardContent>
-                )}
-              </Card>
-            );
-          })}
-        </div>
+                      <Switch
+                        checked={isEnabled}
+                        onCheckedChange={(checked) => handleMethodToggle(method.id, checked)}
+                        disabled={isPending || isLoadingQrCodes}
+                      />
+                    </div>
+                  </CardHeader>
+
+                  {isEnabled && (method.requiresPhone || method.requiresQR) && (
+                    <CardContent className="space-y-4">
+                      {method.requiresPhone && (
+                        <div className="space-y-2">
+                          <Label htmlFor={`phone-${method.id}`}>Business Phone Number *</Label>
+                          <Input
+                            id={`phone-${method.id}`}
+                            type="tel"
+                            placeholder="09xxxxxxxxx"
+                            value={phoneNumbers[method.id] || mergedConfig?.phone || ''}
+                            onChange={(e) => handlePhoneChange(method.id, e.target.value)}
+                            disabled={isPending}
+                          />
+                          <p className="text-muted-foreground text-sm">
+                            Customers will see this number for {method.name} payments
+                          </p>
+                        </div>
+                      )}
+
+                      {method.requiresQR && (
+                        <div className="space-y-2">
+                          <QRCodeUpload
+                            label={`QR Code ${mergedConfig?.qrCodeUrl ? '(Current uploaded)' : '*'}`}
+                            existingQRUrl={mergedConfig?.qrCodeUrl}
+                            onQRCodeChange={(file, shouldDelete) =>
+                              handleQRCodeChange(method.id, file, shouldDelete)
+                            }
+                            disabled={isPending}
+                            maxSizeInMB={5}
+                          />
+                        </div>
+                      )}
+                    </CardContent>
+                  )}
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
         {/* Summary */}
-        {enabledMethods.size > 0 && (
+        {!isLoadingQrCodes && enabledMethods.size > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Currently Enabled</CardTitle>
@@ -413,7 +535,10 @@ export function PaymentMethodsSettings({ project }: PaymentMethodsSettingsProps)
 
         {/* Actions */}
         <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={isPending || enabledMethods.size === 0}>
+          <Button
+            onClick={handleSave}
+            disabled={isPending || enabledMethods.size === 0 || isLoadingQrCodes}
+          >
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
