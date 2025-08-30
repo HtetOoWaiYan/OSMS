@@ -46,10 +46,8 @@ create trigger update_invoices_updated_at
     for each row 
     execute function update_updated_at_column();
 
-create trigger update_item_prices_updated_at 
-    before update on item_prices 
-    for each row 
-    execute function update_updated_at_column();
+-- Item prices don't need updated_at trigger as they use effective_from/effective_until
+-- for versioning and price changes create new records rather than updating existing ones
 
 create trigger update_customer_addresses_updated_at 
     before update on customer_addresses 

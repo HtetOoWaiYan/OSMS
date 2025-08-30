@@ -58,6 +58,8 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
     basePrice: '',
     sellingPrice: '',
     discountPercentage: '',
+    isFeatured: false,
+    isActive: true,
   });
   const router = useRouter();
 
@@ -85,6 +87,8 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
             sellingPrice: itemResult.data.current_price?.selling_price?.toString() || '',
             discountPercentage:
               itemResult.data.current_price?.discount_percentage?.toString() || '',
+            isFeatured: itemResult.data.is_featured || false,
+            isActive: itemResult.data.is_active ?? true,
           });
 
           // Load existing images
@@ -107,18 +111,17 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
   }, [itemId]);
 
   async function handleSubmit(formData: FormData) {
+    // Validate required fields before setting submitting state
+    const name = formData.get('name') as string;
+    if (!name || name.trim().length === 0) {
+      setError('Product name is required. Please enter a name for your item.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Validate required fields before submission
-      const name = formData.get('name') as string;
-      if (!name || name.trim().length === 0) {
-        setError('Product name is required. Please enter a name for your item.');
-        setIsSubmitting(false);
-        return;
-      }
-
       // Add required fields for update
       formData.append('itemId', itemId);
       formData.append('projectId', projectId);
@@ -200,6 +203,8 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
           toast.success('Item updated, but some image operations failed');
         }
 
+        // Small delay to show loading state before redirect
+        await new Promise((resolve) => setTimeout(resolve, 500));
         router.push(`/dashboard/${projectId}/items`);
       } else {
         // Enhanced error handling with specific error messages
@@ -283,7 +288,14 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
         <CardDescription>Update the item information and settings</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            await handleSubmit(formData);
+          }}
+          className="space-y-6"
+        >
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Basic Information</h3>
@@ -575,14 +587,24 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
               <div className="flex items-center space-x-2">
                 <Switch
                   id="isFeatured"
-                  name="isFeatured"
-                  defaultChecked={item.is_featured || false}
+                  checked={formData.isFeatured}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, isFeatured: checked }))
+                  }
                 />
+                <input type="hidden" name="isFeatured" value={formData.isFeatured.toString()} />
                 <Label htmlFor="isFeatured">Featured Item</Label>
               </div>
 
               <div className="flex items-center space-x-2">
-                <Switch id="isActive" name="isActive" defaultChecked={item.is_active || false} />
+                <Switch
+                  id="isActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, isActive: checked }))
+                  }
+                />
+                <input type="hidden" name="isActive" value={formData.isActive.toString()} />
                 <Label htmlFor="isActive">Active</Label>
               </div>
             </div>
@@ -608,7 +630,7 @@ export function EditItemForm({ projectId, itemId, categories }: EditItemFormProp
 
           {/* Submit Actions */}
           <div className="flex items-center space-x-4 pt-4">
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting} className="min-w-[140px]">
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
