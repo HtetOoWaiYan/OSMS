@@ -23,3 +23,7 @@ create type message_direction_enum as enum ('inbound', 'outbound');
 -- Stock movement types
 create type stock_movement_type_enum as enum ('in', 'out', 'adjustment');
 create type stock_movement_reason_enum as enum ('purchase', 'sale', 'return', 'damaged', 'adjustment', 'initial');
+
+-- Health check types
+create type health_check_status_enum as enum ('healthy', 'warning', 'critical', 'unknown');
+create type health_check_component_enum as enum ('database', 'api', 'storage', 'telegram_bot', 'external_service');

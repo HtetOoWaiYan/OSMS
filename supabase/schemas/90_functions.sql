@@ -66,6 +66,11 @@ create trigger update_payment_qr_codes_updated_at
     for each row 
     execute function update_updated_at_column();
 
+create trigger update_health_checks_updated_at 
+    before update on health_checks 
+    for each row 
+    execute function update_updated_at_column();
+
 -- Function to create customer from Telegram user data
 create or replace function create_customer_from_telegram(
   p_project_id uuid,
@@ -130,3 +135,35 @@ create trigger update_stock_on_order_confirm
     after update on orders 
     for each row 
     execute function update_item_stock();
+
+-- Function to record health check results
+create or replace function record_health_check(
+  p_component health_check_component_enum,
+  p_status health_check_status_enum,
+  p_message text default null,
+  p_response_time_ms integer default null,
+  p_details jsonb default '{}'
+) returns uuid as $$
+declare
+  health_check_id uuid;
+begin
+  insert into health_checks (
+    component,
+    status,
+    message,
+    response_time_ms,
+    details,
+    checked_at
+  ) values (
+    p_component,
+    p_status,
+    p_message,
+    p_response_time_ms,
+    p_details,
+    now()
+  )
+  returning id into health_check_id;
+  
+  return health_check_id;
+end;
+$$ language plpgsql;

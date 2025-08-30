@@ -190,5 +190,18 @@ using (
     )
 );
 
+-- ========================================
+-- PAYMENT QR CODES TABLE POLICIES
+-- ========================================
+create policy "Users can view payment QR codes in their projects" on payment_qr_codes
+for select
+to authenticated
+using (
+    project_id in (
+        select project_id from user_roles 
+        where user_id = (select auth.uid()) and is_active = true
+    )
+);
+
 
 
