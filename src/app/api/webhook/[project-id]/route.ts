@@ -2,6 +2,7 @@ import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 import { Bot } from 'grammy';
 import { getProjectById } from '@/lib/data/projects';
+import { generateMockInitData } from '@/lib/telegram/mock-data';
 
 /**
  * Dynamic webhook handler for multiple Telegram bots
@@ -158,28 +159,60 @@ Click the button below to open our mobile shopping app:`,
     const miniAppUrl = generateMiniAppUrl(projectId);
     const user = ctx.from;
     
+    if (!user) {
+      await ctx.reply('❌ User information not available');
+      return;
+    }
+
+    // Generate mock Telegram Mini App initData for localhost testing
+    const mockInitData = generateMockInitData(user);
+    const localhost = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const localhostUrlWithParams = `${localhost}/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}`;
+    
     const debugInfo = `🔧 **Debug Information**
 
 **Project ID:** \`${projectId}\`
 **Project Name:** ${projectName}
+**User ID:** \`${user.id}\`
+**Username:** ${user.username ? `@${user.username}` : 'Not set'}
+**First Name:** ${user.first_name || 'Not set'}
+
+**🌐 URLs:**
 **Mini App URL:** \`${miniAppUrl}\`
-**User ID:** \`${user?.id}\`
-**Username:** ${user?.username ? `@${user.username}` : 'Not set'}
-**First Name:** ${user?.first_name || 'Not set'}
+**Localhost with Params:** \`${localhostUrlWithParams}\`
 
-**For localhost testing:**
-1. Make sure your Next.js dev server is running on port 3000
-2. Copy the Mini App URL above and open it in your browser
-3. Test the mini app functionality directly
+**🔑 Mock initData for localhost:**
+\`\`\`
+${mockInitData.raw}
+\`\`\`
 
-**For Telegram Mini App testing:**
-- Click the button below to test the web app integration
-- The bot uses the URL shown above`;
+**📱 Launch Parameters:**
+- **tgWebAppData:** Mock Telegram user data
+- **tgWebAppVersion:** 7.0
+- **tgWebAppPlatform:** web
+- **tgWebAppStartParam:** debug_mode
+- **tgWebAppThemeParams:** Default theme
+
+**🚀 Testing Instructions:**
+1. **For Telegram Mini App:** Click "Test Mini App" button below
+2. **For localhost development:** 
+   - Make sure Next.js dev server is running on port 3000
+   - Click "Open Localhost with Mock Data" button
+   - Or copy the localhost URL above and paste in browser
+
+**💡 Mock User Data:**
+\`\`\`json
+${JSON.stringify(mockInitData.userData, null, 2)}
+\`\`\`
+
+**⚠️ Note:** The mock initData includes proper hash validation for development. This simulates a real Telegram Mini App environment.`;
 
     await ctx.reply(debugInfo, {
       reply_markup: {
         inline_keyboard: [
           [{ text: '🚀 Test Mini App', web_app: { url: miniAppUrl } }],
+          [{ text: '🖥️ Open Localhost with Mock Data', url: localhostUrlWithParams }],
+          [{ text: '📋 Copy Mock initData', callback_data: `copy_initdata_${user.id}` }],
         ],
       },
       parse_mode: 'Markdown',
@@ -189,6 +222,48 @@ Click the button below to open our mobile shopping app:`,
   // Handle callback queries from inline keyboards
   bot.on('callback_query:data', async (ctx) => {
     const data = ctx.callbackQuery.data;
+
+    if (data.startsWith('copy_initdata_')) {
+      const userId = data.replace('copy_initdata_', '');
+      const user = ctx.from;
+      
+      if (user && user.id.toString() === userId) {
+        const mockInitData = generateMockInitData(user);
+        
+        await ctx.editMessageText(
+          `📋 **Mock initData Copied**
+
+Here's your mock initData for localhost development:
+
+\`\`\`
+${mockInitData.raw}
+\`\`\`
+
+**How to use:**
+1. Copy the initData above
+2. Open your localhost URL: \`http://localhost:3000/app/${projectId}?initData=<paste-here>\`
+3. Replace \`<paste-here>\` with the URL-encoded initData
+
+**Or use this direct URL:**
+\`http://localhost:3000/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}\`
+
+This will simulate a real Telegram Mini App environment with your user data.`,
+          {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🔙 Back to Debug', callback_data: 'debug' }],
+              ],
+            },
+          },
+        );
+      } else {
+        await ctx.editMessageText('❌ Unauthorized action');
+      }
+      
+      await ctx.answerCallbackQuery();
+      return;
+    }
 
     switch (data) {
       case 'catalog':
@@ -208,6 +283,44 @@ Available commands:
 /debug - Show debug info and localhost URL
 /help - Show this help message`.trim();
         await ctx.editMessageText(helpMessage);
+        break;
+      case 'debug':
+        const user = ctx.from;
+        if (user) {
+          const miniAppUrl = generateMiniAppUrl(projectId);
+          const mockInitData = generateMockInitData(user);
+          const localhost = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+          const localhostUrlWithParams = `${localhost}/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}`;
+          
+          const debugInfo = `🔧 **Debug Information**
+
+**Project ID:** \`${projectId}\`
+**Project Name:** ${projectName}
+**User ID:** \`${user.id}\`
+**Username:** ${user.username ? `@${user.username}` : 'Not set'}
+**First Name:** ${user.first_name || 'Not set'}
+
+**🌐 URLs:**
+**Mini App URL:** \`${miniAppUrl}\`
+**Localhost with Params:** \`${localhostUrlWithParams}\`
+
+**🚀 Testing Instructions:**
+1. **For Telegram Mini App:** Click "Test Mini App" button below
+2. **For localhost development:** Click "Open Localhost with Mock Data" button
+
+**💡 The localhost URL includes mock Telegram initData for proper testing.**`;
+
+          await ctx.editMessageText(debugInfo, {
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🚀 Test Mini App', web_app: { url: miniAppUrl } }],
+                [{ text: '🖥️ Open Localhost with Mock Data', url: localhostUrlWithParams }],
+                [{ text: '📋 Copy Mock initData', callback_data: `copy_initdata_${user.id}` }],
+              ],
+            },
+            parse_mode: 'Markdown',
+          });
+        }
         break;
       default:
         await ctx.answerCallbackQuery('Unknown action');
