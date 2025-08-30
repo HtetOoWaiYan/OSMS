@@ -11,12 +11,12 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, DollarSign, ShoppingCart, Users, TrendingUp, TrendingDown } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 
-export default async function AnalyticsPage({
-  params,
-}: {
+interface AnalyticsPageProps {
   params: { "project-id": string };
-}) {
-  const { 'project-id': projectId } = await params;
+}
+
+export default async function AnalyticsPage({ params }: AnalyticsPageProps) {
+  const projectId = params["project-id"];
   const {
     revenueAndOrders,
     orderStatusDistribution,
