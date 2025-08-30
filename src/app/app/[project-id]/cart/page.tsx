@@ -118,16 +118,6 @@ export default function CartPage({ params }: CartPageProps) {
         </div>
 
         <div className="space-y-4 p-4">
-          {/* Stock validation warning */}
-          {isValidating && (
-            <div className="border-primary/20 bg-primary/5 rounded-lg border p-4">
-              <div className="flex items-center gap-2">
-                <div className="border-primary h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"></div>
-                <p className="text-primary text-sm font-medium">Checking stock availability...</p>
-              </div>
-            </div>
-          )}
-
           {/* Cart Items */}
           <div className="space-y-3">
             <CartItemsList

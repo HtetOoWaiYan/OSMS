@@ -129,9 +129,7 @@ export function CartItemCard({ item, onValidateStock, disabled = false }: CartIt
               max={item.maxStock}
               disabled={disabled}
             />
-            <p className="text-muted-foreground h-4 text-xs font-medium">
-              {disabled ? 'Checking stock...' : item.maxStock ? `${item.maxStock} available` : ''}
-            </p>
+            <p className="text-muted-foreground text-xs font-medium">{item.maxStock} available</p>
           </div>
         </div>
       </CardContent>
