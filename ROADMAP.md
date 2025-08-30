@@ -353,7 +353,7 @@ Purple Shopping consists of two integrated applications:
 
 #### **Payment Processing (MVP - Basic)**
 
-- [ ] **Payment Method Selection:**
+- [x] **Payment Method Selection:**
   - Dropdown with available methods (from enum)
   - Payment status tracking (pending, paid, failed, refunded)
   - Manual payment confirmation (admin marks as paid)
