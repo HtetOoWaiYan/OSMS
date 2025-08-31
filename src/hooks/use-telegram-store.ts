@@ -66,18 +66,20 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
 
         // If Telegram WebApp API is still not available, try URL fallback
         if (!get().isInitialized) {
-          // Try to get data from URL parameters as fallback
-          const urlParams = new URLSearchParams(window.location.search);
-          const initData = urlParams.get('tgWebAppData');
+          // Try to get data from URL fragment as fallback
+          const hash = window.location.hash;
+          const fragmentParams = new URLSearchParams(hash.substring(1)); // Remove the # symbol
+          const initData = fragmentParams.get('tgWebAppData');
           console.log('URL fallback check:', {
             hasInitData: !!initData,
             initDataLength: initData?.length,
-            urlParams: Array.from(urlParams.entries()),
+            hash: hash,
+            fragmentParams: Array.from(fragmentParams.entries()),
           });
 
           if (initData) {
             set({ isInitialized: true });
-            console.log('Telegram data found in URL');
+            console.log('Telegram data found in URL fragment');
           } else {
             set({ isInitialized: false });
             console.log('Not in Telegram environment');
@@ -133,16 +135,17 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
         }
       }
 
-      // Fallback: try to get from URL parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const initData = urlParams.get('tgWebAppData');
+      // Fallback: try to get from URL fragment
+      const hash = window.location.hash;
+      const fragmentParams = new URLSearchParams(hash.substring(1)); // Remove the # symbol
+      const initData = fragmentParams.get('tgWebAppData');
 
       if (initData) {
         set({
           launchParams: null,
           rawInitData: initData,
         });
-        console.log('Telegram data retrieved from URL');
+        console.log('Telegram data retrieved from URL fragment');
         return { params: null, initData: initData as string };
       }
 
