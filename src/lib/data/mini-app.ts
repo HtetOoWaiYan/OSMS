@@ -1,7 +1,7 @@
 import 'server-only';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { unstable_cache } from 'next/cache';
-import type { Tables } from '@/lib/supabase/database.types';
+import type { Tables, Database } from '@/lib/supabase/database.types';
 
 // Types for mini-app
 type MiniAppItem = Tables<'items'> & {
@@ -325,6 +325,80 @@ export const getRelatedItemsForMiniApp = unstable_cache(
   },
   ['mini-app-related-items'],
   { revalidate: 600, tags: ['items'] }, // 10 minute cache
+);
+
+/**
+ * Get user orders for mini-app (server-side)
+ */
+export const getUserOrdersForMiniApp = unstable_cache(
+  async (
+    projectId: string,
+    telegramUserId: number,
+    filters?: {
+      status?: string;
+      page?: number;
+      limit?: number;
+    },
+  ) => {
+    const serviceClient = createServiceRoleClient();
+    const { status, page = 1, limit = 10 } = filters || {};
+
+    let query = serviceClient
+      .from('orders')
+      .select(
+        `
+        id,
+        order_number,
+        status,
+        payment_status,
+        payment_method,
+        total_amount,
+        created_at,
+        updated_at,
+        order_items (
+          id,
+          quantity,
+          unit_price,
+          item_snapshot
+        )
+      `,
+        { count: 'exact' },
+      )
+      .eq('project_id', projectId)
+      .eq('telegram_user_id', telegramUserId)
+      .order('created_at', { ascending: false });
+
+    // Add status filter if provided
+    if (status && status !== 'all') {
+      query = query.eq('status', status as Database['public']['Enums']['order_status_enum']);
+    }
+
+    // Add pagination
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    query = query.range(from, to);
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error('Error fetching user orders:', error);
+      return {
+        orders: [],
+        total: 0,
+        page,
+        limit,
+      };
+    }
+
+    return {
+      orders: data || [],
+      total: count || 0,
+      page,
+      limit,
+    };
+  },
+  ['mini-app-user-orders'],
+  { revalidate: 60, tags: ['user-orders'] }, // 1 minute cache
 );
 
 /**

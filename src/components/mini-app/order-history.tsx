@@ -76,41 +76,8 @@ export function OrderHistory({ projectId, statusFilter, page }: OrderHistoryProp
       }
 
       if (!telegramUser) {
-        // Provide a development fallback user for testing
-        console.log('No Telegram user found, using fallback for development');
-        const fallbackUserId = 123456789; // Mock Telegram user ID for testing
-
-        const result = await getUserOrdersAction({
-          projectId,
-          telegramUserId: fallbackUserId,
-          status: filter === 'all' ? undefined : filter,
-          page: currentPage,
-          limit: 10,
-        });
-
-        if (result.success && result.data) {
-          const transformedOrders = result.data.orders.map((order) => ({
-            ...order,
-            order_items: order.order_items
-              .map((item) => ({
-                ...item,
-                item_snapshot:
-                  item.item_snapshot && typeof item.item_snapshot === 'object'
-                    ? (item.item_snapshot as { name: string; image_url?: string })
-                    : null,
-              }))
-              .filter((item) => item.item_snapshot !== null) as Array<{
-              id: string;
-              quantity: number;
-              unit_price: number;
-              item_snapshot: { name: string; image_url?: string };
-            }>,
-          }));
-          setOrders(transformedOrders);
-          setTotalPages(Math.ceil(result.data.total / 10));
-        } else {
-          setError(result.error || 'Failed to load orders');
-        }
+        // No Telegram user available
+        setError('Please access this page through Telegram to view your orders.');
         return;
       }
 

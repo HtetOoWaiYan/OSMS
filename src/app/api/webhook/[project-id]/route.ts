@@ -1,8 +1,7 @@
 import 'server-only';
-import { NextRequest, NextResponse } from 'next/server';
 import { Bot } from 'grammy';
+import { NextRequest, NextResponse } from 'next/server';
 import { getProjectById } from '@/lib/data/projects';
-import { generateMockInitData } from '@/lib/telegram/mock-data';
 
 /**
  * Dynamic webhook handler for multiple Telegram bots
@@ -88,17 +87,17 @@ Here are some things I can help you with:
 • Check order status
 • Get help and support
 
-Use /catalog to start browsing our products!`.trim();
+Click the Browse button to start shopping!`.trim();
 
-    // Generate mini app URL for this project
+    // Generate mini app URLs for this project
     const miniAppUrl = generateMiniAppUrl(projectId);
+    const ordersUrl = `${miniAppUrl}/orders`;
 
     await ctx.reply(welcomeMessage, {
       reply_markup: {
         inline_keyboard: [
-          [{ text: '🚀 Launch Mini App', web_app: { url: miniAppUrl } }],
-          [{ text: '🛍️ Browse Catalog', callback_data: 'catalog' }],
-          [{ text: '📦 My Orders', callback_data: 'orders' }],
+          [{ text: '🛍️ Browse', web_app: { url: miniAppUrl } }],
+          [{ text: '📦 My Orders', web_app: { url: ordersUrl } }],
           [{ text: '❓ Help', callback_data: 'help' }],
         ],
       },
@@ -112,29 +111,15 @@ Use /catalog to start browsing our products!`.trim();
 Available commands:
 /start - Welcome message and main menu
 /launch - Open the mini app
-/catalog - Browse our product catalog
-/orders - View your order history
-/debug - Show debug info and localhost URL
 /help - Show this help message
 
-🚀 Launch Mini App button - Opens our mobile shopping app
+🛍️ Browse button - Opens our mobile shopping app
+📦 My Orders button - Opens your order history
 You can also send me messages and I'll assist you with your shopping needs!
 
 For support, contact our team directly.`.trim();
 
     await ctx.reply(helpMessage);
-  });
-
-  // Handle /catalog command
-  bot.command('catalog', async (ctx) => {
-    // TODO: Implement catalog browsing
-    await ctx.reply('🛍️ Product catalog feature coming soon! Stay tuned.');
-  });
-
-  // Handle /orders command
-  bot.command('orders', async (ctx) => {
-    // TODO: Implement order history
-    await ctx.reply('📦 Order history feature coming soon! Stay tuned.');
   });
 
   // Handle /launch command
@@ -147,205 +132,26 @@ For support, contact our team directly.`.trim();
 Click the button below to open our mobile shopping app:`,
       {
         reply_markup: {
-          inline_keyboard: [[{ text: '🛍️ Open Purple Shopping', web_app: { url: miniAppUrl } }]],
+          inline_keyboard: [[{ text: '🛍️ Browse', web_app: { url: miniAppUrl } }]],
         },
         parse_mode: 'Markdown',
       },
     );
   });
 
-  // Handle /debug command for development
-  bot.command('debug', async (ctx) => {
-    const user = ctx.from;
-    
-    if (!user) {
-      await ctx.reply('❌ User information not available');
-      return;
-    }
-
-    // Generate mock Telegram Mini App initData for localhost testing
-    const mockInitData = generateMockInitData(user);
-    const localhost = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const localhostUrlWithParams = `${localhost}/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}`;
-    
-    // Simplified debug info without complex markdown formatting that causes parsing errors
-    const debugInfo = `🔧 Debug Information
-
-Project: ${projectName}
-Project ID: ${projectId}
-User ID: ${user.id}
-Username: ${user.username ? '@' + user.username : 'Not set'}
-First Name: ${user.first_name || 'Not set'}
-
-🚀 Use the buttons below to test:`;
-
-    await ctx.reply(debugInfo, {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '🖥️ Open Localhost with Mock Data', url: localhostUrlWithParams }],
-          [{ text: '📋 Show Mock Data', callback_data: `show_mock_data_${user.id}` }],
-          [{ text: '📱 Show Launch Params', callback_data: `show_launch_params_${user.id}` }],
-        ],
-      },
-    });
-  });
-
   // Handle callback queries from inline keyboards
   bot.on('callback_query:data', async (ctx) => {
     const data = ctx.callbackQuery.data;
 
-    if (data.startsWith('copy_initdata_')) {
-      const userId = data.replace('copy_initdata_', '');
-      const user = ctx.from;
-      
-      if (user && user.id.toString() === userId) {
-        const mockInitData = generateMockInitData(user);
-        
-        await ctx.editMessageText(
-          `📋 Mock initData
-
-\`\`\`
-${mockInitData.raw}
-\`\`\`
-
-Copy the initData above and use with your localhost URL:
-\`http://localhost:3000/app/${projectId}?initData=<paste-here>\`
-
-Or use this direct URL:
-\`http://localhost:3000/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}\``,
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '🔙 Back to Debug', callback_data: 'debug' }],
-              ],
-            },
-          },
-        );
-      } else {
-        await ctx.editMessageText('❌ Unauthorized action');
-      }
-      
-      await ctx.answerCallbackQuery();
-      return;
-    }
-
-    if (data.startsWith('show_mock_data_')) {
-      const userId = data.replace('show_mock_data_', '');
-      const user = ctx.from;
-      
-      if (user && user.id.toString() === userId) {
-        const mockInitData = generateMockInitData(user);
-        
-        await ctx.editMessageText(
-          `📋 Mock Data
-
-User Data:
-\`\`\`json
-${JSON.stringify(mockInitData.userData, null, 2)}
-\`\`\`
-
-Raw initData:
-\`\`\`
-${mockInitData.raw}
-\`\`\``,
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '🔙 Back to Debug', callback_data: 'debug' }],
-              ],
-            },
-          },
-        );
-      } else {
-        await ctx.editMessageText('❌ Unauthorized action');
-      }
-      
-      await ctx.answerCallbackQuery();
-      return;
-    }
-
-    if (data.startsWith('show_launch_params_')) {
-      const userId = data.replace('show_launch_params_', '');
-      const user = ctx.from;
-      
-      if (user && user.id.toString() === userId) {
-        const mockInitData = generateMockInitData(user);
-        
-        await ctx.editMessageText(
-          `📱 Launch Parameters
-
-\`\`\`
-tgWebAppData=${encodeURIComponent(mockInitData.raw)}
-tgWebAppVersion=7.0
-tgWebAppPlatform=web
-tgWebAppStartParam=debug_mode
-tgWebAppThemeParams=Default theme
-\`\`\`
-
-Direct URL:
-\`http://localhost:3000/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}\``,
-          {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '🔙 Back to Debug', callback_data: 'debug' }],
-              ],
-            },
-          },
-        );
-      } else {
-        await ctx.editMessageText('❌ Unauthorized action');
-      }
-      
-      await ctx.answerCallbackQuery();
-      return;
-    }
-
     switch (data) {
-      case 'catalog':
-        await ctx.editMessageText('🛍️ Product catalog feature coming soon! Stay tuned.');
-        break;
-      case 'orders':
-        await ctx.editMessageText('📦 Order history feature coming soon! Stay tuned.');
-        break;
       case 'help':
         const helpMessage = `🆘 Help & Support
 
 Available commands:
 /start - Welcome message and main menu
 /launch - Open the mini app
-/catalog - Browse our product catalog
-/orders - View your order history
-/debug - Show debug info and localhost URL
 /help - Show this help message`.trim();
         await ctx.editMessageText(helpMessage);
-        break;
-      case 'debug':
-        const user = ctx.from;
-        if (user) {
-          const mockInitData = generateMockInitData(user);
-          const localhost = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-          const localhostUrlWithParams = `${localhost}/app/${projectId}?initData=${encodeURIComponent(mockInitData.raw)}`;
-          
-          const debugInfo = `🔧 Debug Information
-
-Project: ${projectName}
-Project ID: ${projectId}
-User ID: ${user.id}
-Username: ${user.username ? '@' + user.username : 'Not set'}
-First Name: ${user.first_name || 'Not set'}
-
-🚀 Use the buttons below to test:`;
-
-          await ctx.editMessageText(debugInfo, {
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '🖥️ Open Localhost with Mock Data', url: localhostUrlWithParams }],
-                [{ text: '📋 Show Mock Data', callback_data: `show_mock_data_${user.id}` }],
-                [{ text: '📱 Show Launch Params', callback_data: `show_launch_params_${user.id}` }],
-              ],
-            },
-          });
-        }
         break;
       default:
         await ctx.answerCallbackQuery('Unknown action');
@@ -356,30 +162,35 @@ First Name: ${user.first_name || 'Not set'}
 
   // Handle text messages
   bot.on('message:text', async (ctx) => {
-    const message = ctx.message.text.toLowerCase();
+    const user = ctx.from;
+    if (!user) return;
 
-    // Simple keyword responses
-    if (message.includes('hello') || message.includes('hi')) {
-      await ctx.reply(`Hello! Welcome to ${projectName}. How can I help you today?`);
-    } else if (message.includes('catalog') || message.includes('product')) {
-      await ctx.reply(
-        '🛍️ Product catalog feature is coming soon! Use /catalog to browse when available.',
-      );
-    } else if (message.includes('order')) {
-      await ctx.reply(
-        '📦 Order management feature is coming soon! Use /orders to check your orders when available.',
-      );
-    } else {
-      // Default response for unrecognized messages
-      await ctx.reply(
-        `I understand you said: "${ctx.message.text}"\n\nI'm still learning! For now, please use the commands above or type /help for assistance.`,
-        {
-          reply_markup: {
-            inline_keyboard: [[{ text: '🆘 Help', callback_data: 'help' }]],
-          },
-        },
-      );
-    }
+    const welcomeMessage = `🌟 Welcome to ${projectName}! 🌟
+
+Hello ${user.first_name}! I'm your shopping assistant.
+
+Here are some things I can help you with:
+• Browse our product catalog
+• Add items to cart
+• Place orders directly through chat
+• Check order status
+• Get help and support
+
+Click the Browse button to start shopping!`.trim();
+
+    // Generate mini app URLs for this project
+    const miniAppUrl = generateMiniAppUrl(projectId);
+    const ordersUrl = `${miniAppUrl}/orders`;
+
+    await ctx.reply(welcomeMessage, {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '🛍️ Browse', web_app: { url: miniAppUrl } }],
+          [{ text: '📦 My Orders', web_app: { url: ordersUrl } }],
+          [{ text: '❓ Help', callback_data: 'help' }],
+        ],
+      },
+    });
   });
 
   console.log(`Bot commands set up for project: ${projectName} (${projectId})`);
