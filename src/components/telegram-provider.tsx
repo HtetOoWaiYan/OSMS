@@ -61,25 +61,21 @@ function TelegramProviderClient({ children, projectId }: TelegramProviderProps) 
     loadTelegramSDK();
   }, []);
 
-  // Get Telegram data using imported hooks
-  const [launchParams, setLaunchParams] = useState<Record<string, unknown> | null>(null);
-  const [rawInitData, setRawInitData] = useState<string | null>(null);
+  // Get Telegram data using imported hooks - call hooks at component level
+  let launchParams: Record<string, unknown> | null = null;
+  let rawInitData: string | null = null;
 
-  useEffect(() => {
-    if (!telegramHooks || !isInitialized) return;
-
+  if (telegramHooks && isInitialized) {
     try {
-      const params = telegramHooks.useLaunchParams();
-      const initData = telegramHooks.useRawInitData();
-      setLaunchParams(params || null);
-      setRawInitData(initData || null);
+      launchParams = telegramHooks.useLaunchParams() || null;
+      rawInitData = telegramHooks.useRawInitData() || null;
       console.log('Telegram data retrieved');
     } catch (err) {
       console.debug('Telegram hooks not available:', err);
-      setLaunchParams(null);
-      setRawInitData(null);
+      launchParams = null;
+      rawInitData = null;
     }
-  }, [telegramHooks, isInitialized]);
+  }
 
   // Validate initData when we have it
   useEffect(() => {
