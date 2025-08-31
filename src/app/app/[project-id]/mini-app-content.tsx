@@ -1,10 +1,11 @@
 'use client';
 
-import { useTelegramUser, useTelegram, useIsTelegram } from '@/components/telegram-provider';
+import { useTelegramUser, useIsTelegram } from '@/components/telegram-provider';
+import { useTelegramStore } from '@/hooks/use-telegram-store';
 
 export default function MiniAppContent() {
   const { user, project, authDate, isLoading, error, isAuthenticated } = useTelegramUser();
-  const { launchParams } = useTelegram();
+  const { launchParams } = useTelegramStore();
   const isTelegram = useIsTelegram();
 
   // Type-safe access to launch parameters
