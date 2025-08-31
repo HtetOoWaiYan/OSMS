@@ -106,34 +106,6 @@ begin
 end;
 $$ language plpgsql;
 
--- Function to update item stock when orders are confirmed
-create or replace function update_item_stock()
-returns trigger as $$
-begin
-    if new.status = 'confirmed' and old.status != 'confirmed' then
-        -- Decrease stock when order is confirmed
-        update items 
-        set stock_quantity = stock_quantity - oi.quantity
-        from order_items oi
-        where oi.order_id = new.id and items.id = oi.item_id;
-        
-        -- Record stock movements
-        insert into stock_movements (item_id, movement_type, reason, quantity, reference_id, reference_type)
-        select oi.item_id, 'out', 'sale', oi.quantity, new.id, 'order'
-        from order_items oi
-        where oi.order_id = new.id;
-    end if;
-    
-    return new;
-end;
-$$ language 'plpgsql';
-
--- Trigger to update stock on order confirmation
-create trigger update_stock_on_order_confirm 
-    after update on orders 
-    for each row 
-    execute function update_item_stock();
-
 -- Function to record health check results
 create or replace function record_health_check(
   p_component health_check_component_enum,
