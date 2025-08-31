@@ -39,27 +39,15 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
       if (typeof window !== 'undefined') {
         // Try multiple times with delays to handle timing issues
         for (let attempt = 1; attempt <= 3; attempt++) {
-          console.log(`Telegram initialization attempt ${attempt}/3`);
-
           const telegram = (window as unknown as Record<string, unknown>).Telegram;
-          console.log('Telegram object check:', {
-            attempt,
-            hasWindow: typeof window !== 'undefined',
-            hasTelegram: !!telegram,
-            telegramType: typeof telegram,
-            hasWebApp: telegram && typeof telegram === 'object' && 'WebApp' in telegram,
-            telegramKeys: telegram && typeof telegram === 'object' ? Object.keys(telegram) : [],
-          });
 
           if (telegram && typeof telegram === 'object' && 'WebApp' in telegram) {
             set({ isInitialized: true });
-            console.log('Telegram WebApp environment detected');
             break;
           }
 
           // If not found and this isn't the last attempt, wait and try again
           if (attempt < 3) {
-            console.log(`Telegram not found, waiting 500ms before retry...`);
             await new Promise((resolve) => setTimeout(resolve, 500));
           }
         }
@@ -70,19 +58,11 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
           const hash = window.location.hash;
           const fragmentParams = new URLSearchParams(hash.substring(1)); // Remove the # symbol
           const initData = fragmentParams.get('tgWebAppData');
-          console.log('URL fallback check:', {
-            hasInitData: !!initData,
-            initDataLength: initData?.length,
-            hash: hash,
-            fragmentParams: Array.from(fragmentParams.entries()),
-          });
 
           if (initData) {
             set({ isInitialized: true });
-            console.log('Telegram data found in URL fragment');
           } else {
             set({ isInitialized: false });
-            console.log('Not in Telegram environment');
           }
         }
       }
@@ -107,26 +87,20 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
 
   getTelegramData: async () => {
     try {
-      console.log('Getting Telegram data...');
-
       // Try to get data from Telegram WebApp API directly
       if (typeof window !== 'undefined') {
         const telegram = (window as unknown as Record<string, unknown>).Telegram;
-        console.log('Telegram object:', telegram);
 
         if (telegram && typeof telegram === 'object' && 'WebApp' in telegram) {
           const webApp = telegram.WebApp as Record<string, unknown>;
           const initData = webApp.initData;
           const initDataUnsafe = webApp.initDataUnsafe;
 
-          console.log('WebApp data:', { initData, initDataUnsafe });
-
           if (initData) {
             set({
               launchParams: (initDataUnsafe as Record<string, unknown>) || null,
               rawInitData: (initData as string) || null,
             });
-            console.log('Telegram data retrieved from WebApp API');
             return {
               params: initDataUnsafe as Record<string, unknown> | null,
               initData: initData as string,
@@ -145,7 +119,6 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
           launchParams: null,
           rawInitData: initData,
         });
-        console.log('Telegram data retrieved from URL fragment');
         return { params: null, initData: initData as string };
       }
 
@@ -159,9 +132,6 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
   validateUser: async (projectId: string) => {
     const { rawInitData } = get();
 
-    console.log('Validating user with projectId:', projectId);
-    console.log('Raw initData available:', !!rawInitData);
-
     if (!rawInitData) {
       set({
         error: 'No initData available',
@@ -173,20 +143,8 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      console.log('Validating Telegram user with:', {
-        hasInitData: !!rawInitData,
-        projectId,
-        initDataLength: rawInitData?.length,
-      });
-
       const result = await validateTelegramUser(rawInitData, projectId);
       set({ validationResult: result });
-
-      console.log('Validation result:', {
-        success: result.success,
-        error: result.error,
-        hasUser: !!result.user,
-      });
 
       if (!result.success) {
         set({ error: result.error || 'Validation failed' });
