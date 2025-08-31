@@ -30,8 +30,9 @@ import { createOrderAction } from '@/lib/actions/mini-app';
 import { customerInfoSchema, type CustomerInfo } from '@/lib/validations/mini-app';
 import { validateMyanmarPhone, MYANMAR_CITIES } from '@/lib/utils/myanmar-phone';
 import { toast } from 'sonner';
-import { Loader2, User, MapPin, CreditCard } from 'lucide-react';
+import { Loader2, User, MapPin, CreditCard, QrCode } from 'lucide-react';
 import { useTelegramUser } from '@/components/telegram-provider';
+import { getPaymentQRCodesAction } from '@/lib/actions/mini-app';
 
 interface CheckoutFormProps {
   projectId: string;
@@ -42,7 +43,17 @@ interface PaymentMethod {
   name: string;
   description: string;
   enabled: boolean;
+  hasQRCode?: boolean;
+  qrCodeUrl?: string;
+  phoneNumber?: string;
 }
+
+type PaymentQRCodeData = {
+  id: string;
+  payment_method: string;
+  phone_number: string;
+  qr_code_url: string;
+};
 
 export function CheckoutForm({ projectId }: CheckoutFormProps) {
   const router = useRouter();
@@ -50,34 +61,101 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
   const { user: telegramUser, isLoading: userLoading } = useTelegramUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('cod');
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [isLoadingPaymentMethods, setIsLoadingPaymentMethods] = useState(true);
 
-  // Mock payment methods - in real implementation, fetch from server
-  const paymentMethods: PaymentMethod[] = [
-    {
-      id: 'cod',
-      name: 'Cash on Delivery (COD)',
-      description: 'Pay when your order arrives',
-      enabled: true,
-    },
-    {
-      id: 'kbz_pay',
-      name: 'KBZ Pay',
-      description: 'Pay with KBZ Pay mobile wallet',
-      enabled: true,
-    },
-    {
-      id: 'cb_pay',
-      name: 'CB Pay',
-      description: 'Pay with CB Pay mobile wallet',
-      enabled: true,
-    },
-    {
-      id: 'aya_pay',
-      name: 'AYA Pay',
-      description: 'Pay with AYA Pay mobile wallet',
-      enabled: false,
-    },
-  ];
+  // Fetch payment methods and QR codes
+  useEffect(() => {
+    async function fetchPaymentMethods() {
+      try {
+        const result = await getPaymentQRCodesAction(projectId);
+        const qrCodes = (result.success ? result.data : []) as PaymentQRCodeData[];
+
+        // Create payment methods with QR code info
+        const methods: PaymentMethod[] = [
+          {
+            id: 'cod',
+            name: 'Cash on Delivery (COD)',
+            description: 'Pay when your order arrives',
+            enabled: true,
+            hasQRCode: false,
+          },
+          {
+            id: 'kbz_pay',
+            name: 'KBZ Pay',
+            description: 'Pay with KBZ Pay mobile wallet',
+            enabled: true,
+            hasQRCode: qrCodes.some((qr) => qr.payment_method === 'kbz_pay'),
+            qrCodeUrl:
+              qrCodes.find((qr) => qr.payment_method === 'kbz_pay')?.qr_code_url || undefined,
+            phoneNumber:
+              qrCodes.find((qr) => qr.payment_method === 'kbz_pay')?.phone_number || undefined,
+          },
+          {
+            id: 'cb_pay',
+            name: 'CB Pay',
+            description: 'Pay with CB Pay mobile wallet',
+            enabled: true,
+            hasQRCode: qrCodes.some((qr) => qr.payment_method === 'cb_pay'),
+            qrCodeUrl:
+              qrCodes.find((qr) => qr.payment_method === 'cb_pay')?.qr_code_url || undefined,
+            phoneNumber:
+              qrCodes.find((qr) => qr.payment_method === 'cb_pay')?.phone_number || undefined,
+          },
+          {
+            id: 'aya_pay',
+            name: 'AYA Pay',
+            description: 'Pay with AYA Pay mobile wallet',
+            enabled: qrCodes.some((qr) => qr.payment_method === 'aya_pay'),
+            hasQRCode: qrCodes.some((qr) => qr.payment_method === 'aya_pay'),
+            qrCodeUrl:
+              qrCodes.find((qr) => qr.payment_method === 'aya_pay')?.qr_code_url || undefined,
+            phoneNumber:
+              qrCodes.find((qr) => qr.payment_method === 'aya_pay')?.phone_number || undefined,
+          },
+        ];
+
+        setPaymentMethods(methods);
+      } catch (error) {
+        console.error('Error fetching payment methods:', error);
+        // Fallback to default methods
+        setPaymentMethods([
+          {
+            id: 'cod',
+            name: 'Cash on Delivery (COD)',
+            description: 'Pay when your order arrives',
+            enabled: true,
+            hasQRCode: false,
+          },
+          {
+            id: 'kbz_pay',
+            name: 'KBZ Pay',
+            description: 'Pay with KBZ Pay mobile wallet',
+            enabled: true,
+            hasQRCode: false,
+          },
+          {
+            id: 'cb_pay',
+            name: 'CB Pay',
+            description: 'Pay with CB Pay mobile wallet',
+            enabled: true,
+            hasQRCode: false,
+          },
+          {
+            id: 'aya_pay',
+            name: 'AYA Pay',
+            description: 'Pay with AYA Pay mobile wallet',
+            enabled: false,
+            hasQRCode: false,
+          },
+        ]);
+      } finally {
+        setIsLoadingPaymentMethods(false);
+      }
+    }
+
+    fetchPaymentMethods();
+  }, [projectId]);
 
   const form = useForm<CustomerInfo>({
     resolver: zodResolver(customerInfoSchema),
@@ -152,10 +230,19 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
         // Clear cart after successful order
         clearCart();
 
-        // Navigate to payment page
-        router.push(`/app/${projectId}/payment?orderId=${result.data.orderId}`);
+        // Check if this is a QR code payment method (automatically paid)
+        const selectedMethod = paymentMethods.find((m) => m.id === selectedPaymentMethod);
+        const isQRCodePayment = selectedMethod?.hasQRCode;
 
-        toast.success('Order created successfully!');
+        if (isQRCodePayment) {
+          // For QR code payments, navigate directly to invoice page
+          router.push(`/app/${projectId}/invoice/${result.data.orderId}`);
+          toast.success('Order created and marked as paid!');
+        } else {
+          // For COD, navigate to payment page
+          router.push(`/app/${projectId}/payment?orderId=${result.data.orderId}`);
+          toast.success('Order created successfully!');
+        }
       } else {
         toast.error(result.error || 'Failed to create order');
 
@@ -405,28 +492,100 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <RadioGroup
-              value={selectedPaymentMethod}
-              onValueChange={setSelectedPaymentMethod}
-              className="space-y-3"
-            >
-              {paymentMethods
-                .filter((method) => method.enabled)
-                .map((method) => (
-                  <div
-                    key={method.id}
-                    className="hover:bg-muted data-[state=checked]:border-primary data-[state=checked]:bg-primary/5 flex items-center space-x-3 rounded-xl border-2 p-4 transition-colors"
-                  >
-                    <RadioGroupItem value={method.id} id={method.id} className="flex-shrink-0" />
-                    <Label htmlFor={method.id} className="flex-1 cursor-pointer">
-                      <div>
-                        <p className="text-card-foreground font-semibold">{method.name}</p>
-                        <p className="text-muted-foreground text-sm">{method.description}</p>
+            {isLoadingPaymentMethods ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+                <span className="text-muted-foreground ml-2">Loading payment methods...</span>
+              </div>
+            ) : (
+              <>
+                <RadioGroup
+                  value={selectedPaymentMethod}
+                  onValueChange={setSelectedPaymentMethod}
+                  className="space-y-3"
+                >
+                  {paymentMethods
+                    .filter((method) => method.enabled)
+                    .map((method) => (
+                      <div
+                        key={method.id}
+                        className="hover:bg-muted data-[state=checked]:border-primary data-[state=checked]:bg-primary/5 flex items-center space-x-3 rounded-xl border-2 p-4 transition-colors"
+                      >
+                        <RadioGroupItem
+                          value={method.id}
+                          id={method.id}
+                          className="flex-shrink-0"
+                        />
+                        <Label htmlFor={method.id} className="flex-1 cursor-pointer">
+                          <div>
+                            <p className="text-card-foreground font-semibold">{method.name}</p>
+                            <p className="text-muted-foreground text-sm">{method.description}</p>
+                            {method.hasQRCode && (
+                              <div className="text-muted-foreground mt-2 flex items-center gap-1 text-sm">
+                                <QrCode className="h-4 w-4" />
+                                <span>
+                                  {method.phoneNumber
+                                    ? `Pay with ${method.name} on Telegram`
+                                    : 'Scan QR code to pay'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </Label>
                       </div>
-                    </Label>
-                  </div>
-                ))}
-            </RadioGroup>
+                    ))}
+                </RadioGroup>
+
+                {/* QR Code Display */}
+                {selectedPaymentMethod !== 'cod' &&
+                  paymentMethods.find((m) => m.id === selectedPaymentMethod)?.hasQRCode && (
+                    <div className="border-muted-foreground/20 bg-muted/30 mt-6 rounded-lg border border-dashed p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <QrCode className="text-primary h-5 w-5" />
+                        <h4 className="text-card-foreground font-semibold">
+                          {paymentMethods.find((m) => m.id === selectedPaymentMethod)?.name} QR Code
+                        </h4>
+                      </div>
+                      {paymentMethods.find((m) => m.id === selectedPaymentMethod)?.qrCodeUrl ? (
+                        <div className="flex flex-col items-center space-y-3">
+                          <img
+                            src={
+                              paymentMethods.find((m) => m.id === selectedPaymentMethod)?.qrCodeUrl
+                            }
+                            alt={`${paymentMethods.find((m) => m.id === selectedPaymentMethod)?.name} QR Code`}
+                            className="border-border h-48 w-48 rounded-lg border"
+                          />
+                          {paymentMethods.find((m) => m.id === selectedPaymentMethod)
+                            ?.phoneNumber && (
+                            <p className="text-muted-foreground text-center text-sm">
+                              Phone:{' '}
+                              {
+                                paymentMethods.find((m) => m.id === selectedPaymentMethod)
+                                  ?.phoneNumber
+                              }
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground text-center text-sm">
+                          QR code not available
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                {/* Payment Status Note */}
+                {selectedPaymentMethod !== 'cod' &&
+                  paymentMethods.find((m) => m.id === selectedPaymentMethod)?.hasQRCode && (
+                    <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                      <p className="text-sm text-blue-800">
+                        💳 <strong>Payment Status:</strong> Orders with QR code payment methods will
+                        be automatically marked as &ldquo;Paid&rdquo; when you place the order.
+                      </p>
+                    </div>
+                  )}
+              </>
+            )}
           </CardContent>
         </Card>
 

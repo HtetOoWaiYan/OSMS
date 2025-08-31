@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CheckCircle, CreditCard, Truck, Package } from 'lucide-react';
+import { Clock, CheckCircle, Truck, Package } from 'lucide-react';
 
 interface OrderStatusTimelineProps {
   currentStatus: string;
@@ -57,11 +57,6 @@ export function OrderStatusTimeline({
         description: 'Your order has been confirmed and is being prepared',
         color: 'text-chart-1',
       },
-      paid: {
-        label: 'Payment Received',
-        description: 'Payment confirmed, preparing for delivery',
-        color: 'text-chart-1',
-      },
       delivering: {
         label: 'Out for Delivery',
         description: 'Your order is on its way',
@@ -105,12 +100,6 @@ export function OrderStatusTimeline({
       timestamp: timestamps.confirmed_at,
     },
     {
-      key: 'paid',
-      label: 'Payment',
-      icon: CreditCard,
-      timestamp: timestamps.paid_at,
-    },
-    {
       key: 'delivering',
       label: 'Delivery',
       icon: Truck,
@@ -125,7 +114,7 @@ export function OrderStatusTimeline({
   ];
 
   const getCurrentStepIndex = () => {
-    const statusOrder = ['pending', 'confirmed', 'paid', 'delivering', 'delivered'];
+    const statusOrder = ['pending', 'confirmed', 'delivering', 'delivered'];
     return statusOrder.indexOf(currentStatus);
   };
 
@@ -137,17 +126,17 @@ export function OrderStatusTimeline({
         {/* Current Status Display - Figma style */}
         <div className="mb-6">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-card-foreground">Order Status</h3>
+            <h3 className="text-card-foreground text-lg font-semibold">Order Status</h3>
             <Badge variant={paymentInfo.variant} className="capitalize">
               {paymentInfo.label}
             </Badge>
           </div>
 
-          <div className="rounded-lg bg-muted p-4">
+          <div className="bg-muted rounded-lg p-4">
             <div className={`text-lg font-semibold ${orderInfo.color} mb-1`}>{orderInfo.label}</div>
-            <p className="mb-3 text-sm text-muted-foreground">{orderInfo.description}</p>
+            <p className="text-muted-foreground mb-3 text-sm">{orderInfo.description}</p>
             {timestamps.created_at && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Ordered on {formatDate(timestamps.created_at)}
               </p>
             )}
@@ -157,13 +146,13 @@ export function OrderStatusTimeline({
         {/* Simplified Progress Steps - Figma style */}
         {currentStatus !== 'cancelled' && (
           <div>
-            <h4 className="mb-4 text-sm font-medium text-muted-foreground">Progress</h4>
+            <h4 className="text-muted-foreground mb-4 text-sm font-medium">Progress</h4>
             <div className="relative flex items-center justify-between">
               {/* Progress line background */}
-              <div className="absolute top-4 right-4 left-4 h-0.5 bg-border"></div>
+              <div className="bg-border absolute top-4 right-4 left-4 h-0.5"></div>
               {/* Active progress line */}
               <div
-                className="absolute top-4 left-4 h-0.5 bg-chart-1 transition-all duration-300"
+                className="bg-chart-1 absolute top-4 left-4 h-0.5 transition-all duration-300"
                 style={{
                   width: `${Math.max(0, (currentStepIndex / (orderSteps.length - 1)) * 100)}%`,
                 }}
@@ -186,7 +175,7 @@ export function OrderStatusTimeline({
                     </div>
                     <p
                       className={`max-w-[50px] text-center text-xs ${
-                        isCompleted ? 'font-medium text-chart-1' : 'text-muted-foreground'
+                        isCompleted ? 'text-chart-1 font-medium' : 'text-muted-foreground'
                       }`}
                     >
                       {step.label}
@@ -200,12 +189,12 @@ export function OrderStatusTimeline({
 
         {/* Delivery Estimate - Figma style */}
         {currentStatus !== 'cancelled' && currentStatus !== 'delivered' && (
-          <div className="mt-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <div className="border-primary/20 bg-primary/5 mt-6 rounded-lg border p-4">
             <div className="mb-1 flex items-center gap-2">
-              <Truck className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Estimated Delivery</span>
+              <Truck className="text-primary h-4 w-4" />
+              <span className="text-primary text-sm font-medium">Estimated Delivery</span>
             </div>
-            <p className="text-sm text-primary/80">
+            <p className="text-primary/80 text-sm">
               {currentStatus === 'delivering'
                 ? 'Your order is on the way and should arrive today'
                 : '2-3 business days from order confirmation'}

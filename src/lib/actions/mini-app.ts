@@ -227,6 +227,13 @@ export async function createOrderAction(formData: FormData) {
     // Calculate totals
     const totals = calculateOrderTotals(validatedData.items);
 
+    // Determine payment status based on payment method
+    const hasQRCode = ['kbz_pay', 'cb_pay', 'aya_pay'].includes(validatedData.paymentMethod);
+    const paymentStatus = hasQRCode ? 'paid' : 'pending';
+    const orderStatus = hasQRCode ? 'confirmed' : 'pending';
+    const paidAt = hasQRCode ? new Date().toISOString() : null;
+    const confirmedAt = hasQRCode ? new Date().toISOString() : null;
+
     // Create order
     const { data: order, error: orderError } = await serviceClient
       .from('orders')
@@ -234,9 +241,9 @@ export async function createOrderAction(formData: FormData) {
         project_id: validatedData.projectId,
         customer_id: customer.id,
         order_number: orderNumber,
-        status: 'pending',
+        status: orderStatus,
         payment_method: validatedData.paymentMethod,
-        payment_status: 'pending',
+        payment_status: paymentStatus,
         telegram_user_id: validatedData.telegramUser.id,
         subtotal: totals.subtotal,
         shipping_cost: totals.shippingCost,
@@ -255,6 +262,8 @@ export async function createOrderAction(formData: FormData) {
         customer_phone_secondary: validatedData.customerInfo.secondaryPhone || null,
         delivery_notes: validatedData.deliveryNotes || null,
         notes: validatedData.customerInfo.notes || null,
+        paid_at: paidAt,
+        confirmed_at: confirmedAt,
       })
       .select()
       .single();
@@ -517,6 +526,42 @@ export async function updateOrderStatusAction(data: UpdateOrderStatusData) {
     return {
       success: false,
       error: 'Failed to update order status',
+    };
+  }
+}
+
+/**
+ * Get payment QR codes for mini-app (server action)
+ */
+export async function getPaymentQRCodesAction(projectId: string) {
+  try {
+    const serviceClient = createServiceRoleClient();
+
+    const { data, error } = await serviceClient
+      .from('payment_qr_codes')
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching payment QR codes:', error);
+      return {
+        success: false,
+        error: 'Failed to fetch payment QR codes',
+        data: [],
+      };
+    }
+
+    return {
+      success: true,
+      data: data || [],
+    };
+  } catch (error) {
+    console.error('Error fetching payment QR codes:', error);
+    return {
+      success: false,
+      error: 'Failed to fetch payment QR codes',
+      data: [],
     };
   }
 }

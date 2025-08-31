@@ -447,3 +447,27 @@ export const getPaymentMethodsForMiniApp = unstable_cache(
   ['mini-app-payment-methods'],
   { revalidate: 3600, tags: ['payment-methods'] },
 );
+
+/**
+ * Get payment QR codes for mini-app
+ */
+export const getPaymentQRCodesForMiniApp = unstable_cache(
+  async (projectId: string) => {
+    const serviceClient = createServiceRoleClient();
+
+    const { data, error } = await serviceClient
+      .from('payment_qr_codes')
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching payment QR codes:', error);
+      return [];
+    }
+
+    return data || [];
+  },
+  ['mini-app-payment-qr-codes'],
+  { revalidate: 3600, tags: ['payment-qr-codes'] }, // 1 hour cache
+);
