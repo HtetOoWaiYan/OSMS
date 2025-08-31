@@ -47,7 +47,7 @@ interface PaymentMethod {
 export function CheckoutForm({ projectId }: CheckoutFormProps) {
   const router = useRouter();
   const { items, clearCart } = useCartStore();
-  const { user: telegramUser } = useTelegramUser();
+  const { user: telegramUser, isLoading: userLoading } = useTelegramUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('cod');
 
@@ -111,6 +111,12 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
       return;
     }
 
+    // Check if Telegram user is still loading
+    if (userLoading) {
+      toast.error('Please wait while we verify your Telegram account...');
+      return;
+    }
+
     // Validate phone number
     const phoneValidation = validateMyanmarPhone(data.phone);
     if (!phoneValidation.isValid) {
@@ -121,12 +127,13 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Get Telegram user data from validated user
-      const telegramUserData = telegramUser || {
-        id: Date.now(),
-        first_name: data.firstName,
-        last_name: data.lastName,
-      };
+      // Require valid Telegram user data
+      if (!telegramUser) {
+        toast.error('Please access this page through Telegram to place orders.');
+        return;
+      }
+
+      const telegramUserData = telegramUser;
 
       // Create form data
       const formData = new FormData();
@@ -174,6 +181,30 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Telegram Authentication Warning */}
+        {userLoading && (
+          <Card className="border-0 border-yellow-200 bg-yellow-50 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-yellow-800">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm font-medium">Verifying your Telegram account...</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {!userLoading && !telegramUser && (
+          <Card className="border-0 border-red-200 bg-red-50 shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-red-800">
+                <span className="text-sm font-medium">
+                  ⚠️ Please access this page through Telegram to place orders.
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Customer Information */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-4">
@@ -429,7 +460,7 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
         <div className="pt-4">
           <Button
             type="submit"
-            disabled={isSubmitting || items.length === 0}
+            disabled={isSubmitting || items.length === 0 || userLoading || !telegramUser}
             className="bg-primary hover:bg-primary/90 h-12 w-full text-base font-semibold shadow-sm"
             size="lg"
           >
