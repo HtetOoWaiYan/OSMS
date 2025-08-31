@@ -57,6 +57,14 @@ export function OrderHistory({ projectId, statusFilter, page }: OrderHistoryProp
       setLoading(true);
       setError(null);
 
+      // Debug: Log the current state
+      console.log('Telegram user state:', {
+        isLoading: userLoading,
+        hasUser: !!telegramUser,
+        userError,
+        telegramUser: telegramUser ? { id: telegramUser.id, name: telegramUser.first_name } : null,
+      });
+
       // Check if we have a valid Telegram user
       if (userLoading) {
         return; // Still loading user data
@@ -77,6 +85,7 @@ export function OrderHistory({ projectId, statusFilter, page }: OrderHistoryProp
 
       if (!telegramUser) {
         // No Telegram user available
+        console.log('No Telegram user found - this might be a validation issue');
         setError('Please access this page through Telegram to view your orders.');
         return;
       }

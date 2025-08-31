@@ -93,8 +93,20 @@ function TelegramProviderClient({ children, projectId }: TelegramProviderProps) 
         setIsLoading(true);
         setError(null);
 
+        console.log('Validating Telegram user with:', {
+          hasInitData: !!rawInitData,
+          projectId,
+          initDataLength: rawInitData?.length,
+        });
+
         const result = await validateTelegramUser(rawInitData, projectId);
         setValidationResult(result);
+
+        console.log('Validation result:', {
+          success: result.success,
+          error: result.error,
+          hasUser: !!result.user,
+        });
 
         if (!result.success) {
           setError(result.error || 'Validation failed');
