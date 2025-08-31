@@ -35,20 +35,31 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      // Dynamic import to avoid SSR issues
-      const telegram = await import('@telegram-apps/sdk-react');
+      // Check if we're in a Telegram WebApp environment
+      if (typeof window !== 'undefined') {
+        const telegram = (window as unknown as Record<string, unknown>).Telegram;
+        if (telegram && typeof telegram === 'object' && 'WebApp' in telegram) {
+          set({ isInitialized: true });
+          console.log('Telegram WebApp environment detected');
+        } else {
+          // Try to get data from URL parameters as fallback
+          const urlParams = new URLSearchParams(window.location.search);
+          const initData = urlParams.get('tgWebAppData');
+          if (initData) {
+            set({ isInitialized: true });
+            console.log('Telegram data found in URL');
+          } else {
+            set({ isInitialized: false });
+            console.log('Not in Telegram environment');
+          }
+        }
+      }
 
-      // Initialize SDK
-      telegram.init();
-      set({ isInitialized: true });
-      console.log('Telegram SDK initialized');
-
-      // We'll get the data in a separate step to avoid hook issues
       set({ isLoading: false });
     } catch (err) {
-      console.error('Failed to load Telegram SDK:', err);
+      console.error('Failed to initialize Telegram:', err);
       set({
-        error: 'Failed to load Telegram SDK',
+        error: 'Failed to initialize Telegram',
         isLoading: false,
       });
     }
@@ -64,13 +75,19 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
 
   getTelegramData: async () => {
     try {
+      console.log('Getting Telegram data...');
+
       // Try to get data from Telegram WebApp API directly
       if (typeof window !== 'undefined') {
         const telegram = (window as unknown as Record<string, unknown>).Telegram;
+        console.log('Telegram object:', telegram);
+
         if (telegram && typeof telegram === 'object' && 'WebApp' in telegram) {
           const webApp = telegram.WebApp as Record<string, unknown>;
           const initData = webApp.initData;
           const initDataUnsafe = webApp.initDataUnsafe;
+
+          console.log('WebApp data:', { initData, initDataUnsafe });
 
           if (initData) {
             set({
@@ -108,6 +125,9 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
 
   validateUser: async (projectId: string) => {
     const { rawInitData } = get();
+
+    console.log('Validating user with projectId:', projectId);
+    console.log('Raw initData available:', !!rawInitData);
 
     if (!rawInitData) {
       set({

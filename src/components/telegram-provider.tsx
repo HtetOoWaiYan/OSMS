@@ -12,26 +12,15 @@ export function TelegramProvider({ children, projectId }: TelegramProviderProps)
   const { initialize, getTelegramData, validateUser, isInitialized, rawInitData } =
     useTelegramStore();
 
-  // Initialize Telegram SDK on mount
+  // Initialize Telegram on mount
   useEffect(() => {
     initialize();
   }, [initialize]);
 
-  // Get Telegram data when SDK is initialized
+  // Get Telegram data when initialized
   useEffect(() => {
     if (isInitialized && !rawInitData) {
-      // Poll for data every 100ms until we get it
-      const interval = setInterval(async () => {
-        const data = await getTelegramData();
-        if (data?.initData) {
-          clearInterval(interval);
-        }
-      }, 100);
-
-      // Cleanup after 5 seconds
-      setTimeout(() => clearInterval(interval), 5000);
-
-      return () => clearInterval(interval);
+      getTelegramData();
     }
   }, [isInitialized, rawInitData, getTelegramData]);
 

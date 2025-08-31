@@ -209,6 +209,12 @@ export async function createOrderAction(formData: FormData) {
     }
 
     // Create or update customer
+    console.log('Creating order with Telegram user:', {
+      id: validatedData.telegramUser.id,
+      first_name: validatedData.telegramUser.first_name,
+      username: validatedData.telegramUser.username,
+    });
+
     const customer = await upsertTelegramCustomer(
       validatedData.projectId,
       validatedData.telegramUser,

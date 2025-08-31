@@ -31,6 +31,7 @@ import { customerInfoSchema, type CustomerInfo } from '@/lib/validations/mini-ap
 import { validateMyanmarPhone, MYANMAR_CITIES } from '@/lib/utils/myanmar-phone';
 import { toast } from 'sonner';
 import { Loader2, User, MapPin, CreditCard } from 'lucide-react';
+import { useTelegramUser } from '@/components/telegram-provider';
 
 interface CheckoutFormProps {
   projectId: string;
@@ -46,6 +47,7 @@ interface PaymentMethod {
 export function CheckoutForm({ projectId }: CheckoutFormProps) {
   const router = useRouter();
   const { items, clearCart } = useCartStore();
+  const { user: telegramUser } = useTelegramUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('cod');
 
@@ -95,26 +97,13 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
     },
   });
 
-  // Get Telegram user data if available
+  // Pre-fill form with validated Telegram user data
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      const webapp = window.Telegram.WebApp as {
-        initDataUnsafe?: {
-          user?: {
-            id: number;
-            first_name?: string;
-            last_name?: string;
-            username?: string;
-          };
-        };
-      };
-      if (webapp.initDataUnsafe?.user) {
-        const user = webapp.initDataUnsafe.user;
-        form.setValue('firstName', user.first_name || '');
-        form.setValue('lastName', user.last_name || '');
-      }
+    if (telegramUser) {
+      form.setValue('firstName', telegramUser.first_name || '');
+      form.setValue('lastName', telegramUser.last_name || '');
     }
-  }, [form]);
+  }, [telegramUser, form]);
 
   const onSubmit = async (data: CustomerInfo) => {
     if (items.length === 0) {
@@ -132,29 +121,12 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Get Telegram user data
-      const telegramUser = (() => {
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-          const webapp = window.Telegram.WebApp as {
-            initDataUnsafe?: {
-              user?: {
-                id: number;
-                first_name?: string;
-                last_name?: string;
-                username?: string;
-              };
-            };
-          };
-          return (
-            webapp.initDataUnsafe?.user || {
-              id: Date.now(),
-              first_name: data.firstName,
-              last_name: data.lastName,
-            }
-          );
-        }
-        return { id: Date.now(), first_name: data.firstName, last_name: data.lastName };
-      })();
+      // Get Telegram user data from validated user
+      const telegramUserData = telegramUser || {
+        id: Date.now(),
+        first_name: data.firstName,
+        last_name: data.lastName,
+      };
 
       // Create form data
       const formData = new FormData();
@@ -162,7 +134,7 @@ export function CheckoutForm({ projectId }: CheckoutFormProps) {
       formData.append('items', JSON.stringify(items));
       formData.append('customerInfo', JSON.stringify(data));
       formData.append('paymentMethod', selectedPaymentMethod);
-      formData.append('telegramUser', JSON.stringify(telegramUser));
+      formData.append('telegramUser', JSON.stringify(telegramUserData));
       if (data.notes) {
         formData.append('deliveryNotes', data.notes);
       }
