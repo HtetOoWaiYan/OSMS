@@ -37,14 +37,44 @@ export const useTelegramStore = create<TelegramState>((set, get) => ({
 
       // Check if we're in a Telegram WebApp environment
       if (typeof window !== 'undefined') {
-        const telegram = (window as unknown as Record<string, unknown>).Telegram;
-        if (telegram && typeof telegram === 'object' && 'WebApp' in telegram) {
-          set({ isInitialized: true });
-          console.log('Telegram WebApp environment detected');
-        } else {
+        // Try multiple times with delays to handle timing issues
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          console.log(`Telegram initialization attempt ${attempt}/3`);
+
+          const telegram = (window as unknown as Record<string, unknown>).Telegram;
+          console.log('Telegram object check:', {
+            attempt,
+            hasWindow: typeof window !== 'undefined',
+            hasTelegram: !!telegram,
+            telegramType: typeof telegram,
+            hasWebApp: telegram && typeof telegram === 'object' && 'WebApp' in telegram,
+            telegramKeys: telegram && typeof telegram === 'object' ? Object.keys(telegram) : [],
+          });
+
+          if (telegram && typeof telegram === 'object' && 'WebApp' in telegram) {
+            set({ isInitialized: true });
+            console.log('Telegram WebApp environment detected');
+            break;
+          }
+
+          // If not found and this isn't the last attempt, wait and try again
+          if (attempt < 3) {
+            console.log(`Telegram not found, waiting 500ms before retry...`);
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+        }
+
+        // If Telegram WebApp API is still not available, try URL fallback
+        if (!get().isInitialized) {
           // Try to get data from URL parameters as fallback
           const urlParams = new URLSearchParams(window.location.search);
           const initData = urlParams.get('tgWebAppData');
+          console.log('URL fallback check:', {
+            hasInitData: !!initData,
+            initDataLength: initData?.length,
+            urlParams: Array.from(urlParams.entries()),
+          });
+
           if (initData) {
             set({ isInitialized: true });
             console.log('Telegram data found in URL');
